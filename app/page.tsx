@@ -1,65 +1,156 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { createClient } from '@supabase/supabase-js';
+
+interface Firm {
+  name: string;
+  lawyer_count: number;
+  c1_count: number;
+  c2_count: number;
+  c3_count: number;
+  bl_count: number;
+  unclassified_count: number;
+  participation_rate: number;
+  assigned_count: number;
+}
 
 export default function Home() {
+  const [firms, setFirms] = useState<Firm[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    loadFirms();
+  }, []);
+
+  const loadFirms = async () => {
+    try {
+      // Utilisons une API route plutôt qu'un accès direct Supabase côté client
+      const response = await fetch('/api/firms');
+      const data = await response.json();
+      
+      if (data.success) {
+        setFirms(data.firms || []);
+      } else {
+        console.error('Erreur API:', data.error);
+      }
+    } catch (error) {
+      console.error('Erreur chargement cabinets:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredFirms = firms.filter(firm => 
+    firm.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const formatClassementBadge = (type: string, count: number) => {
+    if (count === 0) return null;
+    
+    const variants = {
+      C1: 'bg-green-600 text-white',
+      C2: 'bg-green-400 text-white', 
+      C3: 'bg-yellow-500 text-white',
+      BL: 'bg-red-600 text-white'
+    };
+
+    return (
+      <Badge className={variants[type as keyof typeof variants]}>
+        {type}: {count}
+      </Badge>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Chargement des cabinets...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="container mx-auto p-8">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-2">Bâtonnat Fabiani-Naquet 2026</h1>
+        <p className="text-xl text-gray-600">Descente de cabinet - {firms.length} cabinets</p>
+      </div>
+
+      <div className="mb-6 flex gap-4 items-center">
+        <Input 
+          placeholder="Rechercher un cabinet..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-md"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+        <Button variant="outline" asChild>
+          <Link href="/admin">Admin</Link>
+        </Button>
+        <Button variant="outline" asChild>
+          <Link href="/test">Test API</Link>
+        </Button>
+      </div>
+
+      <div className="grid gap-4">
+        {filteredFirms.map((firm) => (
+          <Card key={firm.name} className="hover:shadow-lg transition-shadow cursor-pointer">
+            <Link href={`/cabinet/${encodeURIComponent(firm.name)}`}>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-xl mb-2">{firm.name}</CardTitle>
+                    <CardDescription>
+                      {firm.lawyer_count} avocat{firm.lawyer_count > 1 ? 's' : ''}
+                      {firm.participation_rate > 0 && (
+                        <span className="ml-2 text-sm">
+                          • Taux participation: {(firm.participation_rate * 100).toFixed(1)}%
+                        </span>
+                      )}
+                    </CardDescription>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-gray-500 mb-1">
+                      {firm.assigned_count > 0 && (
+                        <Badge variant="outline">
+                          {firm.assigned_count} assigné{firm.assigned_count > 1 ? 's' : ''}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {formatClassementBadge('C1', firm.c1_count)}
+                  {formatClassementBadge('C2', firm.c2_count)}
+                  {formatClassementBadge('C3', firm.c3_count)}
+                  {formatClassementBadge('BL', firm.bl_count)}
+                  {firm.unclassified_count > 0 && (
+                    <Badge variant="secondary">
+                      Non classés: {firm.unclassified_count}
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Link>
+          </Card>
+        ))}
+      </div>
+
+      {filteredFirms.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-500">Aucun cabinet trouvé pour "{searchTerm}"</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      )}
     </div>
   );
 }

@@ -75,17 +75,17 @@ class GoogleSheetsService {
       });
 
       return {
-        prenomnom: row[0] || '',
-        civilite: row[1] || '',
-        nom_complet: row[8] || '',
-        telephone: row[9] || '',
-        email: row[14] || '',
-        annee_serment: parseInt(row[27]) || 0,
-        cabinet: row[34] || '',
-        classement: row[47] || '',
+        prenomnom: row[0] || '', // nomcomplet
+        civilite: row[1] || '', // Nature  
+        nom_complet: row[8] || '', // Nom complet
+        telephone: row[9] || '', // Numéro de téléphone
+        email: row[14] || '', // Adresse e-mail
+        annee_serment: parseInt(row[27]) || 0, // Année de serment
+        cabinet: row[34] || '', // Structure
+        classement: this.determineClassement(row), // C1/C2/C3/Blacklist depuis colonnes 44-49
         soutiens_precedents: soutiens,
-        ami_linkedin_mhf: row[57] === '1',
-        ami_linkedin_fn: row[58] === '1',
+        ami_linkedin_mhf: row[60] === '1', // LINKEDIN MHF
+        ami_linkedin_fn: row[61] === '1', // LINKEDIN FN
         raw_data: row,
       };
     }).filter(lawyer => lawyer.prenomnom); // Filtrer les lignes vides
@@ -248,6 +248,18 @@ class GoogleSheetsService {
         values: [['date', 'type_erreur', 'prenomnom', 'details']]
       },
     });
+  }
+
+  /**
+   * Détermine le classement C1/C2/C3/Blacklist depuis les colonnes du Sheet
+   */
+  private determineClassement(row: any[]): string {
+    // D'après les entêtes vues : C1 (col 44), C2 (col 45), C3 (col 46), Blacklist (col 49)
+    if (row[49] === '1') return 'Blacklist';
+    if (row[44] === '1') return 'C1';
+    if (row[45] === '1') return 'C2'; 
+    if (row[46] === '1') return 'C3';
+    return ''; // Non classé
   }
 
   /**

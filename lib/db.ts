@@ -1,11 +1,22 @@
+import { createClient } from '@supabase/supabase-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is not set');
+// Pour Supabase, on utilise directement les clés d'API
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('Supabase credentials not configured');
 }
 
-// Disable prefetch as it is not supported for "Transaction" pool mode
-const client = postgres(process.env.DATABASE_URL, { prepare: false });
+// Client Supabase pour les opérations administratives
+export const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+// Client Drizzle pour les opérations de base de données
+// Construction de l'URL de connexion Postgres avec la clé service
+const connectionString = `postgresql://postgres:[service-role-key]@db.${process.env.SUPABASE_URL?.split('//')[1]?.split('.')[0]}.supabase.co:5432/postgres?sslmode=require`;
+
+const client = postgres(connectionString, { prepare: false });
 export const db = drizzle(client, { schema });
