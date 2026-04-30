@@ -92,139 +92,176 @@ export default function Home() {
   }
 
   return (
-    <div className="container mx-auto p-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Bâtonnat Fabiani-Naquet 2026</h1>
-        <p className="text-xl text-gray-600">
-          Descente de cabinet - {firms.length} cabinets
-          {searchTerm && ` • ${filteredFirms.length} résultats pour "${searchTerm}"`}
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-white to-gray-50">
+      {/* Header Fabiani-Naquet */}
+      <header className="fn-header">
+        <div className="container mx-auto px-8 py-6">
+          <div className="mb-6">
+            <h1 className="text-fn-red font-bold mb-2">Bâtonnat Fabiani-Naquet 2026</h1>
+            <p className="text-xl text-gray-600 font-medium">
+              <span className="decorative-text">Descente de cabinet</span> • {firms.length} cabinets
+              {searchTerm && (
+                <span className="text-fn-blue"> • {filteredFirms.length} résultats pour "{searchTerm}"</span>
+              )}
+            </p>
+          </div>
 
-      <div className="mb-6 space-y-4">
-        <div className="flex gap-2 border-b">
-          <Button variant="ghost" className="border-b-2 border-blue-500 text-blue-600 font-semibold">
-            Cabinets
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link href="/historique">Historique</Link>
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link href="/recapitulatif">Récapitulatif</Link>
-          </Button>
+          {/* Navigation moderne */}
+          <nav className="mb-6">
+            <div className="flex gap-1 border-b-2 border-gray-200 mb-4">
+              <a href="#" className="fn-nav-item active">
+                Cabinets
+              </a>
+              <Link href="/historique" className="fn-nav-item">
+                Historique
+              </Link>
+              <Link href="/recapitulatif" className="fn-nav-item">
+                Récapitulatif
+              </Link>
+            </div>
+            
+            {/* Barre de recherche et boutons */}
+            <div className="flex gap-4 items-center flex-wrap">
+              <div className="flex-1 min-w-[300px] max-w-lg">
+                <input
+                  type="text"
+                  placeholder="Rechercher un cabinet..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="fn-input"
+                />
+              </div>
+              <Link href="/admin" className="btn-fn-primary">
+                Interface Admin
+              </Link>
+              <Link href="/test" className="btn-fn-outline">
+                Test API
+              </Link>
+            </div>
+          </nav>
         </div>
-        
-        <div className="flex gap-4 items-center">
-          <Input 
-            placeholder="Rechercher un cabinet..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md"
-          />
-          <Button variant="outline" asChild>
-            <Link href="/admin">Admin</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/test">Test API</Link>
-          </Button>
-        </div>
-      </div>
+      </header>
 
-      <div className="grid gap-4">
-        {currentFirms.map((firm) => (
-          <Card key={firm.name} className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link href={`/cabinet/${encodeURIComponent(firm.name)}`}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-xl mb-2">{firm.name}</CardTitle>
-                    <CardDescription>
-                      {firm.lawyer_count} avocat{firm.lawyer_count > 1 ? 's' : ''}
-                    </CardDescription>
+      {/* Contenu principal */}
+      <main className="container mx-auto px-8 pb-8">
+
+        {/* Grille de cabinets avec style Fabiani-Naquet */}
+        <div className="grid gap-6">
+          {currentFirms.map((firm) => (
+            <div key={firm.name} className="fn-card">
+              <Link href={`/cabinet/${encodeURIComponent(firm.name)}`} className="block">
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-fn-black mb-2">{firm.name}</h3>
+                      <p className="text-gray-600 font-medium">
+                        {firm.lawyer_count} avocat{firm.lawyer_count > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <div className="text-right space-y-2">
+                      {firm.participation_rate !== null && firm.participation_rate !== undefined && (
+                        <div className="text-2xl font-bold text-fn-blue">
+                          {(firm.participation_rate * 100).toFixed(1)}%
+                        </div>
+                      )}
+                      {firm.assigned_count > 0 && (
+                        <div className="fn-badge fn-badge-outline text-xs">
+                          {firm.assigned_count} assigné{firm.assigned_count > 1 ? 's' : ''}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right space-y-1">
-                    {firm.participation_rate !== null && firm.participation_rate !== undefined && (
-                      <div className="font-bold text-lg text-blue-600">
-                        {(firm.participation_rate * 100).toFixed(1)}%
-                      </div>
+                  
+                  {/* Badges de classification avec nouveau style */}
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {firm.c1_count > 0 && (
+                      <span className="fn-badge fn-badge-c1">
+                        C1: {firm.c1_count}
+                      </span>
                     )}
-                    {firm.assigned_count > 0 && (
-                      <Badge variant="outline" className="text-xs">
-                        {firm.assigned_count} assigné{firm.assigned_count > 1 ? 's' : ''}
-                      </Badge>
+                    {firm.c2_count > 0 && (
+                      <span className="fn-badge fn-badge-c2">
+                        C2: {firm.c2_count}
+                      </span>
+                    )}
+                    {firm.c3_count > 0 && (
+                      <span className="fn-badge fn-badge-c3">
+                        C3: {firm.c3_count}
+                      </span>
+                    )}
+                    {firm.bl_count > 0 && (
+                      <span className="fn-badge fn-badge-bl">
+                        BL: {firm.bl_count}
+                      </span>
+                    )}
+                    {firm.unclassified_count > 0 && (
+                      <span className="fn-badge" style={{backgroundColor: 'var(--fn-gray-medium)', color: 'var(--fn-white)'}}>
+                        Non classés: {firm.unclassified_count}
+                      </span>
                     )}
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {formatClassementBadge('C1', firm.c1_count)}
-                  {formatClassementBadge('C2', firm.c2_count)}
-                  {formatClassementBadge('C3', firm.c3_count)}
-                  {formatClassementBadge('BL', firm.bl_count)}
-                  {firm.unclassified_count > 0 && (
-                    <Badge variant="secondary">
-                      Non classés: {firm.unclassified_count}
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Link>
-          </Card>
-        ))}
-      </div>
-
-      {filteredFirms.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-500">Aucun cabinet trouvé pour "{searchTerm}"</p>
+              </Link>
+            </div>
+          ))}
         </div>
-      )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-8 flex justify-center items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(1)}
-            disabled={currentPage === 1}
-          >
-            ⏮ Première
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            ← Précédent
-          </Button>
-          
-          <span className="text-sm text-gray-600 px-4">
-            Page {currentPage} sur {totalPages} 
-            <span className="ml-2 text-xs">
-              ({startIndex + 1}-{Math.min(endIndex, filteredFirms.length)} sur {filteredFirms.length} cabinets)
-            </span>
-          </span>
-          
-          <Button
-            variant="outline"
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-          >
-            Suivant →
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={currentPage === totalPages}
-          >
-            Dernière ⏭
-          </Button>
-        </div>
-      )}
+        {/* Message si aucun résultat */}
+        {filteredFirms.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🔍</div>
+            <h3 className="text-xl font-semibold text-fn-black mb-2">Aucun cabinet trouvé</h3>
+            <p className="text-gray-500">
+              {searchTerm ? `Aucun résultat pour "${searchTerm}"` : 'Aucun cabinet disponible'}
+            </p>
+          </div>
+        )}
+
+        {/* Pagination avec style Fabiani-Naquet */}
+        {totalPages > 1 && (
+          <div className="mt-12 flex justify-center items-center gap-3">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="btn-fn-outline text-sm px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              ⏮ Première
+            </button>
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="btn-fn-outline text-sm px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              ← Précédent
+            </button>
+            
+            <div className="bg-white px-4 py-2 rounded-md border-2 border-gray-200 text-sm font-medium">
+              <span className="text-fn-blue font-semibold">Page {currentPage}</span>
+              <span className="text-gray-500"> sur {totalPages}</span>
+              <div className="text-xs text-gray-400 mt-1">
+                ({startIndex + 1}-{Math.min(endIndex, filteredFirms.length)} sur {filteredFirms.length} cabinets)
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="btn-fn-outline text-sm px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Suivant →
+            </button>
+            
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="btn-fn-outline text-sm px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Dernière ⏭
+            </button>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
