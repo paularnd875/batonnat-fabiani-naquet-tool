@@ -1,0 +1,188 @@
+/* Styles CSS pour le header Fabiani-Naquet */
+
+/* Variables CSS personnalisées - Style Mondrian */
+:root {
+  --white: #ffffff;
+  --black: #111111;
+  --yellow: #FFD700;
+  --blue: #4A90E2;
+  --red: #E74C3C;
+  --gray: #555555;
+  --bw: 3px; /* border width */
+  --nav-h: 78px; /* nav height */
+  --resolve: 'Resolve Sans', 'Inter', system-ui, sans-serif;
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Styles du header principal */
+.mondrian-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--white);
+  border-bottom: var(--bw) solid var(--black);
+}
+
+.nav-inner {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  height: var(--nav-h);
+  padding: 0 0 0 3rem;
+}
+
+.nav-logo {
+  font-family: var(--resolve);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--black);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+}
+
+.nav-links {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  gap: 0;
+}
+
+.nav-link {
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--black);
+  text-decoration: none;
+  padding: 0 1.2rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: color 0.2s, background 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background: var(--yellow);
+  color: var(--black);
+  box-shadow: 
+    inset var(--bw) 0 0 var(--black),
+    inset calc(var(--bw) * -1) 0 0 var(--black);
+}
+
+/* Bande de couleurs Mondrian */
+.nav-color-strip {
+  display: flex;
+  height: 4px;
+}
+
+.color-strip-segment {
+  flex: 1;
+}
+
+.color-blue { background: var(--blue); }
+.color-white { background: var(--white); }
+.color-yellow { background: var(--yellow); }
+.color-red { background: var(--red); }
+.color-black { background: var(--black); }
+
+/* Menu burger */
+.nav-burger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+}
+
+.nav-burger span {
+  display: block;
+  height: 2px;
+  background: var(--black);
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+.nav-burger.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.nav-burger.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-burger.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Menu mobile */
+.mobile-menu {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--white);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.mobile-menu.open {
+  display: flex;
+  opacity: 1;
+  pointer-events: all;
+}
+
+.mobile-menu-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.mobile-menu-link {
+  font-family: var(--resolve);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--black);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 1rem;
+  transition: background 0.2s, color 0.2s;
+}
+
+.mobile-menu-link:hover {
+  background: var(--yellow);
+  color: var(--black);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .nav-inner {
+    padding: 0 1rem;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .nav-burger {
+    display: flex;
+  }
+  
+  .nav-logo {
+    font-size: 1rem;
+  }
+}

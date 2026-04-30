@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
 
 interface Assignment {
   id: string;
@@ -125,51 +126,34 @@ export default function HistoriquePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-gray-50">
-      {/* Header Fabiani-Naquet */}
-      <header className="fn-header">
-        <div className="container mx-auto px-8 py-6">
-          <div className="mb-6">
-            <h1 className="text-fn-red font-bold mb-2">Historique des assignations</h1>
-            <p className="text-xl text-gray-600 font-medium">
-              <span className="decorative-text">{assignments.length} assignation{assignments.length > 1 ? 's' : ''}</span>
-              {searchTerm && (
-                <span className="text-fn-blue"> • {filteredAssignments.length} résultats pour "{searchTerm}"</span>
-              )}
-            </p>
-          </div>
-
-          {/* Navigation moderne */}
-          <nav className="mb-6">
-            <div className="flex gap-1 border-b-2 border-gray-200 mb-4">
-              <Link href="/" className="fn-nav-item">
-                Cabinets
-              </Link>
-              <a href="#" className="fn-nav-item active">
-                Historique
-              </a>
-              <Link href="/recapitulatif" className="fn-nav-item">
-                Récapitulatif
-              </Link>
-            </div>
-            
-            {/* Barre de recherche et boutons */}
-            <div className="flex gap-4 items-center flex-wrap">
-              <div className="flex-1 min-w-[300px] max-w-xl">
-                <input
-                  type="text"
-                  placeholder="Rechercher un avocat, cabinet ou assigneur..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="fn-input"
-                />
-              </div>
-              <Link href="/admin" className="btn-fn-primary">
-                Interface Admin
-              </Link>
-            </div>
-          </nav>
+      {/* Header Fabiani-Naquet avec style Mondrian */}
+      <FabianiNaquetHeader />
+      
+      {/* Contenu principal avec informations et recherche */}
+      <div className="container mx-auto px-8 py-6">
+        <div className="mb-6">
+          <h2 className="text-fn-blue font-bold mb-2">Historique des assignations</h2>
+          <p className="text-lg text-gray-600 font-medium">
+            <span className="decorative-text">{assignments.length} assignation{assignments.length > 1 ? 's' : ''}</span>
+            {searchTerm && (
+              <span className="text-fn-blue"> • {filteredAssignments.length} résultats pour "{searchTerm}"</span>
+            )}
+          </p>
         </div>
-      </header>
+
+        {/* Barre de recherche */}
+        <div className="flex gap-4 items-center flex-wrap mb-8">
+          <div className="flex-1 min-w-[300px] max-w-xl">
+            <input
+              type="text"
+              placeholder="Rechercher un avocat, cabinet ou assigneur..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="fn-input"
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Contenu principal */}
       <main className="container mx-auto px-8 pb-8">

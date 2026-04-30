@@ -181,14 +181,14 @@
   }
   
   h1 {
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    letter-spacing: -1.12px;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    letter-spacing: -0.5px;
     color: var(--fn-red);
   }
   
   h2 {
-    font-size: clamp(2rem, 4vw, 3.5rem);
-    letter-spacing: 1.12px;
+    font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+    letter-spacing: 0.5px;
     color: var(--fn-blue);
   }
   

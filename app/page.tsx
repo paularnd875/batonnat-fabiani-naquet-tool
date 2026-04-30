@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@supabase/supabase-js';
+import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
 
 interface Firm {
   name: string;
@@ -93,54 +94,36 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-gray-50">
-      {/* Header Fabiani-Naquet */}
-      <header className="fn-header">
-        <div className="container mx-auto px-8 py-6">
-          <div className="mb-6">
-            <h1 className="text-fn-red font-bold mb-2">Bâtonnat Fabiani-Naquet 2026</h1>
-            <p className="text-xl text-gray-600 font-medium">
-              <span className="decorative-text">Descente de cabinet</span> • {firms.length} cabinets
-              {searchTerm && (
-                <span className="text-fn-blue"> • {filteredFirms.length} résultats pour "{searchTerm}"</span>
-              )}
-            </p>
-          </div>
-
-          {/* Navigation moderne */}
-          <nav className="mb-6">
-            <div className="flex gap-1 border-b-2 border-gray-200 mb-4">
-              <a href="#" className="fn-nav-item active">
-                Cabinets
-              </a>
-              <Link href="/historique" className="fn-nav-item">
-                Historique
-              </Link>
-              <Link href="/recapitulatif" className="fn-nav-item">
-                Récapitulatif
-              </Link>
-            </div>
-            
-            {/* Barre de recherche et boutons */}
-            <div className="flex gap-4 items-center flex-wrap">
-              <div className="flex-1 min-w-[300px] max-w-lg">
-                <input
-                  type="text"
-                  placeholder="Rechercher un cabinet..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="fn-input"
-                />
-              </div>
-              <Link href="/admin" className="btn-fn-primary">
-                Interface Admin
-              </Link>
-              <Link href="/test" className="btn-fn-outline">
-                Test API
-              </Link>
-            </div>
-          </nav>
+      {/* Header Fabiani-Naquet avec style Mondrian */}
+      <FabianiNaquetHeader />
+      
+      {/* Contenu principal avec informations et recherche */}
+      <div className="container mx-auto px-8 py-6">
+        <div className="mb-6">
+          <p className="text-lg text-gray-600 font-medium">
+            <span className="decorative-text">Descente de cabinet</span> • {firms.length} cabinets
+            {searchTerm && (
+              <span className="text-fn-blue"> • {filteredFirms.length} résultats pour "{searchTerm}"</span>
+            )}
+          </p>
         </div>
-      </header>
+
+        {/* Barre de recherche et boutons */}
+        <div className="flex gap-4 items-center flex-wrap mb-8">
+          <div className="flex-1 min-w-[300px] max-w-lg">
+            <input
+              type="text"
+              placeholder="Rechercher un cabinet..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="fn-input"
+            />
+          </div>
+          <Link href="/test" className="btn-fn-outline">
+            Test API
+          </Link>
+        </div>
+      </div>
 
       {/* Contenu principal */}
       <main className="container mx-auto px-8 pb-8">

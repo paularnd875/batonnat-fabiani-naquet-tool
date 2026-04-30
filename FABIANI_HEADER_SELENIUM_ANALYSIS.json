@@ -1,0 +1,224 @@
+{
+  "url": "https://www.fabiani-naquet.paris/",
+  "title": "Fabiani & Naquet — Bâtonnat du Barreau de Paris",
+  "timestamp": "20260430_135104",
+  "elements": {
+    "header": {
+      "tag": "nav",
+      "class": "mondrian-nav",
+      "id": "",
+      "location": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "height": 78,
+        "width": 1512
+      },
+      "position": {
+        "x": 0,
+        "y": 0,
+        "width": 1512,
+        "height": 78
+      }
+    }
+  },
+  "styles": {
+    "css_rules": [
+      {
+        "selector": ".mondrian-nav",
+        "style": "position: fixed; top: 0px; left: 0px; right: 0px; z-index: 1000; background: var(--white); border-bottom: var(--bw) solid var(--black);"
+      },
+      {
+        "selector": ".nav-inner",
+        "style": "display: flex; align-items: stretch; justify-content: space-between; height: var(--nav-h); padding: 0px 0px 0px 3rem;"
+      },
+      {
+        "selector": ".nav-logo",
+        "style": "font-family: var(--resolve); font-weight: 700; font-size: 1.1rem; color: var(--black); text-decoration: none; letter-spacing: 0.02em; text-transform: uppercase; display: flex; align-items: center;"
+      },
+      {
+        "selector": ".nav-links",
+        "style": "display: flex; align-items: stretch; height: 100%; gap: 0px;"
+      },
+      {
+        "selector": ".nav-link",
+        "style": "font-family: var(--sans); font-size: 0.8rem; font-weight: 500; color: var(--black); text-decoration: none; padding: 0px 1.2rem; letter-spacing: 0.05em; text-transform: uppercase; transition: color 0.2s, background 0.2s, box-shadow 0.2s; display: flex; align-items: center;"
+      },
+      {
+        "selector": ".nav-link:hover, .nav-link.active",
+        "style": "background: var(--yellow); color: var(--black); box-shadow: inset var(--bw) 0 0 var(--black),inset calc(var(--bw) * -1) 0 0 var(--black);"
+      },
+      {
+        "selector": ".nav-dot",
+        "style": "width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;"
+      },
+      {
+        "selector": ".nav-color-strip",
+        "style": "display: flex; height: 4px;"
+      },
+      {
+        "selector": ".nav-burger",
+        "style": "display: none; flex-direction: column; justify-content: center; gap: 5px; background: none; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; cursor: pointer; padding: 8px; width: 40px; height: 40px;"
+      },
+      {
+        "selector": ".nav-burger span",
+        "style": "display: block; height: 2px; background: var(--black); transition: transform 0.3s, opacity 0.3s;"
+      },
+      {
+        "selector": ".nav-burger.open span:nth-child(1)",
+        "style": "transform: translateY(7px) rotate(45deg);"
+      },
+      {
+        "selector": ".nav-burger.open span:nth-child(2)",
+        "style": "opacity: 0;"
+      },
+      {
+        "selector": ".nav-burger.open span:nth-child(3)",
+        "style": "transform: translateY(-7px) rotate(-45deg);"
+      },
+      {
+        "selector": ".mobile-menu",
+        "style": "display: none; position: fixed; inset: 0px; background: var(--white); z-index: 999; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s;"
+      },
+      {
+        "selector": ".mobile-menu.open",
+        "style": "display: flex; opacity: 1; pointer-events: all;"
+      },
+      {
+        "selector": ".mobile-menu-inner",
+        "style": "display: flex; flex-direction: column; gap: 1.5rem; text-align: center;"
+      },
+      {
+        "selector": ".manifeste-header",
+        "style": "margin-bottom: 2.5rem;"
+      },
+      {
+        "selector": ".manifeste-header h2",
+        "style": "font-family: var(--resolve); font-weight: 700; font-size: clamp(2rem, 5vw, 3.5rem); text-transform: uppercase; letter-spacing: 0.02em;"
+      },
+      {
+        "selector": ".candidats-header",
+        "style": "background: var(--white); padding: 4rem 3rem 3rem; text-align: center;"
+      },
+      {
+        "selector": ".candidats-header .section-accent",
+        "style": "margin: 0px auto 1rem;"
+      },
+      {
+        "selector": ".candidats-header h2",
+        "style": "font-family: var(--resolve); font-weight: 700; font-size: clamp(2rem, 5vw, 3.5rem); text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 0.3rem;"
+      },
+      {
+        "selector": ".candidats-header p",
+        "style": "font-size: 1.05rem; color: rgb(85, 85, 85);"
+      },
+      {
+        "selector": ".soutiens-header",
+        "style": "display: grid; grid-template-columns: 1fr auto; background: var(--black); gap: var(--bw);"
+      },
+      {
+        "selector": ".soutiens-header-text",
+        "style": "background: var(--yellow); padding: 3.5rem 4rem;"
+      },
+      {
+        "selector": ".soutiens-header-text h2",
+        "style": "font-family: var(--resolve); font-weight: 700; font-size: clamp(1.8rem, 4vw, 2.8rem); text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 0.3rem;"
+      },
+      {
+        "selector": ".soutiens-header-text p",
+        "style": "font-size: 1.05rem; color: rgb(85, 85, 85);"
+      },
+      {
+        "selector": ".soutiens-header-count",
+        "style": "background: var(--red); color: var(--white); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2.5rem 4rem; min-width: 200px;"
+      },
+      {
+        "selector": ".contact-header",
+        "style": "margin-bottom: 3rem;"
+      },
+      {
+        "selector": ".contact-header h2",
+        "style": "font-family: var(--resolve); font-weight: 700; font-size: clamp(2rem, 5vw, 3.5rem); text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 0.5rem;"
+      },
+      {
+        "selector": ".contact-header p",
+        "style": "font-size: 1.05rem; color: rgb(85, 85, 85);"
+      }
+    ],
+    "colors": {
+      "backgroundColor": "rgb(255, 255, 255)",
+      "borderBottomColor": "rgb(17, 17, 17)",
+      "borderColor": "rgb(17, 17, 17)",
+      "borderTopColor": "rgb(17, 17, 17)",
+      "color": "rgb(17, 17, 17)"
+    }
+  },
+  "navigation": [
+    {
+      "text": "FABIANI & NAQUET",
+      "href": "https://www.fabiani-naquet.paris/",
+      "class": "nav-logo",
+      "position": {
+        "x": 48,
+        "y": 0
+      },
+      "size": {
+        "height": 64,
+        "width": 168
+      }
+    },
+    {
+      "text": "MANIFESTE",
+      "href": "https://www.fabiani-naquet.paris/#manifeste",
+      "class": "nav-link",
+      "position": {
+        "x": 1065,
+        "y": 0
+      },
+      "size": {
+        "height": 64,
+        "width": 117
+      }
+    },
+    {
+      "text": "CANDIDATS",
+      "href": "https://www.fabiani-naquet.paris/#candidats",
+      "class": "nav-link",
+      "position": {
+        "x": 1182,
+        "y": 0
+      },
+      "size": {
+        "height": 64,
+        "width": 117
+      }
+    },
+    {
+      "text": "SOUTIENS",
+      "href": "https://www.fabiani-naquet.paris/soutiens",
+      "class": "nav-link",
+      "position": {
+        "x": 1299,
+        "y": 0
+      },
+      "size": {
+        "height": 64,
+        "width": 108
+      }
+    },
+    {
+      "text": "CONTACT",
+      "href": "https://www.fabiani-naquet.paris/#contact",
+      "class": "nav-link",
+      "position": {
+        "x": 1408,
+        "y": 0
+      },
+      "size": {
+        "height": 64,
+        "width": 104
+      }
+    }
+  ]
+}
