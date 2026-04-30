@@ -93,20 +93,71 @@ class GoogleSheetsService {
 
   /**
    * Lit l'onglet votes et retourne les données de participation
+   * Note: Essaie plusieurs onglets possibles pour trouver les bonnes données
    */
   async readFirmsData(): Promise<SheetFirmData[]> {
-    const response = await this.sheets.spreadsheets.values.get({
-      spreadsheetId: this.sheetId,
-      range: 'Synthèse vote par structure!A:G',
-    });
+    // Essayer différents noms d'onglets possibles
+    const possibleSheetNames = [
+      'Synthèse vote toutes structures!A:G', // Onglet correct avec vraies données
+      'Synthèse vote par structure!A:G', // Fallback sur ancien onglet
+      // Ajouter d'autres noms possibles si nécessaire
+    ];
+    
+    for (const rangeName of possibleSheetNames) {
+      try {
+        console.log(`🔍 Tentative lecture onglet: ${rangeName}`);
+        const response = await this.sheets.spreadsheets.values.get({
+          spreadsheetId: this.sheetId,
+          range: rangeName,
+        });
+        
+        const rows = response.data.values || [];
+        if (rows.length === 0) continue;
+        
+        console.log(`📋 Trouvé ${rows.length} lignes dans ${rangeName}`);
+        console.log(`📋 Première ligne:`, rows[0]);
+        console.log(`📋 Deuxième ligne:`, rows[1]);
+        
+        const processedData = this.processFirmsData(rows);
+        if (processedData.length > 0) {
+          console.log(`✅ ${processedData.length} cabinets valides trouvés`);
+          return processedData;
+        }
+      } catch (error) {
+        console.warn(`⚠️ Impossible de lire ${rangeName}:`, error);
+        continue;
+      }
+    }
+    
+    console.warn('⚠️ Aucun onglet de participation trouvé');
+    return [];
+  }
 
-    const rows = response.data.values || [];
+  /**
+   * Traite les données brutes d'un onglet pour extraire les données de participation
+   */
+  private processFirmsData(rows: any[][]): SheetFirmData[] {
     if (rows.length === 0) return [];
 
-    return rows.slice(1).map((row: any[]) => ({
-      cabinet: row[0] || '',
-      taux_participation_moyen: parseFloat(row[6]) || 0,
-    })).filter(firm => firm.cabinet);
+    return rows.slice(1).map((row: any[]) => {
+      const cabinet = (row[0] || '').toString().trim();
+      let taux = parseFloat(row[6]) || 0;
+      
+      // Si le taux > 1, c'est probablement en pourcentage, le convertir en décimal
+      if (taux > 1) {
+        taux = taux / 100;
+      }
+      
+      return {
+        cabinet,
+        taux_participation_moyen: taux,
+      };
+    }).filter(firm => 
+      firm.cabinet && 
+      firm.cabinet !== 'Structure' && 
+      !firm.cabinet.includes('Liste des personnes') &&
+      firm.cabinet.length > 2 // Filtrer les noms trop courts
+    );
   }
 
   /**

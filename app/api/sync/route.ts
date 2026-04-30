@@ -62,21 +62,48 @@ export async function POST() {
       console.log(`✅ ${totalInserted}/${lawyersForDB.length} avocats synchronisés`);
     }
 
-    // 3. Recalculer les statistiques des cabinets
-    console.log('📈 Recalcul statistiques cabinets...');
+    // 3. Lire les taux de participation réels depuis Google Sheets
+    console.log('📈 Lecture taux de participation depuis Google Sheets...');
+    let participationRatesMap = new Map<string, number>();
+    try {
+      const firmsParticipationData = await googleSheets.readFirmsData();
+      console.log(`📊 ${firmsParticipationData.length} cabinets avec taux trouvés dans Google Sheets`);
+      
+      firmsParticipationData.forEach(firmData => {
+        participationRatesMap.set(firmData.cabinet, firmData.taux_participation_moyen);
+      });
+    } catch (error) {
+      console.warn('⚠️ Impossible de lire les taux depuis Google Sheets, utilisation calcul local:', error);
+    }
+
+    // 4. Recalculer les statistiques des cabinets
+    console.log('📊 Recalcul statistiques cabinets...');
     
-    const { data: firmStats } = await supabase
+    // Supprimer toutes les anciennes stats pour éviter les incohérences
+    const { error: deleteError } = await supabase
+      .from('firms')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000'); // Supprime tous les enregistrements
+    
+    if (deleteError) {
+      console.log('Note: Première synchronisation, aucune stat à supprimer');
+    }
+    
+    // Récupérer tous les avocats SANS jointure pour éviter les problèmes de doublons
+    const { data: allLawyers } = await supabase
       .from('lawyers')
       .select(`
         cabinet,
-        classement
+        classement,
+        prenomnom
       `);
 
-    if (firmStats) {
+    let firmsArray = [];
+    if (allLawyers) {
       // Calculer les stats par cabinet
       const firmsMap = new Map();
       
-      firmStats.forEach(lawyer => {
+      allLawyers.forEach(lawyer => {
         const cabinet = lawyer.cabinet || 'Individuel';
         if (!firmsMap.has(cabinet)) {
           firmsMap.set(cabinet, {
@@ -94,6 +121,7 @@ export async function POST() {
         const firm = firmsMap.get(cabinet);
         firm.lawyer_count++;
         
+        // Compter les classements
         switch (lawyer.classement) {
           case 'C1': firm.c1_count++; break;
           case 'C2': firm.c2_count++; break;
@@ -102,23 +130,78 @@ export async function POST() {
           default: firm.unclassified_count++; break;
         }
       });
+      
+      // Récupérer séparément les assignations pour compter les avocats assignés par cabinet
+      // Approche simple : compter juste les assignations uniques par lawyer_prenomnom
+      const { data: assignedLawyers } = await supabase
+        .from('assignments')
+        .select('lawyer_prenomnom');
+        
+      // Pour chaque avocat assigné, trouver son cabinet et incrémenter le compteur
+      if (assignedLawyers) {
+        const uniqueAssigned = new Set(assignedLawyers.map(a => a.lawyer_prenomnom));
+        
+        uniqueAssigned.forEach(lawyerName => {
+          // Trouver l'avocat dans notre liste pour obtenir son cabinet
+          const lawyer = allLawyers.find(l => l.prenomnom === lawyerName);
+          if (lawyer) {
+            const cabinet = lawyer.cabinet || 'Individuel';
+            const firm = firmsMap.get(cabinet);
+            if (firm) {
+              firm.assigned_count++;
+            }
+          }
+        });
+      }
 
-      // Upsert des stats de cabinets
-      const firmsArray = Array.from(firmsMap.values());
+      // Insérer les nouvelles stats avec taux de participation réels
+      firmsArray = Array.from(firmsMap.values()).map(firm => {
+        // D'abord chercher le taux réel depuis Google Sheets
+        let participationRate = participationRatesMap.get(firm.name);
+        
+        // Si pas trouvé, essayer avec des variantes du nom
+        if (participationRate === undefined) {
+          const nameVariants = [
+            firm.name,
+            firm.name.toUpperCase(),
+            firm.name.toLowerCase(),
+            firm.name.trim(),
+          ];
+          
+          for (const variant of nameVariants) {
+            participationRate = participationRatesMap.get(variant);
+            if (participationRate !== undefined) break;
+          }
+        }
+        
+        // Si toujours pas trouvé, utiliser le calcul local comme fallback
+        if (participationRate === undefined) {
+          participationRate = firm.lawyer_count > 0 ? firm.assigned_count / firm.lawyer_count : 0;
+        }
+        
+        return {
+          ...firm,
+          participation_rate: participationRate
+        };
+      });
+      console.log(`📊 Recalcul pour ${firmsArray.length} cabinets (${allLawyers.length} avocats traités)`);
+      
+      // Afficher quelques exemples pour debugging
+      const exampleFirms = firmsArray.slice(0, 3);
+      exampleFirms.forEach(firm => {
+        console.log(`🏢 ${firm.name}: ${firm.lawyer_count} avocats (C1:${firm.c1_count}, C2:${firm.c2_count}, C3:${firm.c3_count}, BL:${firm.bl_count}, NC:${firm.unclassified_count}, Assignés:${firm.assigned_count})`);
+      });
       
       const { error: firmsError } = await supabase
         .from('firms')
-        .upsert(firmsArray, { 
-          onConflict: 'name',
-          ignoreDuplicates: false 
-        });
+        .insert(firmsArray);
 
       if (firmsError) {
         console.error('Erreur stats cabinets:', firmsError);
         throw firmsError;
       }
       
-      console.log(`📊 ${firmsArray.length} cabinets mis à jour`);
+      console.log(`✅ ${firmsArray.length} cabinets mis à jour avec stats correctes`);
     }
 
     return NextResponse.json({
@@ -127,7 +210,7 @@ export async function POST() {
       timestamp: new Date().toISOString(),
       stats: {
         lawyers_synced: totalInserted,
-        firms_updated: firmStats ? Array.from(new Set(firmStats.map(l => l.cabinet))).length : 0,
+        firms_updated: firmsArray ? firmsArray.length : 0,
       }
     });
 

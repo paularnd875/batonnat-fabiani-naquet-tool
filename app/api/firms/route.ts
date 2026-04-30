@@ -3,17 +3,42 @@ import { supabase } from '@/lib/db';
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
-      .from('firms')
-      .select('*')
-      .order('lawyer_count', { ascending: false });
+    console.log('📋 Récupération de tous les cabinets par pagination...');
+    
+    let allFirms: any[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    let hasMore = true;
 
-    if (error) throw error;
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('firms')
+        .select('*')
+        .order('lawyer_count', { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        allFirms.push(...data);
+        page++;
+        console.log(`📄 Page ${page}: +${data.length} cabinets (total: ${allFirms.length})`);
+        
+        // Si cette page a moins de 1000 enregistrements, on a atteint la fin
+        if (data.length < pageSize) {
+          hasMore = false;
+        }
+      } else {
+        hasMore = false;
+      }
+    }
+
+    console.log(`✅ ${allFirms.length} cabinets récupérés au total`);
 
     return NextResponse.json({
       success: true,
-      firms: data || [],
-      count: data?.length || 0,
+      firms: allFirms,
+      count: allFirms.length,
     });
 
   } catch (error) {
