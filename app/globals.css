@@ -1,6 +1,6 @@
-/* Imports des polices Fabiani-Naquet */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+/* Imports des polices Fabiani-Naquet - Exactement comme sur leur site */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,700&display=swap');
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -96,10 +96,15 @@
   --fn-gray-medium: #6C757D;
   --fn-gray-dark: #343A40;
   
-  /* Polices Fabiani-Naquet */
-  --font-resolve: 'Resolve', 'Inter', var(--font-sans);
-  --font-inter: 'Inter', var(--font-sans);
+  /* Polices Fabiani-Naquet - Exactement comme sur leur site */
+  --font-resolve: 'Resolve', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-inter: 'Inter', system-ui, -apple-system, sans-serif;
   --font-cormorant: 'Cormorant Garamond', Georgia, serif;
+  
+  /* Couleurs exactes du site Fabiani-Naquet */
+  --fn-text-primary: rgb(17, 17, 17);
+  --fn-text-secondary: rgb(85, 85, 85);
+  --fn-text-white: rgb(255, 255, 255);
 }
 
 .dark {
@@ -136,10 +141,19 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Police Resolve - Exactement comme sur le site Fabiani-Naquet */
 @font-face {
   font-family: 'Resolve';
-  src: local('Inter'), local('Inter-Regular');
-  font-weight: normal;
+  src: url('/fonts/resolve-light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Resolve';
+  src: url('/fonts/resolve-bold.woff2') format('woff2');
+  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
@@ -157,37 +171,50 @@
     font-family: var(--font-inter);
   }
   
+  /* Hiérarchie typographique EXACTE du site Fabiani-Naquet */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-resolve);
-    font-weight: 600;
-    line-height: 1.2;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--fn-text-primary);
+    line-height: 1.1;
   }
   
   h1 {
-    font-size: 3rem;
-    font-weight: 700;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    letter-spacing: -1.12px;
     color: var(--fn-red);
   }
   
   h2 {
-    font-size: 2.25rem;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    letter-spacing: 1.12px;
     color: var(--fn-blue);
   }
   
   h3 {
-    font-size: 1.875rem;
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    letter-spacing: 0.624px;
   }
   
   h4 {
-    font-size: 1.5rem;
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    letter-spacing: 0.304px;
   }
 }
 
 @layer components {
+  /* Boutons - Style Fabiani-Naquet avec police Resolve */
   .btn-fn-primary {
-    @apply inline-flex items-center justify-center px-6 py-2 rounded-md font-medium text-sm transition-all duration-200 border-2 cursor-pointer text-white;
+    @apply inline-flex items-center justify-center px-6 py-2 rounded-md transition-all duration-200 border-2 cursor-pointer;
+    font-family: var(--font-resolve);
+    font-weight: 700;
+    font-size: 15.2px;
+    letter-spacing: 0.304px;
+    text-transform: uppercase;
     background-color: var(--fn-red);
     border-color: var(--fn-red);
+    color: var(--fn-text-white);
   }
   
   .btn-fn-primary:hover {
@@ -197,9 +224,15 @@
   }
   
   .btn-fn-secondary {
-    @apply inline-flex items-center justify-center px-6 py-2 rounded-md font-medium text-sm transition-all duration-200 border-2 cursor-pointer text-white;
+    @apply inline-flex items-center justify-center px-6 py-2 rounded-md transition-all duration-200 border-2 cursor-pointer;
+    font-family: var(--font-resolve);
+    font-weight: 700;
+    font-size: 15.2px;
+    letter-spacing: 0.304px;
+    text-transform: uppercase;
     background-color: var(--fn-blue);
     border-color: var(--fn-blue);
+    color: var(--fn-text-white);
   }
   
   .btn-fn-secondary:hover {
@@ -209,8 +242,13 @@
   }
   
   .btn-fn-outline {
-    @apply inline-flex items-center justify-center px-6 py-2 rounded-md font-medium text-sm transition-all duration-200 border-2 cursor-pointer bg-transparent;
-    color: var(--fn-black);
+    @apply inline-flex items-center justify-center px-6 py-2 rounded-md transition-all duration-200 border-2 cursor-pointer bg-transparent;
+    font-family: var(--font-resolve);
+    font-weight: 700;
+    font-size: 15.2px;
+    letter-spacing: 0.304px;
+    text-transform: uppercase;
+    color: var(--fn-text-primary);
     border-color: var(--fn-gray-medium);
   }
   
@@ -229,8 +267,15 @@
     border-left-color: var(--fn-blue);
   }
   
+  /* Navigation - Style Fabiani-Naquet avec police Resolve */
   .fn-nav-item {
-    @apply px-4 py-2 text-gray-700 no-underline font-medium border-b-2 border-transparent transition-all duration-200;
+    @apply px-4 py-2 no-underline border-b-2 border-transparent transition-all duration-200;
+    font-family: var(--font-resolve);
+    font-weight: 700;
+    font-size: 17.6px;
+    letter-spacing: 0.352px;
+    text-transform: uppercase;
+    color: var(--fn-text-primary);
   }
   
   .fn-nav-item:hover {
@@ -241,7 +286,6 @@
   .fn-nav-item.active {
     color: var(--fn-blue);
     border-bottom-color: var(--fn-blue);
-    @apply font-semibold;
   }
   
   .fn-badge {

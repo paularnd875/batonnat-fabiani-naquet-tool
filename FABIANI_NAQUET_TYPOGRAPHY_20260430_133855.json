@@ -1,0 +1,284 @@
+{
+  "url": "https://www.fabiani-naquet.paris/",
+  "date_analyse": "2026-04-30 13:38:54",
+  "imports_fonts": [
+    "https://fonts.gstatic.com/"
+  ],
+  "font_faces": [
+    {
+      "fontFamily": "Resolve",
+      "fontStyle": "normal",
+      "fontWeight": "300",
+      "src": "url(\"/fonts/resolve-light.woff2\") format(\"woff2\"), url(\"/fonts/resolve-light.woff\") format(\"woff\")"
+    },
+    {
+      "fontFamily": "Resolve",
+      "fontStyle": "normal",
+      "fontWeight": "700",
+      "src": "url(\"/fonts/resolve-bold.woff2\") format(\"woff2\"), url(\"/fonts/resolve-bold.woff\") format(\"woff\")"
+    }
+  ],
+  "elements_typography": {},
+  "computed_styles": {
+    "H1": {
+      "selector": "h1",
+      "styles": {
+        "color": "rgb(17, 17, 17)",
+        "fontFamily": "Resolve, \"Arial Black\", sans-serif",
+        "fontFeatureSettings": "normal",
+        "fontSize": "112px",
+        "fontStyle": "normal",
+        "fontVariant": "normal",
+        "fontWeight": "700",
+        "letterSpacing": "-1.12px",
+        "lineHeight": "100.8px",
+        "textAlign": "start",
+        "textDecoration": "none",
+        "textTransform": "uppercase"
+      }
+    },
+    "H2": {
+      "selector": "h2",
+      "styles": {
+        "color": "rgb(17, 17, 17)",
+        "fontFamily": "Resolve, \"Arial Black\", sans-serif",
+        "fontFeatureSettings": "normal",
+        "fontSize": "56px",
+        "fontStyle": "normal",
+        "fontVariant": "normal",
+        "fontWeight": "700",
+        "letterSpacing": "1.12px",
+        "lineHeight": "normal",
+        "textAlign": "start",
+        "textDecoration": "none",
+        "textTransform": "uppercase"
+      }
+    },
+    "H3": {
+      "selector": "h3",
+      "styles": {
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "Resolve, \"Arial Black\", sans-serif",
+        "fontFeatureSettings": "normal",
+        "fontSize": "20.8px",
+        "fontStyle": "normal",
+        "fontVariant": "normal",
+        "fontWeight": "700",
+        "letterSpacing": "0.624px",
+        "lineHeight": "normal",
+        "textAlign": "start",
+        "textDecoration": "none",
+        "textTransform": "uppercase"
+      }
+    },
+    "H4": {
+      "selector": "h4",
+      "styles": {
+        "color": "rgb(17, 17, 17)",
+        "fontFamily": "Resolve, \"Arial Black\", sans-serif",
+        "fontFeatureSettings": "normal",
+        "fontSize": "15.2px",
+        "fontStyle": "normal",
+        "fontVariant": "normal",
+        "fontWeight": "700",
+        "letterSpacing": "0.304px",
+        "lineHeight": "normal",
+        "textAlign": "start",
+        "textDecoration": "none",
+        "textTransform": "uppercase"
+      }
+    },
+    "Body": {
+      "selector": "body",
+      "styles": {
+        "color": "rgb(17, 17, 17)",
+        "fontFamily": "Inter, -apple-system, system-ui, sans-serif",
+        "fontFeatureSettings": "normal",
+        "fontSize": "16px",
+        "fontStyle": "normal",
+        "fontVariant": "normal",
+        "fontWeight": "400",
+        "letterSpacing": "normal",
+        "lineHeight": "normal",
+        "textAlign": "start",
+        "textDecoration": "none",
+        "textTransform": "none"
+      }
+    },
+    "Paragraphe": {
+      "selector": "p",
+      "styles": {
+        "color": "rgb(85, 85, 85)",
+        "fontFamily": "Inter, -apple-system, system-ui, sans-serif",
+        "fontFeatureSettings": "normal",
+        "fontSize": "19.2px",
+        "fontStyle": "italic",
+        "fontVariant": "normal",
+        "fontWeight": "400",
+        "letterSpacing": "normal",
+        "lineHeight": "normal",
+        "textAlign": "start",
+        "textDecoration": "none",
+        "textTransform": "none"
+      }
+    },
+    "Navigation": {
+      "selector": "nav a",
+      "styles": {
+        "color": "rgb(17, 17, 17)",
+        "fontFamily": "Resolve, \"Arial Black\", sans-serif",
+        "fontFeatureSettings": "normal",
+        "fontSize": "17.6px",
+        "fontStyle": "normal",
+        "fontVariant": "normal",
+        "fontWeight": "700",
+        "letterSpacing": "0.352px",
+        "lineHeight": "normal",
+        "textAlign": "start",
+        "textDecoration": "none",
+        "textTransform": "uppercase"
+      }
+    },
+    "Boutons": {
+      "selector": "button",
+      "styles": {
+        "color": "rgb(0, 0, 0)",
+        "fontFamily": "Arial",
+        "fontFeatureSettings": "normal",
+        "fontSize": "13.3333px",
+        "fontStyle": "normal",
+        "fontVariant": "normal",
+        "fontWeight": "400",
+        "letterSpacing": "normal",
+        "lineHeight": "normal",
+        "textAlign": "center",
+        "textDecoration": "none",
+        "textTransform": "none"
+      }
+    },
+    "Footer": {
+      "selector": "footer",
+      "styles": {
+        "color": "rgb(255, 255, 255)",
+        "fontFamily": "Inter, -apple-system, system-ui, sans-serif",
+        "fontFeatureSettings": "normal",
+        "fontSize": "16px",
+        "fontStyle": "normal",
+        "fontVariant": "normal",
+        "fontWeight": "400",
+        "letterSpacing": "normal",
+        "lineHeight": "normal",
+        "textAlign": "start",
+        "textDecoration": "none",
+        "textTransform": "none"
+      }
+    },
+    "Citations": {
+      "selector": "blockquote",
+      "styles": {
+        "color": "rgb(85, 85, 85)",
+        "fontFamily": "Inter, -apple-system, system-ui, sans-serif",
+        "fontFeatureSettings": "normal",
+        "fontSize": "13.6px",
+        "fontStyle": "italic",
+        "fontVariant": "normal",
+        "fontWeight": "400",
+        "letterSpacing": "normal",
+        "lineHeight": "19.04px",
+        "textAlign": "start",
+        "textDecoration": "none",
+        "textTransform": "none"
+      }
+    },
+    "Labels": {
+      "selector": "label",
+      "styles": {
+        "color": "rgb(17, 17, 17)",
+        "fontFamily": "Resolve, \"Arial Black\", sans-serif",
+        "fontFeatureSettings": "normal",
+        "fontSize": "12px",
+        "fontStyle": "normal",
+        "fontVariant": "normal",
+        "fontWeight": "700",
+        "letterSpacing": "0.96px",
+        "lineHeight": "normal",
+        "textAlign": "start",
+        "textDecoration": "none",
+        "textTransform": "uppercase"
+      }
+    },
+    "Liens": {
+      "selector": "a",
+      "styles": {
+        "color": "rgb(17, 17, 17)",
+        "fontFamily": "Resolve, \"Arial Black\", sans-serif",
+        "fontFeatureSettings": "normal",
+        "fontSize": "17.6px",
+        "fontStyle": "normal",
+        "fontVariant": "normal",
+        "fontWeight": "700",
+        "letterSpacing": "0.352px",
+        "lineHeight": "normal",
+        "textAlign": "start",
+        "textDecoration": "none",
+        "textTransform": "uppercase"
+      }
+    }
+  },
+  "css_rules": [],
+  "google_fonts": [
+    "https://fonts.googleapis.com/",
+    "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,700&display=swap"
+  ],
+  "adobe_fonts": [],
+  "custom_fonts": [],
+  "unique_fonts": [
+    "Times",
+    "Inter, -apple-system, system-ui, sans-serif",
+    "Resolve, \"Arial Black\", sans-serif",
+    "Arial"
+  ],
+  "media_queries": [
+    {
+      "media": "(max-width: 768px)",
+      "rules": [
+        {
+          "fontFamily": "",
+          "fontSize": "0.7rem",
+          "lineHeight": "",
+          "selector": ".hero-badge"
+        },
+        {
+          "fontFamily": "",
+          "fontSize": "0.75rem",
+          "lineHeight": "",
+          "selector": ".hero-name"
+        },
+        {
+          "fontFamily": "",
+          "fontSize": "clamp(2.5rem, 12vw, 4.5rem)",
+          "lineHeight": "",
+          "selector": ".title-main"
+        },
+        {
+          "fontFamily": "",
+          "fontSize": "0.6rem",
+          "lineHeight": "",
+          "selector": ".float-btn"
+        }
+      ]
+    },
+    {
+      "media": "(max-width: 480px)",
+      "rules": [
+        {
+          "fontFamily": "",
+          "fontSize": "0.9rem",
+          "lineHeight": "",
+          "selector": ".hero-name"
+        }
+      ]
+    }
+  ],
+  "css_variables": {}
+}

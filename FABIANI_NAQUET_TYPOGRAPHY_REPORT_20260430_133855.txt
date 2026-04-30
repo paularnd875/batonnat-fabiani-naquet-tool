@@ -1,0 +1,109 @@
+ANALYSE TYPOGRAPHIQUE - FABIANI-NAQUET.PARIS
+================================================================================
+
+Date: 2026-04-30 13:38:54
+URL: https://www.fabiani-naquet.paris/
+
+GOOGLE FONTS:
+  - https://fonts.googleapis.com/
+  - https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,700&display=swap
+
+POLICES UNIQUES UTILISÉES:
+  - Times
+  - Inter, -apple-system, system-ui, sans-serif
+  - Resolve, "Arial Black", sans-serif
+  - Arial
+
+HIÉRARCHIE TYPOGRAPHIQUE:
+----------------------------------------
+
+H1:
+  Sélecteur: h1
+  Police: Resolve, "Arial Black", sans-serif
+  Taille: 112px
+  Poids: 700
+  Hauteur de ligne: 100.8px
+  Espacement lettres: -1.12px
+
+H2:
+  Sélecteur: h2
+  Police: Resolve, "Arial Black", sans-serif
+  Taille: 56px
+  Poids: 700
+  Hauteur de ligne: normal
+  Espacement lettres: 1.12px
+
+H3:
+  Sélecteur: h3
+  Police: Resolve, "Arial Black", sans-serif
+  Taille: 20.8px
+  Poids: 700
+  Hauteur de ligne: normal
+  Espacement lettres: 0.624px
+
+H4:
+  Sélecteur: h4
+  Police: Resolve, "Arial Black", sans-serif
+  Taille: 15.2px
+  Poids: 700
+  Hauteur de ligne: normal
+  Espacement lettres: 0.304px
+
+Body:
+  Sélecteur: body
+  Police: Inter, -apple-system, system-ui, sans-serif
+  Taille: 16px
+  Poids: 400
+  Hauteur de ligne: normal
+
+Paragraphe:
+  Sélecteur: p
+  Police: Inter, -apple-system, system-ui, sans-serif
+  Taille: 19.2px
+  Poids: 400
+  Hauteur de ligne: normal
+
+Navigation:
+  Sélecteur: nav a
+  Police: Resolve, "Arial Black", sans-serif
+  Taille: 17.6px
+  Poids: 700
+  Hauteur de ligne: normal
+  Espacement lettres: 0.352px
+
+Boutons:
+  Sélecteur: button
+  Police: Arial
+  Taille: 13.3333px
+  Poids: 400
+  Hauteur de ligne: normal
+
+Footer:
+  Sélecteur: footer
+  Police: Inter, -apple-system, system-ui, sans-serif
+  Taille: 16px
+  Poids: 400
+  Hauteur de ligne: normal
+
+Citations:
+  Sélecteur: blockquote
+  Police: Inter, -apple-system, system-ui, sans-serif
+  Taille: 13.6px
+  Poids: 400
+  Hauteur de ligne: 19.04px
+
+Labels:
+  Sélecteur: label
+  Police: Resolve, "Arial Black", sans-serif
+  Taille: 12px
+  Poids: 700
+  Hauteur de ligne: normal
+  Espacement lettres: 0.96px
+
+Liens:
+  Sélecteur: a
+  Police: Resolve, "Arial Black", sans-serif
+  Taille: 17.6px
+  Poids: 700
+  Hauteur de ligne: normal
+  Espacement lettres: 0.352px
