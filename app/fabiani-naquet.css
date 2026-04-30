@@ -1,0 +1,216 @@
+/* Polices Fabiani-Naquet */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+/* Variables Fabiani-Naquet */
+:root {
+  --fn-red: #D93025;
+  --fn-blue: #3078C6;
+  --fn-yellow: #F2B705;
+  --fn-black: #111;
+  --fn-white: #FFFFFF;
+  --fn-gray-light: #F8F9FA;
+  --fn-gray-medium: #6C757D;
+  --fn-gray-dark: #343A40;
+  
+  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
+}
+
+/* Typographie */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-inter);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--fn-red);
+}
+
+h2 {
+  font-size: 2.25rem;
+  color: var(--fn-blue);
+}
+
+/* Boutons */
+.btn-fn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease-in-out;
+  border: 2px solid var(--fn-red);
+  background-color: var(--fn-red);
+  color: var(--fn-white);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-fn-primary:hover {
+  background-color: #B8251C;
+  border-color: #B8251C;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-fn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease-in-out;
+  border: 2px solid var(--fn-blue);
+  background-color: var(--fn-blue);
+  color: var(--fn-white);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-fn-secondary:hover {
+  background-color: #2A6BB0;
+  border-color: #2A6BB0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-fn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease-in-out;
+  border: 2px solid var(--fn-gray-medium);
+  background-color: transparent;
+  color: var(--fn-black);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-fn-outline:hover {
+  background-color: var(--fn-gray-light);
+  border-color: var(--fn-black);
+}
+
+/* Cards */
+.fn-card {
+  background: var(--fn-white);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+  border-left: 4px solid var(--fn-red);
+  position: relative;
+  overflow: hidden;
+}
+
+.fn-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  border-left-color: var(--fn-blue);
+}
+
+/* Navigation */
+.fn-nav-item {
+  padding: 0.5rem 1rem;
+  color: var(--fn-gray-dark);
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.fn-nav-item:hover {
+  color: var(--fn-red);
+  border-bottom-color: var(--fn-red);
+}
+
+.fn-nav-item.active {
+  color: var(--fn-blue);
+  border-bottom-color: var(--fn-blue);
+  font-weight: 600;
+}
+
+/* Badges */
+.fn-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.fn-badge-c1 {
+  background-color: var(--fn-blue);
+  color: var(--fn-white);
+}
+
+.fn-badge-c2 {
+  background-color: var(--fn-yellow);
+  color: var(--fn-black);
+}
+
+.fn-badge-c3 {
+  background-color: var(--fn-gray-medium);
+  color: var(--fn-white);
+}
+
+.fn-badge-bl {
+  background-color: var(--fn-red);
+  color: var(--fn-white);
+}
+
+/* Inputs */
+.fn-input {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--fn-gray-light);
+  border-radius: 0.5rem;
+  font-family: var(--font-inter);
+  font-size: 0.875rem;
+  background-color: var(--fn-white);
+  transition: border-color 0.2s ease;
+}
+
+.fn-input:focus {
+  outline: none;
+  border-color: var(--fn-blue);
+  box-shadow: 0 0 0 3px rgba(48, 120, 198, 0.1);
+}
+
+/* Header */
+.fn-header {
+  background: linear-gradient(135deg, var(--fn-white) 0%, var(--fn-gray-light) 100%);
+  border-bottom: 1px solid var(--fn-gray-light);
+  position: relative;
+}
+
+.fn-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--fn-red) 33%, var(--fn-blue) 33% 66%, var(--fn-yellow) 66%);
+}
+
+/* Texte décoratif */
+.decorative-text {
+  font-family: var(--font-cormorant);
+  font-style: italic;
+  color: var(--fn-blue);
+}

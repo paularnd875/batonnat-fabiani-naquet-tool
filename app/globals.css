@@ -1,3 +1,7 @@
+/* Imports des polices Fabiani-Naquet */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -81,6 +85,21 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Variables Fabiani-Naquet */
+  --fn-red: #D93025;
+  --fn-blue: #3078C6;
+  --fn-yellow: #F2B705;
+  --fn-black: #111;
+  --fn-white: #FFFFFF;
+  --fn-gray-light: #F8F9FA;
+  --fn-gray-medium: #6C757D;
+  --fn-gray-dark: #343A40;
+  
+  /* Polices Fabiani-Naquet */
+  --font-resolve: 'Resolve', 'Inter', var(--font-sans);
+  --font-inter: 'Inter', var(--font-sans);
+  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
 }
 
 .dark {
@@ -117,43 +136,12 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* Imports des polices Fabiani-Naquet */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
-
-/* Police Resolve - fallback vers Inter */
 @font-face {
   font-family: 'Resolve';
   src: local('Inter'), local('Inter-Regular');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
-}
-
-/* Variables Fabiani-Naquet ajoutées aux variables existantes */
-:root {
-  /* Couleurs Fabiani-Naquet */
-  --fn-red: #D93025;
-  --fn-blue: #3078C6;
-  --fn-yellow: #F2B705;
-  --fn-black: #111;
-  --fn-white: #FFFFFF;
-  --fn-gray-light: #F8F9FA;
-  --fn-gray-medium: #6C757D;
-  --fn-gray-dark: #343A40;
-  
-  /* Polices Fabiani-Naquet */
-  --font-resolve: 'Resolve', 'Inter', var(--font-sans);
-  --font-inter: 'Inter', var(--font-sans);
-  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
-  
-  /* Override primary colors pour Fabiani-Naquet */
-  --primary: var(--fn-red);
-  --primary-foreground: var(--fn-white);
-  --secondary: var(--fn-blue);
-  --secondary-foreground: var(--fn-white);
-  --accent: var(--fn-yellow);
-  --accent-foreground: var(--fn-black);
 }
 
 @layer base {
@@ -169,7 +157,6 @@
     font-family: var(--font-inter);
   }
   
-  /* Typographie hiérarchique Fabiani-Naquet */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-resolve);
     font-weight: 600;
@@ -197,13 +184,8 @@
 }
 
 @layer components {
-  /* Boutons style Fabiani-Naquet */
-  .btn-fabiani {
-    @apply inline-flex items-center justify-center px-6 py-2 rounded-md font-medium text-sm transition-all duration-200 border-2 border-transparent cursor-pointer;
-  }
-  
   .btn-fn-primary {
-    @apply btn-fabiani text-white border-2;
+    @apply inline-flex items-center justify-center px-6 py-2 rounded-md font-medium text-sm transition-all duration-200 border-2 cursor-pointer text-white;
     background-color: var(--fn-red);
     border-color: var(--fn-red);
   }
@@ -215,7 +197,7 @@
   }
   
   .btn-fn-secondary {
-    @apply btn-fabiani text-white border-2;
+    @apply inline-flex items-center justify-center px-6 py-2 rounded-md font-medium text-sm transition-all duration-200 border-2 cursor-pointer text-white;
     background-color: var(--fn-blue);
     border-color: var(--fn-blue);
   }
@@ -227,7 +209,7 @@
   }
   
   .btn-fn-outline {
-    @apply btn-fabiani bg-transparent border-2;
+    @apply inline-flex items-center justify-center px-6 py-2 rounded-md font-medium text-sm transition-all duration-200 border-2 cursor-pointer bg-transparent;
     color: var(--fn-black);
     border-color: var(--fn-gray-medium);
   }
@@ -237,7 +219,6 @@
     border-color: var(--fn-black);
   }
   
-  /* Cards style Fabiani-Naquet */
   .fn-card {
     @apply bg-white rounded-lg shadow-md transition-all duration-300 relative overflow-hidden;
     border-left: 4px solid var(--fn-red);
@@ -248,18 +229,6 @@
     border-left-color: var(--fn-blue);
   }
   
-  .fn-card::before {
-    content: '';
-    @apply absolute top-0 right-0 w-15 h-15 opacity-10 transition-opacity duration-300;
-    background: linear-gradient(45deg, rgba(242, 183, 5, 0.1), var(--fn-yellow));
-    border-radius: 0 0.75rem 0 100%;
-  }
-  
-  .fn-card:hover::before {
-    @apply opacity-20;
-  }
-  
-  /* Navigation style Fabiani-Naquet */
   .fn-nav-item {
     @apply px-4 py-2 text-gray-700 no-underline font-medium border-b-2 border-transparent transition-all duration-200;
   }
@@ -275,7 +244,6 @@
     @apply font-semibold;
   }
   
-  /* Badges style Fabiani-Naquet */
   .fn-badge {
     @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide;
   }
@@ -300,7 +268,6 @@
     color: var(--fn-white);
   }
   
-  /* Inputs style Fabiani-Naquet */
   .fn-input {
     @apply w-full px-4 py-2 border-2 rounded-md text-sm bg-white transition-all duration-200;
     border-color: var(--fn-gray-light);
@@ -312,7 +279,6 @@
     box-shadow: 0 0 0 3px rgba(48, 120, 198, 0.1);
   }
   
-  /* Header principal */
   .fn-header {
     @apply bg-gradient-to-br from-white to-gray-50 border-b relative;
   }
@@ -323,7 +289,6 @@
     background: linear-gradient(90deg, var(--fn-red) 33%, var(--fn-blue) 33% 66%, var(--fn-yellow) 66%);
   }
   
-  /* Texte décoratif */
   .decorative-text {
     font-family: var(--font-cormorant);
     @apply italic;
