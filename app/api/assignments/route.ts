@@ -48,17 +48,21 @@ export async function GET(request: Request) {
       id: assignment.id,
       lawyer_prenomnom: assignment.lawyer_prenomnom,
       assigned_at: assignment.assigned_at,
-      assigned_by: assignment.team_members ? 
-        `${assignment.team_members.prenom} ${assignment.team_members.nom}` : 'Système',
+      assigned_by: assignment.team_members && 
+                   typeof assignment.team_members === 'object' && 
+                   !Array.isArray(assignment.team_members) &&
+                   'prenom' in assignment.team_members && 
+                   'nom' in assignment.team_members ? 
+        `${(assignment.team_members as any).prenom} ${(assignment.team_members as any).nom}` : 'Système',
       status: 'assigned', // Statut par défaut
       notes: null,
       // Informations de l'avocat depuis la jointure
-      lawyer_nom_complet: assignment.lawyers?.nom_complet,
-      lawyer_cabinet: assignment.lawyers?.cabinet,
-      lawyer_classement: assignment.lawyers?.classement,
-      lawyer_email: assignment.lawyers?.email,
-      lawyer_telephone: assignment.lawyers?.telephone,
-      lawyer_civilite: assignment.lawyers?.civilite,
+      lawyer_nom_complet: (assignment.lawyers as any)?.nom_complet,
+      lawyer_cabinet: (assignment.lawyers as any)?.cabinet,
+      lawyer_classement: (assignment.lawyers as any)?.classement,
+      lawyer_email: (assignment.lawyers as any)?.email,
+      lawyer_telephone: (assignment.lawyers as any)?.telephone,
+      lawyer_civilite: (assignment.lawyers as any)?.civilite,
     }));
 
     console.log(`✅ ${formattedAssignments.length} assignations récupérées`);

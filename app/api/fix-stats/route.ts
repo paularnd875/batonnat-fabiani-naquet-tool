@@ -13,7 +13,7 @@ export async function POST() {
     // 2. Récupérer TOUS les avocats par pagination pour éviter les limites
     console.log('📊 Lecture TOUS les avocats par pagination...');
     
-    let allLawyers = [];
+    let allLawyers: any[] = [];
     let page = 0;
     const pageSize = 1000;
     let hasMore = true;
@@ -102,7 +102,7 @@ export async function POST() {
 
     // 4. Récupérer TOUTES les assignations par pagination
     console.log('📋 Calcul assignations...');
-    let allAssignments = [];
+    let allAssignments: any[] = [];
     let assignPage = 0;
     let hasMoreAssignments = true;
 

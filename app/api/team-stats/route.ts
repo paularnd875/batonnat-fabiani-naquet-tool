@@ -55,9 +55,9 @@ export async function GET() {
         // Formater les assignations
         const formattedAssignments = (assignments || []).map(assignment => ({
           lawyer_prenomnom: assignment.lawyer_prenomnom,
-          lawyer_nom_complet: assignment.lawyers?.nom_complet,
-          lawyer_cabinet: assignment.lawyers?.cabinet,
-          lawyer_classement: assignment.lawyers?.classement,
+          lawyer_nom_complet: (assignment.lawyers as any)?.nom_complet,
+          lawyer_cabinet: (assignment.lawyers as any)?.cabinet,
+          lawyer_classement: (assignment.lawyers as any)?.classement,
           assigned_at: assignment.assigned_at
         }));
 

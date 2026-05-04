@@ -90,7 +90,7 @@ class GoogleSheetsService {
         photo_url: row[72] || '', // Colonne BU (index 72)
         raw_data: row,
       };
-    }).filter(lawyer => lawyer.prenomnom); // Filtrer les lignes vides
+    }).filter((lawyer: any) => lawyer.prenomnom); // Filtrer les lignes vides
 
     // Appliquer la logique de distribution des photos
     return this.distributePhotos(lawyersData);
@@ -182,7 +182,7 @@ class GoogleSheetsService {
         prenom: row[0] || '',
         nom: row[1] || '',
         email: row[2] || '',
-      })).filter(member => member.prenom && member.nom && member.email);
+      })).filter((member: any) => member.prenom && member.nom && member.email);
     } catch (error) {
       // L'onglet n'existe pas, on le crée
       await this.createTeamSheet();
