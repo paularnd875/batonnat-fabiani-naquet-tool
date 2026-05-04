@@ -73,15 +73,15 @@ export async function GET() {
         only_in_local: onlyInLocal.length,
         partial_matches: partialMatches.length
       },
-      exact_matches: exactMatches.map(f => ({
+      exact_matches: exactMatches.map((f: any) => ({
         name: f.cabinet,
         participation_rate: f.taux_participation_moyen
       })),
-      only_in_sheets: onlyInSheets.map(f => ({
+      only_in_sheets: onlyInSheets.map((f: any) => ({
         name: f.cabinet,
         participation_rate: f.taux_participation_moyen
       })),
-      only_in_local: onlyInLocal.map(f => ({
+      only_in_local: onlyInLocal.map((f: any) => ({
         name: f.name,
         lawyer_count: f.lawyer_count
       })),
