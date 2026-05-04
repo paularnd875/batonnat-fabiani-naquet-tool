@@ -20,8 +20,8 @@ export async function GET() {
     console.log(`🏢 ${localFirms?.length || 0} cabinets trouvés en base locale`);
     
     // 3. Analyser les correspondances
-    const sheetsNamesSet = new Set(sheetsData.map(f => f.cabinet.toLowerCase().trim()));
-    const localNamesSet = new Set((localFirms || []).map(f => f.name.toLowerCase().trim()));
+    const sheetsNamesSet = new Set(sheetsData.map((f: any) => f.cabinet.toLowerCase().trim()));
+    const localNamesSet = new Set((localFirms || []).map((f: any) => f.name.toLowerCase().trim()));
     
     // Correspondances exactes
     const exactMatches = sheetsData.filter(sheetFirm => {
