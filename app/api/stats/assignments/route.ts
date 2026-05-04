@@ -36,7 +36,7 @@ export async function GET() {
     // Grouper les assignations par membre d'équipe
     const teamCoverage: { [key: string]: number } = {};
     
-    assignments?.forEach((assignment) => {
+    assignments?.forEach((assignment: any) => {
       const memberId = assignment.team_member_id;
       if (!teamCoverage[memberId]) {
         teamCoverage[memberId] = 0;

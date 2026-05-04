@@ -26,7 +26,7 @@ export async function GET() {
 
     // 2. Pour chaque membre, récupérer ses assignations
     const teamStats = await Promise.all(
-      teamMembers.map(async (member) => {
+      teamMembers.map(async (member: any) => {
         // Récupérer les assignations de ce membre avec les infos des avocats
         const { data: assignments, error: assignmentError } = await supabase
           .from('assignments')

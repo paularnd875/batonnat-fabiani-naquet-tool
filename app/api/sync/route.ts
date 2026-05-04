@@ -103,7 +103,7 @@ export async function POST() {
       // Calculer les stats par cabinet
       const firmsMap = new Map();
       
-      allLawyers.forEach(lawyer => {
+      allLawyers.forEach((lawyer: any) => {
         const cabinet = lawyer.cabinet || 'Individuel';
         if (!firmsMap.has(cabinet)) {
           firmsMap.set(cabinet, {
@@ -139,11 +139,11 @@ export async function POST() {
         
       // Pour chaque avocat assigné, trouver son cabinet et incrémenter le compteur
       if (assignedLawyers) {
-        const uniqueAssigned = new Set(assignedLawyers.map(a => a.lawyer_prenomnom));
+        const uniqueAssigned = new Set(assignedLawyers.map((a: any) => a.lawyer_prenomnom));
         
         uniqueAssigned.forEach(lawyerName => {
           // Trouver l'avocat dans notre liste pour obtenir son cabinet
-          const lawyer = allLawyers.find(l => l.prenomnom === lawyerName);
+          const lawyer = allLawyers.find((l: any) => l.prenomnom === lawyerName);
           if (lawyer) {
             const cabinet = lawyer.cabinet || 'Individuel';
             const firm = firmsMap.get(cabinet);
