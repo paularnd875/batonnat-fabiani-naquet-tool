@@ -1,36 +1,52 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/db';
+import { googleSheets } from '@/lib/google-sheets';
 
 export async function GET() {
   try {
-    // Récupérer quelques avocats pour voir leur structure
-    const { data: lawyers } = await supabase
-      .from('lawyers')
-      .select('prenomnom, nom_complet, cabinet, civilite, telephone, email')
-      .limit(10);
-
-    // Vérifier les cabinets non-vides
-    const { data: lawyersWithCabinet } = await supabase
-      .from('lawyers')
-      .select('prenomnom, nom_complet, cabinet')
-      .not('cabinet', 'eq', '')
-      .not('cabinet', 'is', null)
-      .limit(10);
-
+    // Lire tous les avocats avec la fonction readLawyers
+    const lawyers = await googleSheets.readLawyers();
+    
+    // Analyser les classements
+    const classements = {};
+    const origines = new Set();
+    const soutienPublicCount = lawyers.filter(l => l.soutien_public).length;
+    
+    lawyers.forEach(lawyer => {
+      const classement = lawyer.classement || 'Non classé';
+      classements[classement] = (classements[classement] || 0) + 1;
+      
+      if (lawyer.origine && lawyer.origine.trim()) {
+        origines.add(lawyer.origine.trim());
+      }
+    });
+    
+    // Échantillon de 5 avocats avec classements et origines
+    const sample = lawyers
+      .filter(l => l.classement || l.origine || l.soutien_public)
+      .slice(0, 10)
+      .map(l => ({
+        nom: l.nom_complet,
+        classement: l.classement,
+        origine: l.origine,
+        soutien_public: l.soutien_public,
+        cabinet: l.cabinet
+      }));
+    
     return NextResponse.json({
       success: true,
-      debug: {
-        all_lawyers_sample: lawyers,
-        lawyers_with_cabinet: lawyersWithCabinet,
-      }
+      total_lawyers: lawyers.length,
+      soutien_public_count: soutienPublicCount,
+      classements,
+      origines_uniques: Array.from(origines),
+      sample_with_data: sample
     });
 
   } catch (error) {
-    console.error('Erreur debug lawyers:', error);
+    console.error('❌ Erreur debug lawyers:', error);
     
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Erreur inconnue',
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
     }, { status: 500 });
   }
 }
