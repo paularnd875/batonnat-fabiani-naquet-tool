@@ -53,7 +53,7 @@ export async function GET() {
         }
 
         // Formater les assignations
-        const formattedAssignments = (assignments || []).map(assignment => ({
+        const formattedAssignments = (assignments || []).map((assignment: any) => ({
           lawyer_prenomnom: assignment.lawyer_prenomnom,
           lawyer_nom_complet: (assignment.lawyers as any)?.nom_complet,
           lawyer_cabinet: (assignment.lawyers as any)?.cabinet,
