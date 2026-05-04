@@ -30,10 +30,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       );
     }
 
-    // Trier par nom et calculer les totaux
+    // Calculer les totaux (le tri sera fait côté frontend)
     const totalLawyers = filteredLawyers.length;
-    filteredLawyers = filteredLawyers
-      .sort((a, b) => a.nom_complet.localeCompare(b.nom_complet));
     
     // Appliquer la pagination
     const paginatedLawyers = filteredLawyers.slice(offset, offset + limit);

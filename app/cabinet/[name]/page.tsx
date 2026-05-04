@@ -22,6 +22,8 @@ interface Lawyer {
   email: string;
   annee_serment: number;
   classement: string;
+  origine: string;
+  soutien_public: boolean;
   soutiens_precedents: string[];
   ami_linkedin_mhf: boolean;
   ami_linkedin_fn: boolean;
@@ -141,11 +143,11 @@ export default function CabinetPage() {
     }
   };
 
-  const getClassementBadge = (classement: string) => {
+  const getClassementBadge = (classement: string, origine: string) => {
     const variants = {
-      'C1': 'bg-green-600 text-white',
-      'C2': 'bg-green-400 text-white',
-      'C3': 'bg-yellow-500 text-white',
+      'C1': 'bg-blue-600 text-white',
+      'C2': 'bg-yellow-500 text-white',
+      'C3': 'bg-orange-500 text-white',
       'Blacklist': 'bg-red-600 text-white',
     };
 
@@ -153,11 +155,49 @@ export default function CabinetPage() {
       return <Badge variant="secondary">Non classé</Badge>;
     }
 
+    const displayText = origine ? `${classement} (${origine})` : classement;
+
     return (
       <Badge className={variants[classement as keyof typeof variants]}>
-        {classement}
+        {displayText}
       </Badge>
     );
+  };
+
+  const getSoutienPublicBadge = () => {
+    return (
+      <Badge className="bg-green-600 text-white">
+        Soutien Public
+      </Badge>
+    );
+  };
+
+  // Fonction pour trier les avocats selon l'ordre demandé
+  const sortLawyers = (lawyers: Lawyer[]) => {
+    return [...lawyers].sort((a, b) => {
+      // 1er : Soutiens publics
+      if (a.soutien_public && !b.soutien_public) return -1;
+      if (!a.soutien_public && b.soutien_public) return 1;
+      
+      // 2ème : C1
+      if (a.classement === 'C1' && b.classement !== 'C1' && !b.soutien_public) return -1;
+      if (a.classement !== 'C1' && b.classement === 'C1' && !a.soutien_public) return 1;
+      
+      // 3ème : C2
+      if (a.classement === 'C2' && b.classement !== 'C2' && b.classement !== 'C1' && !b.soutien_public) return -1;
+      if (a.classement !== 'C2' && b.classement === 'C2' && a.classement !== 'C1' && !a.soutien_public) return 1;
+      
+      // 4ème : C3
+      if (a.classement === 'C3' && !['C1', 'C2'].includes(b.classement) && !b.soutien_public) return -1;
+      if (a.classement !== 'C3' && b.classement === 'C3' && !['C1', 'C2'].includes(a.classement) && !a.soutien_public) return 1;
+      
+      // 5ème : Blacklist
+      if (a.classement === 'Blacklist' && !['C1', 'C2', 'C3'].includes(b.classement) && !b.soutien_public) return -1;
+      if (a.classement !== 'Blacklist' && b.classement === 'Blacklist' && !['C1', 'C2', 'C3'].includes(a.classement) && !a.soutien_public) return 1;
+      
+      // 6ème : Non classés (ordre alphabétique)
+      return a.nom_complet.localeCompare(b.nom_complet);
+    });
   };
 
   if (loading) {
@@ -206,7 +246,7 @@ export default function CabinetPage() {
       </div>
 
       <div className="grid gap-4">
-        {lawyers.map((lawyer) => (
+        {sortLawyers(lawyers).map((lawyer) => (
           <Card key={lawyer.prenomnom} className="p-4">
             <div className="flex gap-4 items-start">
               <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 border-2 border-gray-300">
@@ -249,7 +289,8 @@ export default function CabinetPage() {
                   </div>
 
                   <div className="flex gap-2 items-center flex-wrap">
-                    {getClassementBadge(lawyer.classement)}
+                    {lawyer.soutien_public && getSoutienPublicBadge()}
+                    {getClassementBadge(lawyer.classement, lawyer.origine)}
                     
                     {lawyer.soutiens_precedents && lawyer.soutiens_precedents.length > 0 && (
                       <Badge variant="destructive">
