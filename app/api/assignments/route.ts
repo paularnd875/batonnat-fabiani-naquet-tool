@@ -44,26 +44,38 @@ export async function GET(request: Request) {
     }
 
     // Reformater les données pour la réponse
-    const formattedAssignments = (assignments || []).map(assignment => ({
-      id: assignment.id,
-      lawyer_prenomnom: assignment.lawyer_prenomnom,
-      assigned_at: assignment.assigned_at,
-      assigned_by: assignment.team_members && 
-                   typeof assignment.team_members === 'object' && 
-                   !Array.isArray(assignment.team_members) &&
-                   'prenom' in assignment.team_members && 
-                   'nom' in assignment.team_members ? 
-        `${(assignment.team_members as any).prenom} ${(assignment.team_members as any).nom}` : 'Système',
-      status: 'assigned', // Statut par défaut
-      notes: null,
-      // Informations de l'avocat depuis la jointure
-      lawyer_nom_complet: (assignment.lawyers as any)?.nom_complet,
-      lawyer_cabinet: (assignment.lawyers as any)?.cabinet,
-      lawyer_classement: (assignment.lawyers as any)?.classement,
-      lawyer_email: (assignment.lawyers as any)?.email,
-      lawyer_telephone: (assignment.lawyers as any)?.telephone,
-      lawyer_civilite: (assignment.lawyers as any)?.civilite,
-    }));
+    const formattedAssignments = (assignments || []).map((assignment: any) => {
+      // Gestion sécurisée de assigned_by
+      let assignedBy = 'Système';
+      try {
+        if (assignment.team_members && 
+            typeof assignment.team_members === 'object' && 
+            !Array.isArray(assignment.team_members)) {
+          const member = assignment.team_members;
+          if (member.prenom && member.nom) {
+            assignedBy = `${member.prenom} ${member.nom}`;
+          }
+        }
+      } catch (error) {
+        console.warn('Erreur parsing team_members:', error);
+      }
+
+      return {
+        id: assignment.id,
+        lawyer_prenomnom: assignment.lawyer_prenomnom,
+        assigned_at: assignment.assigned_at,
+        assigned_by: assignedBy,
+        status: 'assigned', // Statut par défaut
+        notes: null,
+        // Informations de l'avocat depuis la jointure
+        lawyer_nom_complet: assignment.lawyers?.nom_complet || null,
+        lawyer_cabinet: assignment.lawyers?.cabinet || null,
+        lawyer_classement: assignment.lawyers?.classement || null,
+        lawyer_email: assignment.lawyers?.email || null,
+        lawyer_telephone: assignment.lawyers?.telephone || null,
+        lawyer_civilite: assignment.lawyers?.civilite || null,
+      };
+    });
 
     console.log(`✅ ${formattedAssignments.length} assignations récupérées`);
 
