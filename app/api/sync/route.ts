@@ -1,10 +1,26 @@
 import { NextResponse } from 'next/server';
 import { googleSheets } from '@/lib/google-sheets';
-import { supabase } from '@/lib/db';
+import { createClient } from '@supabase/supabase-js';
+
+// Fonction pour obtenir le client Supabase de manière défensive
+function getSupabaseClient() {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Supabase credentials not configured');
+  }
+  
+  return createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+}
 
 export async function POST() {
   try {
     console.log('🔄 Début de synchronisation Google Sheets...');
+    
+    // Obtenir le client Supabase
+    const supabase = getSupabaseClient();
+    console.log('✅ Client Supabase initialisé');
     
     // 1. Lecture des avocats depuis Google Sheets
     console.log('📋 Lecture onglet avocats...');
