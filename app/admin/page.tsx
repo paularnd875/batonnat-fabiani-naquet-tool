@@ -275,7 +275,7 @@ export default function AdminPage() {
 
       {/* Statistiques */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="text-2xl font-bold text-blue-600">{stats.total_assignments}</div>
@@ -290,8 +290,38 @@ export default function AdminPage() {
           </Card>
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-orange-600">{stats.unassigned_lawyers}</div>
-              <p className="text-sm text-gray-600">Avocats non assignés</p>
+              <div className="text-2xl font-bold text-blue-600">{stats.c1_count || 0}</div>
+              <p className="text-sm text-gray-600">C1</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-2xl font-bold text-yellow-600">{stats.c2_count || 0}</div>
+              <p className="text-sm text-gray-600">C2</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-2xl font-bold text-orange-600">{stats.c3_count || 0}</div>
+              <p className="text-sm text-gray-600">C3</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-2xl font-bold text-green-600">{stats.soutien_public_count || 0}</div>
+              <p className="text-sm text-gray-600">Soutiens publics</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-2xl font-bold text-red-600">{stats.blacklist_count || 0}</div>
+              <p className="text-sm text-gray-600">Blacklist</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-2xl font-bold text-gray-600">{stats.unassigned_lawyers}</div>
+              <p className="text-sm text-gray-600">Vraiment non assignés</p>
             </CardContent>
           </Card>
           <Card>
