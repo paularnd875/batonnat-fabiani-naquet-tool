@@ -10,6 +10,8 @@ export interface SheetLawyer {
   annee_serment: number;
   cabinet: string;
   classement: string;
+  origine: string;
+  soutien_public: boolean;
   soutiens_precedents: string[];
   ami_linkedin_mhf: boolean;
   ami_linkedin_fn: boolean;
@@ -97,6 +99,8 @@ class GoogleSheetsService {
         annee_serment: parseInt(row[27]) || 0, // Année de serment
         cabinet: row[34] || '', // Structure
         classement: this.determineClassement(row), // C1/C2/C3/Blacklist depuis colonnes 44-49
+        origine: row[47] || '', // Colonne AW (index 47) - Origine/Prénom
+        soutien_public: row[50] === '1', // Colonne AY (index 50) - Soutien public
         soutiens_precedents: soutiens,
         ami_linkedin_mhf: row[60] === '1', // LINKEDIN MHF
         ami_linkedin_fn: row[61] === '1', // LINKEDIN FN

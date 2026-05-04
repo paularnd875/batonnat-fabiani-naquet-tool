@@ -43,6 +43,8 @@ export async function POST() {
           annee_serment: lawyer.annee_serment,
           cabinet: lawyer.cabinet,
           classement: lawyer.classement,
+          origine: lawyer.origine,
+          soutien_public: lawyer.soutien_public,
           soutiens_precedents: lawyer.soutiens_precedents,
           ami_linkedin_mhf: lawyer.ami_linkedin_mhf,
           ami_linkedin_fn: lawyer.ami_linkedin_fn,
@@ -54,6 +56,15 @@ export async function POST() {
     
     const lawyersForDB = Array.from(uniqueLawyers.values());
     console.log(`🔍 ${lawyers.length} lignes lues → ${lawyersForDB.length} avocats uniques`);
+
+    // Extraire les origines uniques pour créer les membres d'équipe
+    const origines = new Set<string>();
+    lawyersForDB.forEach(lawyer => {
+      if (lawyer.origine && lawyer.origine.trim()) {
+        origines.add(lawyer.origine.trim());
+      }
+    });
+    console.log(`🔍 Origines trouvées:`, Array.from(origines));
 
     // Upsert en lots de 100 pour éviter les timeouts
     const batchSize = 100;
@@ -78,7 +89,11 @@ export async function POST() {
       console.log(`✅ ${totalInserted}/${lawyersForDB.length} avocats synchronisés`);
     }
 
-    // 3. Lire les taux de participation réels depuis Google Sheets
+    // 3. Créer automatiquement les membres d'équipe basés sur les origines
+    console.log('👥 Création des membres d\'équipe...');
+    const teamMembersCount = await createTeamMembersFromOrigines(supabase, origines);
+    
+    // 4. Lire les taux de participation réels depuis Google Sheets
     console.log('📈 Lecture taux de participation depuis Google Sheets...');
     let participationRatesMap = new Map<string, number>();
     try {
@@ -239,4 +254,62 @@ export async function POST() {
       stack: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.stack : undefined : undefined,
     }, { status: 500 });
   }
+}
+
+// Fonction pour créer automatiquement les membres d'équipe basés sur les origines
+async function createTeamMembersFromOrigines(supabase: any, origines: Set<string>) {
+  const teamMembersToCreate = [];
+  
+  // Mapping des noms vers emails prédéfinis
+  const nameToEmail = {
+    'Marie-Hélène': 'mh.fabiani@batonnat.fr',
+    'Frédéric': 'fn@batonnat.fr'
+  };
+  
+  for (const origine of origines) {
+    if (!origine) continue;
+    
+    // Vérifier si ce membre d'équipe existe déjà
+    const { data: existingMember } = await supabase
+      .from('team_members')
+      .select('id')
+      .eq('sheet_origin', origine)
+      .single();
+    
+    if (!existingMember) {
+      // Déterminer le prénom, nom et email
+      let prenom = origine;
+      let nom = '';
+      let email = nameToEmail[origine] || `${origine.toLowerCase().replace(/\s+/g, '.')}@temp.batonnat.fr`;
+      
+      if (origine === 'Marie-Hélène') {
+        prenom = 'Marie-Hélène';
+        nom = 'Fabiani';
+      } else if (origine === 'Frédéric') {
+        prenom = 'Frédéric';
+        nom = 'Naquet';
+      }
+      
+      teamMembersToCreate.push({
+        prenom,
+        nom,
+        email,
+        sheet_origin: origine
+      });
+    }
+  }
+  
+  if (teamMembersToCreate.length > 0) {
+    const { error } = await supabase
+      .from('team_members')
+      .insert(teamMembersToCreate);
+    
+    if (error) {
+      console.error('Erreur création membres équipe:', error);
+    } else {
+      console.log(`✅ ${teamMembersToCreate.length} membres d'équipe créés automatiquement`);
+    }
+  }
+  
+  return teamMembersToCreate.length;
 }
