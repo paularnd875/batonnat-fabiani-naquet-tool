@@ -35,7 +35,7 @@ export async function GET() {
     
     // Grands cabinets uniquement en base locale
     const onlyInLocal = (localFirms || [])
-      .filter(localFirm => {
+      .filter((localFirm: any) => {
         return !sheetsNamesSet.has(localFirm.name.toLowerCase().trim()) && 
                localFirm.lawyer_count > 10; // Seulement les cabinets significatifs
       })
@@ -45,7 +45,7 @@ export async function GET() {
     const partialMatches: any[] = [];
     onlyInSheets.forEach(sheetFirm => {
       const sheetName = sheetFirm.cabinet.toLowerCase();
-      (localFirms || []).forEach(localFirm => {
+      (localFirms || []).forEach((localFirm: any) => {
         const localName = localFirm.name.toLowerCase();
         
         // Vérifier si l'un contient l'autre ou s'ils partagent des mots significatifs
