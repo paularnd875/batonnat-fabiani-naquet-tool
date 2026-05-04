@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
 
 export default function TestPage() {
   const [loading, setLoading] = useState(false);
@@ -25,7 +26,10 @@ export default function TestPage() {
   };
 
   return (
-    <div className="container mx-auto p-8">
+    <div className="min-h-screen bg-gradient-to-br from-white to-gray-50">
+      <FabianiNaquetHeader />
+      
+      <div className="container mx-auto p-8">
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle>Test de connexion Google Sheets</CardTitle>
@@ -52,6 +56,7 @@ export default function TestPage() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

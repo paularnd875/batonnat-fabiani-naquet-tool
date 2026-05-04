@@ -13,6 +13,7 @@ export interface SheetLawyer {
   soutiens_precedents: string[];
   ami_linkedin_mhf: boolean;
   ami_linkedin_fn: boolean;
+  photo_url?: string;
   raw_data: any;
 }
 
@@ -55,7 +56,7 @@ class GoogleSheetsService {
   async readLawyers(): Promise<SheetLawyer[]> {
     const response = await this.sheets.spreadsheets.values.get({
       spreadsheetId: this.sheetId,
-      range: 'Base principale!A:BK', // De A à BK comme spécifié
+      range: 'Base principale!A:BU', // Étendu jusqu'à BU pour inclure les photos
     });
 
     const rows = response.data.values || [];
@@ -65,7 +66,7 @@ class GoogleSheetsService {
     const headers = rows[0];
     const soutienColumns = this.findSoutienColumns(headers);
 
-    return rows.slice(1).map((row: any[]) => {
+    const lawyersData = rows.slice(1).map((row: any[]) => {
       // Extraction des soutiens précédents
       const soutiens: string[] = [];
       soutienColumns.forEach(({ index, binome }) => {
@@ -86,9 +87,13 @@ class GoogleSheetsService {
         soutiens_precedents: soutiens,
         ami_linkedin_mhf: row[60] === '1', // LINKEDIN MHF
         ami_linkedin_fn: row[61] === '1', // LINKEDIN FN
+        photo_url: row[72] || '', // Colonne BU (index 72)
         raw_data: row,
       };
     }).filter(lawyer => lawyer.prenomnom); // Filtrer les lignes vides
+
+    // Appliquer la logique de distribution des photos
+    return this.distributePhotos(lawyersData);
   }
 
   /**
@@ -335,12 +340,44 @@ class GoogleSheetsService {
   }
 
   /**
+   * Distribue les photos selon la logique demandée :
+   * - Si l'avocat a une photo_url : on l'utilise
+   * - Si l'avocat n'a pas de photo_url : on prend une URL au hasard parmi celles disponibles
+   */
+  private distributePhotos(lawyers: SheetLawyer[]): SheetLawyer[] {
+    // Récupérer toutes les URLs de photos disponibles (non vides)
+    const availablePhotoUrls = lawyers
+      .map(lawyer => lawyer.photo_url)
+      .filter(url => url && url.trim() !== '');
+
+    // Si aucune URL disponible, retourner tel quel
+    if (availablePhotoUrls.length === 0) {
+      return lawyers;
+    }
+
+    // Distribuer les photos
+    return lawyers.map(lawyer => {
+      if (lawyer.photo_url && lawyer.photo_url.trim() !== '') {
+        // L'avocat a déjà sa propre photo
+        return lawyer;
+      } else {
+        // L'avocat n'a pas de photo : prendre une URL au hasard
+        const randomUrl = availablePhotoUrls[Math.floor(Math.random() * availablePhotoUrls.length)];
+        return {
+          ...lawyer,
+          photo_url: randomUrl
+        };
+      }
+    });
+  }
+
+  /**
    * Test de connexion - lit les 10 premières lignes de l'onglet principal
    */
   async testConnection(): Promise<any[]> {
     const response = await this.sheets.spreadsheets.values.get({
       spreadsheetId: this.sheetId,
-      range: 'Base principale!A1:BK10', // 10 premières lignes seulement
+      range: 'Base principale!A1:BU10', // Étendu jusqu'à BU pour inclure les photos
     });
 
     return response.data.values || [];

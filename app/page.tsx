@@ -119,6 +119,9 @@ export default function Home() {
               className="fn-input"
             />
           </div>
+          <Link href="/team/add" className="btn-fn-primary">
+            Ajouter un collaborateur
+          </Link>
           <Link href="/test" className="btn-fn-outline">
             Test API
           </Link>

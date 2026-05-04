@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -136,7 +137,10 @@ export default function RecapitulatifPage() {
   }
 
   return (
-    <div className="container mx-auto p-8">
+    <div className="min-h-screen bg-gradient-to-br from-white to-gray-50">
+      <FabianiNaquetHeader />
+      
+      <div className="container mx-auto p-8">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Récapitulatif des assignations</h1>
         <p className="text-xl text-gray-600">
@@ -278,6 +282,7 @@ export default function RecapitulatifPage() {
           </Button>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -8,6 +8,7 @@ const FabianiNaquetHeader: React.FC = () => {
 
   const navLinks = [
     { text: 'CABINETS', href: '/' },
+    { text: 'ÉQUIPE', href: '/team' },
     { text: 'HISTORIQUE', href: '/historique' },
     { text: 'RÉCAPITULATIF', href: '/recapitulatif' },
     { text: 'ADMIN', href: '/admin' },

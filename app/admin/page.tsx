@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Mail, User, Users, ArrowLeft, Send, Check, Plus, Trash2, UserPlus } from 'lucide-react';
 import Link from 'next/link';
+import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
 
 interface TeamMember {
   id: string;
@@ -215,7 +216,10 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="container mx-auto p-8">
+    <div className="min-h-screen bg-gradient-to-br from-white to-gray-50">
+      <FabianiNaquetHeader />
+      
+      <div className="container mx-auto p-8">
       {/* En-tête */}
       <div className="mb-8">
         <Button 
@@ -456,6 +460,7 @@ export default function AdminPage() {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }
