@@ -188,20 +188,20 @@ export default function AdminPage() {
       });
 
       const data = await response.json();
+      console.log('Réponse sync API:', data);
 
       if (data.success) {
         setSyncResults(prev => [
           ...prev,
           `✅ Synchronisation réussie !`,
-          `📊 ${data.lawyers_imported} avocats importés`,
-          `🏢 ${data.firms_created} cabinets créés`,
-          `👥 ${data.team_members_imported} membres d'équipe importés`
+          `📊 ${data.stats?.lawyers_synced || 'N/A'} avocats synchronisés`,
+          `🏢 ${data.stats?.firms_updated || 'N/A'} cabinets mis à jour`
         ]);
         
         // Recharger les données
         loadData();
       } else {
-        setSyncResults(prev => [...prev, `❌ Erreur synchronisation: ${data.error}`]);
+        setSyncResults(prev => [...prev, `❌ Erreur synchronisation: ${data.error || 'Erreur inconnue'}`]);
       }
     } catch (error) {
       setSyncResults(prev => [...prev, '❌ Erreur serveur lors de la synchronisation']);
