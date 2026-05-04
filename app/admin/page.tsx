@@ -20,7 +20,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Mail, User, Users, ArrowLeft, Send, Check, Plus, Trash2, UserPlus } from 'lucide-react';
+import { Mail, User, Users, ArrowLeft, Send, Check, Plus, Trash2, UserPlus, RefreshCw, Database } from 'lucide-react';
 import Link from 'next/link';
 import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
 
@@ -53,6 +53,8 @@ export default function AdminPage() {
   const [newMember, setNewMember] = useState({ prenom: '', nom: '', email: '' });
   const [addingMember, setAddingMember] = useState(false);
   const [deletingMember, setDeletingMember] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResults, setSyncResults] = useState<string[]>([]);
 
   useEffect(() => {
     loadData();
@@ -175,6 +177,40 @@ export default function AdminPage() {
     }
   };
 
+  const syncData = async () => {
+    setSyncing(true);
+    setSyncResults(['🔄 Début de la synchronisation...']);
+
+    try {
+      const response = await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSyncResults(prev => [
+          ...prev,
+          `✅ Synchronisation réussie !`,
+          `📊 ${data.lawyers_imported} avocats importés`,
+          `🏢 ${data.firms_created} cabinets créés`,
+          `👥 ${data.team_members_imported} membres d'équipe importés`
+        ]);
+        
+        // Recharger les données
+        loadData();
+      } else {
+        setSyncResults(prev => [...prev, `❌ Erreur synchronisation: ${data.error}`]);
+      }
+    } catch (error) {
+      setSyncResults(prev => [...prev, '❌ Erreur serveur lors de la synchronisation']);
+      console.error('Erreur synchronisation:', error);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const deleteTeamMember = async (memberId: string, memberName: string) => {
     if (!confirm(`Êtes-vous sûr de vouloir supprimer ${memberName} ?`)) {
       return;
@@ -266,6 +302,68 @@ export default function AdminPage() {
           </Card>
         </div>
       )}
+
+      {/* Synchronisation des données */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="w-5 h-5" />
+            Synchronisation des données
+          </CardTitle>
+          <CardDescription>
+            Synchronisez les données depuis Google Sheets vers la base de données
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <Button 
+              onClick={syncData}
+              disabled={syncing}
+              className="flex items-center gap-2"
+            >
+              {syncing ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  Synchronisation en cours...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4" />
+                  Synchroniser les données
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {/* Résultats de synchronisation */}
+          {syncResults.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {syncResults.map((result, index) => (
+                <div 
+                  key={index} 
+                  className={`p-2 rounded text-sm ${
+                    result.includes('✅') 
+                      ? 'bg-green-50 text-green-700' 
+                      : result.includes('❌')
+                      ? 'bg-red-50 text-red-700'
+                      : 'bg-blue-50 text-blue-700'
+                  }`}
+                >
+                  {result}
+                </div>
+              ))}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setSyncResults([])}
+                className="mt-2"
+              >
+                Effacer les résultats
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Actions rapides */}
       <Card className="mb-8">
