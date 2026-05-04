@@ -39,7 +39,20 @@ class GoogleSheetsService {
       throw new Error('Google Sheets credentials not configured');
     }
 
-    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+    // Supporter l'encodage base64 pour éviter les problèmes d'échappement JSON
+    let credentialsJson = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+    
+    // Si la variable commence par "ey" ou contient "base64:", c'est du base64
+    if (credentialsJson?.startsWith('ey') || credentialsJson?.includes('base64:')) {
+      try {
+        const base64Data = credentialsJson.replace('base64:', '');
+        credentialsJson = Buffer.from(base64Data, 'base64').toString('utf-8');
+      } catch (error) {
+        console.warn('Failed to decode base64, using as-is:', error);
+      }
+    }
+    
+    const credentials = JSON.parse(credentialsJson);
     
     const auth = new google.auth.GoogleAuth({
       credentials,
