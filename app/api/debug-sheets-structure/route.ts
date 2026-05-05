@@ -43,8 +43,8 @@ export async function GET() {
           rows: rows.slice(0, 10), // Premières 10 lignes seulement
           structure_analysis: {
             first_row_cells: rows[0]?.length || 0,
-            non_empty_rows: rows.filter(row => row && row.length > 0).length,
-            max_columns: Math.max(...rows.map(row => row?.length || 0))
+            non_empty_rows: rows.filter((row: any) => row && row.length > 0).length,
+            max_columns: Math.max(...rows.map((row: any) => row?.length || 0))
           }
         });
         
@@ -63,7 +63,7 @@ export async function GET() {
       const spreadsheet = await sheets.spreadsheets.get({
         spreadsheetId: sheetId,
       });
-      sheetsInfo = spreadsheet.data.sheets?.map(sheet => ({
+      sheetsInfo = spreadsheet.data.sheets?.map((sheet: any) => ({
         title: sheet.properties?.title,
         sheetId: sheet.properties?.sheetId,
         gridProperties: sheet.properties?.gridProperties

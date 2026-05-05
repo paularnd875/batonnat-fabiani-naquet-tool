@@ -67,7 +67,7 @@ export async function GET() {
     let participationRatesMap = new Map<string, number>();
     try {
       const firmsParticipationData = await googleSheets.readFirmsData();
-      firmsParticipationData.forEach(firmData => {
+      firmsParticipationData.forEach((firmData: any) => {
         participationRatesMap.set(firmData.cabinet, firmData.taux_participation_moyen);
       });
     } catch (error) {
@@ -75,7 +75,7 @@ export async function GET() {
     }
 
     // 6. Finaliser avec les taux de participation
-    const cabinetsArray = Array.from(cabinetStats.values()).map(firm => {
+    const cabinetsArray = Array.from(cabinetStats.values()).map((firm: any) => {
       let participationRate = participationRatesMap.get(firm.name);
       
       if (participationRate === undefined) {
@@ -94,12 +94,12 @@ export async function GET() {
     console.log(`✅ ${cabinetsArray.length} cabinets calculés avec statistiques LIVE`);
 
     // Afficher quelques exemples pour debugging
-    const examples = cabinetsArray.filter(c => 
+    const examples = cabinetsArray.filter((c: any) => 
       c.soutien_public_count > 0 || c.c1_count > 0 || c.c2_count > 0 || c.c3_count > 0
     ).slice(0, 5);
     
     console.log('📋 Exemples cabinets avec classifications LIVE:');
-    examples.forEach(cabinet => {
+    examples.forEach((cabinet: any) => {
       console.log(`   ${cabinet.name}: SP:${cabinet.soutien_public_count}, C1:${cabinet.c1_count}, C2:${cabinet.c2_count}, C3:${cabinet.c3_count}, BL:${cabinet.bl_count}`);
     });
 

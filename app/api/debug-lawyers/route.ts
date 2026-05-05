@@ -22,9 +22,9 @@ export async function GET() {
     
     // Échantillon de 5 avocats avec classements et origines
     const sample = lawyers
-      .filter(l => l.classement || l.origine || l.soutien_public)
+      .filter((l: any) => l.classement || l.origine || l.soutien_public)
       .slice(0, 10)
-      .map(l => ({
+      .map((l: any) => ({
         nom: l.nom_complet,
         classement: l.classement,
         origine: l.origine,

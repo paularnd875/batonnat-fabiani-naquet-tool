@@ -24,12 +24,12 @@ export async function GET() {
     const localNamesSet = new Set((localFirms || []).map((f: any) => f.name.toLowerCase().trim()));
     
     // Correspondances exactes
-    const exactMatches = sheetsData.filter(sheetFirm => {
+    const exactMatches = sheetsData.filter((sheetFirm: any) => {
       return localNamesSet.has(sheetFirm.cabinet.toLowerCase().trim());
     });
     
     // Cabinets uniquement dans Sheets
-    const onlyInSheets = sheetsData.filter(sheetFirm => {
+    const onlyInSheets = sheetsData.filter((sheetFirm: any) => {
       return !localNamesSet.has(sheetFirm.cabinet.toLowerCase().trim());
     });
     
@@ -43,7 +43,7 @@ export async function GET() {
     
     // Correspondances partielles possibles
     const partialMatches: any[] = [];
-    onlyInSheets.forEach(sheetFirm => {
+    onlyInSheets.forEach((sheetFirm: any) => {
       const sheetName = sheetFirm.cabinet.toLowerCase();
       (localFirms || []).forEach((localFirm: any) => {
         const localName = localFirm.name.toLowerCase();

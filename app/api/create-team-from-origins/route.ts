@@ -36,7 +36,7 @@ export async function POST() {
       .from('team_members')
       .select('prenom, nom, email');
     
-    console.log('👥 Membres existants:', existingMembers?.map(m => `${m.prenom} ${m.nom}`));
+    console.log('👥 Membres existants:', existingMembers?.map((m: any) => `${m.prenom} ${m.nom}`));
     
     // 3. Mapping des noms vers emails et infos complètes
     const nameToInfo: { [key: string]: { prenom: string; nom: string; email: string } } = {
@@ -59,7 +59,7 @@ export async function POST() {
       if (!origine) continue;
       
       // Vérifier si ce membre existe déjà (par prénom)
-      const existsAlready = existingMembers?.some(member => {
+      const existsAlready = existingMembers?.some((member: any) => {
         if (nameToInfo[origine]) {
           return member.prenom === nameToInfo[origine].prenom && 
                  member.nom === nameToInfo[origine].nom;
@@ -97,7 +97,7 @@ export async function POST() {
         throw error;
       } else {
         createdCount = teamMembersToCreate.length;
-        console.log(`✅ ${createdCount} membres d'équipe créés:`, data?.map(m => `${m.prenom} ${m.nom}`));
+        console.log(`✅ ${createdCount} membres d'équipe créés:`, data?.map((m: any) => `${m.prenom} ${m.nom}`));
       }
     }
     

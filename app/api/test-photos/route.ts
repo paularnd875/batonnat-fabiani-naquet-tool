@@ -55,10 +55,10 @@ export async function GET() {
 
     // Compter les stats
     const totalRows = results.length;
-    const rowsWithPhotos = results.filter(r => r.has_photo).length;
+    const rowsWithPhotos = results.filter((r: any) => r.has_photo).length;
     const photosUrls = results
-      .filter(r => r.has_photo)
-      .map(r => r.photo_url);
+      .filter((r: any) => r.has_photo)
+      .map((r: any) => r.photo_url);
 
     return NextResponse.json({
       success: true,

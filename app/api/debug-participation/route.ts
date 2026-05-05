@@ -12,18 +12,18 @@ export async function GET() {
     // Afficher les premiers exemples
     const examples = firmsData.slice(0, 10);
     console.log('📋 Exemples de taux de participation :');
-    examples.forEach(firm => {
+    examples.forEach((firm: any) => {
       console.log(`  🏢 ${firm.cabinet}: ${(firm.taux_participation_moyen * 100).toFixed(1)}%`);
     });
     
     // Statistiques
     const stats = {
       total_firms: firmsData.length,
-      firms_with_participation: firmsData.filter(f => f.taux_participation_moyen > 0).length,
+      firms_with_participation: firmsData.filter((f: any) => f.taux_participation_moyen > 0).length,
       average_participation: firmsData.length > 0 ? 
         (firmsData.reduce((sum, f) => sum + f.taux_participation_moyen, 0) / firmsData.length) : 0,
-      max_participation: Math.max(...firmsData.map(f => f.taux_participation_moyen)),
-      min_participation: Math.min(...firmsData.map(f => f.taux_participation_moyen))
+      max_participation: Math.max(...firmsData.map((f: any) => f.taux_participation_moyen)),
+      min_participation: Math.min(...firmsData.map((f: any) => f.taux_participation_moyen))
     };
     
     return NextResponse.json({
@@ -31,7 +31,7 @@ export async function GET() {
       message: 'Taux de participation lus avec succès',
       data: firmsData,
       stats,
-      examples: examples.map(f => ({
+      examples: examples.map((f: any) => ({
         cabinet: f.cabinet,
         taux_participation: f.taux_participation_moyen,
         taux_participation_percent: `${(f.taux_participation_moyen * 100).toFixed(1)}%`

@@ -42,7 +42,7 @@ export async function POST() {
     
     // Préparer les données pour Supabase et éliminer les doublons
     const uniqueLawyers = new Map();
-    lawyers.forEach(lawyer => {
+    lawyers.forEach((lawyer: any) => {
       if (lawyer.prenomnom && !uniqueLawyers.has(lawyer.prenomnom)) {
         uniqueLawyers.set(lawyer.prenomnom, {
           prenomnom: lawyer.prenomnom,
@@ -69,7 +69,7 @@ export async function POST() {
 
     // Extraire les origines uniques pour créer les membres d'équipe
     const origines = new Set<string>();
-    lawyersForDB.forEach(lawyer => {
+    lawyersForDB.forEach((lawyer: any) => {
       if (lawyer.origine && lawyer.origine.trim()) {
         origines.add(lawyer.origine.trim());
       }
@@ -133,7 +133,7 @@ export async function POST() {
       const firmsParticipationData = await googleSheets.readFirmsData();
       console.log(`📊 ${firmsParticipationData.length} cabinets avec taux trouvés dans Google Sheets`);
       
-      firmsParticipationData.forEach(firmData => {
+      firmsParticipationData.forEach((firmData: any) => {
         participationRatesMap.set(firmData.cabinet, firmData.taux_participation_moyen);
       });
     } catch (error) {
@@ -212,7 +212,7 @@ export async function POST() {
       if (assignedLawyers) {
         const uniqueAssigned = new Set(assignedLawyers.map((a: any) => a.lawyer_prenomnom));
         
-        uniqueAssigned.forEach(lawyerName => {
+        uniqueAssigned.forEach((lawyerName: any) => {
           // Trouver l'avocat dans notre liste pour obtenir son cabinet
           const lawyer = allLawyers.find((l: any) => l.prenomnom === lawyerName);
           if (lawyer) {
@@ -226,7 +226,7 @@ export async function POST() {
       }
 
       // Insérer les nouvelles stats avec taux de participation réels
-      firmsArray = Array.from(firmsMap.values()).map(firm => {
+      firmsArray = Array.from(firmsMap.values()).map((firm: any) => {
         // D'abord chercher le taux réel depuis Google Sheets
         let participationRate = participationRatesMap.get(firm.name);
         
@@ -259,7 +259,7 @@ export async function POST() {
       
       // Afficher quelques exemples pour debugging
       const exampleFirms = firmsArray.slice(0, 3);
-      exampleFirms.forEach(firm => {
+      exampleFirms.forEach((firm: any) => {
         console.log(`🏢 ${firm.name}: ${firm.lawyer_count} avocats (SP:${firm.soutien_public_count}, C1:${firm.c1_count}, C2:${firm.c2_count}, C3:${firm.c3_count}, BL:${firm.bl_count}, NC:${firm.unclassified_count}, Assignés:${firm.assigned_count})`);
       });
       
@@ -305,7 +305,7 @@ async function createTeamMembersFromOrigines(supabase: any, origines: Set<string
   const teamMembersToCreate = [];
   
   // Mapping des noms vers emails prédéfinis
-  const nameToEmail = {
+  const nameToEmail: { [key: string]: any } = {
     'Marie-Hélène': 'mh.fabiani@batonnat.fr',
     'Frédéric': 'fn@batonnat.fr'
   };

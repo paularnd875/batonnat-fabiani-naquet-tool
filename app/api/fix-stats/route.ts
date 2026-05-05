@@ -54,13 +54,13 @@ export async function POST() {
       const firmsParticipationData = await googleSheets.readFirmsData();
       console.log(`📊 ${firmsParticipationData.length} cabinets avec taux trouvés dans Google Sheets`);
       
-      firmsParticipationData.forEach(firmData => {
+      firmsParticipationData.forEach((firmData: any) => {
         participationRatesMap.set(firmData.cabinet, firmData.taux_participation_moyen);
       });
       
       // Afficher quelques exemples
       const exampleParticipation = firmsParticipationData.slice(0, 3);
-      exampleParticipation.forEach(firm => {
+      exampleParticipation.forEach((firm: any) => {
         console.log(`📈 ${firm.cabinet}: ${(firm.taux_participation_moyen * 100).toFixed(1)}%`);
       });
     } catch (error) {
@@ -71,7 +71,7 @@ export async function POST() {
     console.log(`💾 Calcul stats pour ${allLawyers.length} avocats...`);
     const firmsMap = new Map();
 
-    allLawyers.forEach(lawyer => {
+    allLawyers.forEach((lawyer: any) => {
       const cabinet = lawyer.cabinet || 'Individuel';
       
       if (!firmsMap.has(cabinet)) {
@@ -137,11 +137,11 @@ export async function POST() {
     }
 
     if (allAssignments.length > 0) {
-      const uniqueAssigned = new Set(allAssignments.map(a => a.lawyer_prenomnom));
+      const uniqueAssigned = new Set(allAssignments.map((a: any) => a.lawyer_prenomnom));
       console.log(`📊 ${uniqueAssigned.size} avocats uniques assignés`);
       
-      uniqueAssigned.forEach(lawyerName => {
-        const lawyer = allLawyers.find(l => l.prenomnom === lawyerName);
+      uniqueAssigned.forEach((lawyerName: any) => {
+        const lawyer = allLawyers.find((l: any) => l.prenomnom === lawyerName);
         if (lawyer) {
           const cabinet = lawyer.cabinet || 'Individuel';
           const firm = firmsMap.get(cabinet);
@@ -153,7 +153,7 @@ export async function POST() {
     }
 
     // 5. Calculer le taux de participation pour chaque cabinet
-    const firmsArray = Array.from(firmsMap.values()).map(firm => {
+    const firmsArray = Array.from(firmsMap.values()).map((firm: any) => {
       // D'abord chercher le taux réel depuis Google Sheets
       let participationRate = participationRatesMap.get(firm.name);
       
@@ -188,7 +188,7 @@ export async function POST() {
 
     // Afficher quelques exemples
     const examples = firmsArray.slice(0, 5);
-    examples.forEach(firm => {
+    examples.forEach((firm: any) => {
       console.log(`🏢 ${firm.name}: ${firm.lawyer_count} avocats (Assignés:${firm.assigned_count}, Taux:${(firm.participation_rate * 100).toFixed(1)}%, SP:${firm.soutien_public_count}, C1:${firm.c1_count}, C2:${firm.c2_count}, C3:${firm.c3_count})`)
     });
 

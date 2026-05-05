@@ -23,7 +23,7 @@ export async function GET() {
     // 3. Calculer les stats par cabinet
     const cabinetStats = new Map();
     
-    allLawyers.forEach(lawyer => {
+    allLawyers.forEach((lawyer: any) => {
       // Stats globales
       if (lawyer.soutien_public) totalStats.soutien_public_count++;
       
@@ -76,12 +76,12 @@ export async function GET() {
     console.log(`   Cabinets: ${cabinetsArray.length}`);
 
     // Quelques exemples de cabinets avec soutiens publics ou classements
-    const interessantCabinets = cabinetsArray.filter(c => 
+    const interessantCabinets = cabinetsArray.filter((c: any) => 
       c.soutien_public_count > 0 || c.c1_count > 0 || c.c2_count > 0 || c.c3_count > 0 || c.bl_count > 0
     ).slice(0, 5);
     
     console.log('📋 Exemples cabinets avec classifications:');
-    interessantCabinets.forEach(cabinet => {
+    interessantCabinets.forEach((cabinet: any) => {
       console.log(`   ${cabinet.name}: SP:${cabinet.soutien_public_count}, C1:${cabinet.c1_count}, C2:${cabinet.c2_count}, C3:${cabinet.c3_count}, BL:${cabinet.bl_count}`);
     });
 

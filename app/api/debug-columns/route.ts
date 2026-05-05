@@ -20,7 +20,7 @@ export async function GET() {
     
     for (let i = startIndex; i <= endIndex; i++) {
       const columnLetter = String.fromCharCode(65 + Math.floor(i / 26) - 1, 65 + (i % 26));
-      const values = sampleRows.map(row => row[i] || '').filter(v => v !== '');
+      const values = sampleRows.map((row: any) => row[i] || '').filter((v: any) => v !== '');
       const uniqueValues = [...new Set(values)];
       
       columnAnalysis[`${columnLetter} (index ${i})`] = {

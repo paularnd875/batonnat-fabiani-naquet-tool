@@ -76,7 +76,7 @@ export async function GET() {
     teamStats.sort((a, b) => b.total_assignments - a.total_assignments);
 
     console.log(`✅ Statistiques calculées pour ${teamStats.length} membres`);
-    console.log('📈 Répartition:', teamStats.map(m => `${m.prenom} ${m.nom}: ${m.total_assignments}`));
+    console.log('📈 Répartition:', teamStats.map((m: any) => `${m.prenom} ${m.nom}: ${m.total_assignments}`));
 
     return NextResponse.json({
       success: true,
@@ -84,7 +84,7 @@ export async function GET() {
       summary: {
         total_members: teamStats.length,
         total_assignments: teamStats.reduce((sum, member) => sum + member.total_assignments, 0),
-        members_with_assignments: teamStats.filter(m => m.total_assignments > 0).length
+        members_with_assignments: teamStats.filter((m: any) => m.total_assignments > 0).length
       }
     });
 

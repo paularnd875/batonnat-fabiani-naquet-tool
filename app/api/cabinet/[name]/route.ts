@@ -21,11 +21,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     let filteredLawyers;
     if (cabinetName === 'Individuel') {
       // Pour "Individuel", chercher les cabinets vides ou null
-      filteredLawyers = allLawyersFromSheet.filter(lawyer => 
+      filteredLawyers = allLawyersFromSheet.filter((lawyer: any) => 
         !lawyer.cabinet || lawyer.cabinet.trim() === ''
       );
     } else {
-      filteredLawyers = allLawyersFromSheet.filter(lawyer => 
+      filteredLawyers = allLawyersFromSheet.filter((lawyer: any) => 
         lawyer.cabinet === cabinetName
       );
     }

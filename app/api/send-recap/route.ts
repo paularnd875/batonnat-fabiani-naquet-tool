@@ -205,7 +205,7 @@ export async function POST(request: Request) {
 
 function generateIndividualRecapEmail(assignments: Assignment[], teamMember: Assignment['team_members']): string {
   // Filtrer les assignations pour exclure les C1, C2, C3 (déjà acquis)
-  const filteredAssignments = assignments.filter(assignment => {
+  const filteredAssignments = assignments.filter((assignment: any) => {
     const classement = assignment.lawyers.classement;
     return classement !== 'C1' && classement !== 'C2' && classement !== 'C3';
   });

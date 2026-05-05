@@ -27,7 +27,7 @@ export async function GET() {
       spreadsheetId: sheetId,
     });
 
-    const sheetNames = metadata.data.sheets?.map(sheet => sheet.properties?.title) || [];
+    const sheetNames = metadata.data.sheets?.map((sheet: any) => sheet.properties?.title) || [];
 
     return NextResponse.json({
       success: true,
