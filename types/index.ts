@@ -34,6 +34,9 @@ export interface Lawyer {
   ami_linkedin_mhf: boolean;
   ami_linkedin_fn: boolean;
   photo_url?: string;
+  // Données de vote du Barreau de Paris 2024
+  premier_tour_vote?: boolean;
+  second_tour_vote?: boolean;
   assignments?: Assignment[];
 }
 

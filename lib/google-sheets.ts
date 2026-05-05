@@ -17,6 +17,9 @@ export interface SheetLawyer {
   ami_linkedin_mhf: boolean;
   ami_linkedin_fn: boolean;
   photo_url?: string;
+  // Données de vote du Barreau de Paris 2024
+  premier_tour_vote?: boolean;
+  second_tour_vote?: boolean;
   raw_data: any;
 }
 
@@ -31,6 +34,13 @@ export interface SheetTeamMember {
   prenom: string;
   nom: string;
   email: string;
+}
+
+// Interface pour les données de vote du Barreau de Paris 2024
+export interface SheetVoteData {
+  prenomnom: string;
+  premier_tour_vote: boolean;
+  second_tour_vote: boolean;
 }
 
 class GoogleSheetsService {
@@ -128,11 +138,60 @@ class GoogleSheetsService {
     // Appliquer la logique de distribution des photos
     const processedLawyers = this.distributePhotos(lawyersData);
     
-    // 🚀 OPTIMISATION: Mettre en cache pour 15 minutes
-    memoryCache.set(CACHE_KEYS.LAWYERS_ALL, processedLawyers, CACHE_TTL.LAWYERS);
-    console.log(`💾 ${processedLawyers.length} avocats mis en cache pour 15 minutes`);
+    // 📊 Récupérer et fusionner les données de vote du Barreau de Paris 2024
+    const voteData = await this.readVoteData();
+    const voteMap = new Map<string, SheetVoteData>();
+    voteData.forEach(vote => {
+      voteMap.set(vote.prenomnom, vote);
+    });
+
+    // Fusionner les données de vote avec les données d'avocats
+    const lawyersWithVotes = processedLawyers.map(lawyer => {
+      const voteInfo = voteMap.get(lawyer.prenomnom);
+      return {
+        ...lawyer,
+        premier_tour_vote: voteInfo?.premier_tour_vote,
+        second_tour_vote: voteInfo?.second_tour_vote,
+      };
+    });
     
-    return processedLawyers;
+    // 🚀 OPTIMISATION: Mettre en cache pour 15 minutes
+    memoryCache.set(CACHE_KEYS.LAWYERS_ALL, lawyersWithVotes, CACHE_TTL.LAWYERS);
+    console.log(`💾 ${lawyersWithVotes.length} avocats mis en cache pour 15 minutes (avec données de vote)`);
+    
+    return lawyersWithVotes;
+  }
+
+  /**
+   * Lit l'onglet BARREAU-DE-PARIS-2024 pour les données de vote
+   */
+  async readVoteData(): Promise<SheetVoteData[]> {
+    try {
+      console.log('📊 Lecture données de vote BARREAU-DE-PARIS-2024...');
+      
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId: this.sheetId,
+        range: 'BARREAU-DE-PARIS-2024!A:K', // Colonnes A à K pour inclure le vote 2ème tour
+      });
+
+      const rows = response.data.values || [];
+      if (rows.length === 0) return [];
+
+      // Ignorer la première ligne (entêtes) et traiter les données
+      const voteData = rows.slice(1).map((row: any[]) => {
+        return {
+          prenomnom: row[5] || '', // Colonne F (index 5) - prenomnom pour matcher
+          premier_tour_vote: !!(row[9] && row[9].trim() !== ''), // Colonne J (index 9) - 1er tour
+          second_tour_vote: !!(row[10] && row[10].trim() !== ''), // Colonne K (index 10) - 2ème tour
+        };
+      }).filter((vote: any) => vote.prenomnom); // Filtrer les lignes sans prenomnom
+
+      console.log(`📊 ${voteData.length} entrées de vote récupérées`);
+      return voteData;
+    } catch (error) {
+      console.error('❌ Erreur lecture données de vote:', error);
+      return []; // Retourner un tableau vide en cas d'erreur
+    }
   }
 
   /**

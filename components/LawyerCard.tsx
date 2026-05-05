@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Mail, Phone, AlertTriangle, User } from 'lucide-react';
 import { Lawyer, LawyerCardProps } from '@/types';
+import BallotBoxIcon from '@/components/ui/BallotBoxIcon';
 
 const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, teamMembers }) => {
   const getClassementColor = (classement: string) => {
@@ -72,7 +73,6 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, te
               <h3 className="text-lg font-semibold text-gray-900 truncate">
                 {lawyer.nom_complet}
               </h3>
-              <p className="text-sm text-gray-600">{lawyer.civilite}</p>
             </div>
 
             <div className="space-y-1">
@@ -161,6 +161,24 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, te
               <div className="flex items-center gap-1 text-red-600 text-xs">
                 <AlertTriangle className="w-3 h-3" />
                 <span>Blacklisted</span>
+              </div>
+            )}
+
+            {/* Icônes de vote pour les élections du Barreau de Paris 2024 */}
+            {(lawyer.premier_tour_vote !== undefined || lawyer.second_tour_vote !== undefined) && (
+              <div className="flex gap-2 mt-2 justify-end">
+                {lawyer.premier_tour_vote !== undefined && (
+                  <div className="flex items-center gap-1">
+                    <BallotBoxIcon voted={lawyer.premier_tour_vote} className="flex-shrink-0" />
+                    <span className="text-xs text-gray-500">1er</span>
+                  </div>
+                )}
+                {lawyer.second_tour_vote !== undefined && (
+                  <div className="flex items-center gap-1">
+                    <BallotBoxIcon voted={lawyer.second_tour_vote} className="flex-shrink-0" />
+                    <span className="text-xs text-gray-500">2e</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
