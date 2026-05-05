@@ -31,7 +31,7 @@ const LawyerCard = dynamic(() => import('@/components/LawyerCard'), {
 export default function CabinetPage() {
   const params = useParams();
   const router = useRouter();
-  const cabinetName = decodeURIComponent(params.name as string);
+  const cabinetName = params?.name ? decodeURIComponent(params.name as string) : '';
   
   const [lawyers, setLawyers] = useState<Lawyer[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
