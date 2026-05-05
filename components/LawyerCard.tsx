@@ -10,40 +10,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Mail, Phone, AlertTriangle, User } from 'lucide-react';
-
-interface Lawyer {
-  prenomnom: string;
-  civilite: string;
-  nom_complet: string;
-  telephone: string;
-  email: string;
-  annee_serment: number;
-  cabinet?: string;
-  classement: string;
-  origine: string;
-  soutien_public: boolean;
-  soutiens_precedents: string[];
-  ami_linkedin_mhf: boolean;
-  ami_linkedin_fn: boolean;
-  photo_url?: string;
-  assignments?: {
-    id: string;
-    team_member_id: string;
-    assigned_at: string;
-    team_members: {
-      id: string;
-      prenom: string;
-      nom: string;
-      email?: string;
-    };
-  }[];
-}
-
-interface LawyerCardProps {
-  lawyer: Lawyer;
-  onAssign: (lawyer: Lawyer, memberId: string) => void;
-  teamMembers: Array<{ id: string; prenom: string; nom: string }>;
-}
+import { Lawyer, LawyerCardProps } from '@/types';
 
 const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, teamMembers }) => {
   const getClassementColor = (classement: string) => {

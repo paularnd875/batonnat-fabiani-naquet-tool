@@ -2,29 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import LawyerCard from './LawyerCard';
-
-interface Lawyer {
-  prenomnom: string;
-  civilite: string;
-  nom_complet: string;
-  telephone: string;
-  email: string;
-  annee_serment: number;
-  cabinet: string;
-  classement: string;
-  origine: string;
-  soutien_public: boolean;
-  soutiens_precedents: string[];
-  ami_linkedin_mhf: boolean;
-  ami_linkedin_fn: boolean;
-  photo_url?: string;
-}
-
-interface VirtualizedLawyerListProps {
-  lawyers: Lawyer[];
-  onAssign: (lawyer: Lawyer, memberId: string) => void;
-  teamMembers: Array<{ id: string; prenom: string; nom: string }>;
-}
+import { Lawyer, VirtualizedLawyerListProps } from '@/types';
 
 const ITEM_HEIGHT = 200; // Hauteur estimée d'une carte d'avocat
 const CONTAINER_HEIGHT = 600; // Hauteur du conteneur visible

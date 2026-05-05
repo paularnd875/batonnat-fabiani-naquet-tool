@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
+import { Lawyer, TeamMember, AssignFunction, AssignWrapperFunction } from '@/types';
 
 // Dynamic imports pour le code splitting
 const LawyerCard = dynamic(() => import('@/components/LawyerCard'), {
@@ -26,39 +27,6 @@ const LawyerCard = dynamic(() => import('@/components/LawyerCard'), {
   ssr: false
 });
 
-interface Lawyer {
-  prenomnom: string;
-  civilite: string;
-  nom_complet: string;
-  telephone: string;
-  email: string;
-  annee_serment: number;
-  classement: string;
-  origine: string;
-  soutien_public: boolean;
-  soutiens_precedents: string[];
-  ami_linkedin_mhf: boolean;
-  ami_linkedin_fn: boolean;
-  assignments: {
-    id: string;
-    team_member_id: string;
-    assigned_at: string;
-    team_members: {
-      id: string;
-      prenom: string;
-      nom: string;
-      email: string;
-    };
-  }[];
-  photo_url?: string;
-}
-
-interface TeamMember {
-  id: string;
-  prenom: string;
-  nom: string;
-  email: string;
-}
 
 export default function CabinetPage() {
   const params = useParams();
@@ -115,7 +83,7 @@ export default function CabinetPage() {
     }
   };
 
-  const handleAssign = async (lawyerPrenomnom: string, teamMemberId: string) => {
+  const handleAssign: AssignFunction = async (lawyerPrenomnom: string, teamMemberId: string) => {
     try {
       const response = await fetch('/api/assignments', {
         method: 'POST',
@@ -140,7 +108,7 @@ export default function CabinetPage() {
   };
 
   // Wrapper pour la nouvelle signature de LawyerCard
-  const handleAssignWrapper = (lawyer: Lawyer, teamMemberId: string) => {
+  const handleAssignWrapper: AssignWrapperFunction = (lawyer: Lawyer, teamMemberId: string) => {
     handleAssign(lawyer.prenomnom, teamMemberId);
   };
 
@@ -286,143 +254,6 @@ export default function CabinetPage() {
           </Suspense>
         ))}
 
-        {/* Garder la carte originale pour compatibilité temporaire */}
-        {false && lawyers.map((lawyer) => (
-          <Card key={lawyer.prenomnom} className="p-4">
-            <div className="flex gap-4 items-start">
-              <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 border-2 border-gray-300 relative">
-                {lawyer.photo_url ? (
-                  <Image 
-                    src={lawyer.photo_url}
-                    alt={`Photo de ${lawyer.nom_complet}`}
-                    width={96}
-                    height={96}
-                    className="w-full h-full object-cover rounded-full"
-                    sizes="96px"
-                    priority={false}
-                    loading="lazy"
-                    placeholder="blur"
-                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkrHB0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                    onError={(e) => {
-                      const target = e.target as HTMLElement;
-                      target.style.display = 'none';
-                      const userIcon = target.parentElement?.querySelector('.user-fallback');
-                      if (userIcon) {
-                        userIcon.classList.remove('hidden');
-                      }
-                    }}
-                  />
-                ) : null}
-                <User className={`w-8 h-8 text-gray-500 user-fallback absolute inset-0 m-auto ${lawyer.photo_url ? 'hidden' : ''}`} />
-              </div>
-
-              <div className="flex-1 min-w-0 flex justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="mb-2">
-                    <h3 className="font-semibold text-lg">{lawyer.nom_complet}</h3>
-                    <p className="text-sm text-gray-500">
-                      Serment: {lawyer.annee_serment}
-                    </p>
-                  </div>
-
-                  <div className="flex gap-4 items-center mb-3 flex-wrap">
-                    {lawyer.telephone && (
-                      <a href={`tel:${lawyer.telephone}`} className="text-blue-600 hover:underline text-sm">
-                        <Phone className="w-4 h-4 inline mr-1" />
-                        {lawyer.telephone}
-                      </a>
-                    )}
-                    {lawyer.email && (
-                      <a href={`mailto:${lawyer.email}`} className="text-blue-600 hover:underline text-sm">
-                        <Mail className="w-4 h-4 inline mr-1" />
-                        {lawyer.email}
-                      </a>
-                    )}
-                  </div>
-
-                  <div className="flex gap-2 items-center flex-wrap">
-                    {lawyer.soutien_public && getSoutienPublicBadge()}
-                    {getClassementBadge(lawyer.classement, lawyer.origine)}
-                    
-                    {lawyer.soutiens_precedents && lawyer.soutiens_precedents.length > 0 && (
-                      <Badge variant="destructive">
-                        <AlertTriangle className="w-3 h-3 mr-1" />
-                        Soutien {lawyer.soutiens_precedents[0]}
-                      </Badge>
-                    )}
-                    
-                    {lawyer.ami_linkedin_mhf && (
-                      <Badge variant="outline" title="Ami LinkedIn Marie-Hélène Fabiani">
-                        🔗 MHF
-                      </Badge>
-                    )}
-                    {lawyer.ami_linkedin_fn && (
-                      <Badge variant="outline" title="Ami LinkedIn Frédéric Naquet">
-                        🔗 FN
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                <div className="ml-4">
-                  {lawyer.assignments && lawyer.assignments.length > 0 ? (
-                    <div className="text-right">
-                      <p className="text-sm text-green-600 mb-2">
-                        Assigné à <strong>{lawyer.assignments[0].team_members.prenom} {lawyer.assignments[0].team_members.nom}</strong>
-                      </p>
-                      <div className="flex gap-2">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button size="sm" variant="outline">Réassigner</Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            {teamMembers.map((member) => (
-                              <DropdownMenuItem
-                                key={member.id}
-                                onClick={() => handleAssign(lawyer.prenomnom, member.id)}
-                              >
-                                {member.prenom} {member.nom}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleUnassign(lawyer.prenomnom)}
-                        >
-                          Désassigner
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      {lawyer.classement === 'Blacklist' ? (
-                        <Badge variant="destructive">Pas d'assignation (Blacklist)</Badge>
-                      ) : (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button size="sm">Assigner à...</Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            {teamMembers.map((member) => (
-                              <DropdownMenuItem
-                                key={member.id}
-                                onClick={() => handleAssign(lawyer.prenomnom, member.id)}
-                              >
-                                {member.prenom} {member.nom}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </Card>
-        ))}
       </div>
 
       {/* Contrôles de pagination */}

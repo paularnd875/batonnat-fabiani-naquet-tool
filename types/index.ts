@@ -1,3 +1,4 @@
+// Types unifiés pour toute l'application
 export interface TeamMember {
   id: string;
   prenom: string;
@@ -9,10 +10,16 @@ export interface Assignment {
   id: string;
   team_member_id: string;
   assigned_at: string;
-  team_members: TeamMember;
+  team_members: {
+    id: string;
+    prenom: string;
+    nom: string;
+    email?: string;
+  };
 }
 
-export interface BaseLawyer {
+// Interface Lawyer unifiée - SEULE source de vérité
+export interface Lawyer {
   prenomnom: string;
   civilite: string;
   nom_complet: string;
@@ -30,4 +37,24 @@ export interface BaseLawyer {
   assignments?: Assignment[];
 }
 
-export type Lawyer = BaseLawyer;
+// Props pour composants - signature unifiée
+export interface LawyerCardProps {
+  lawyer: Lawyer;
+  onAssign: (lawyer: Lawyer, memberId: string) => void;
+  teamMembers: TeamMember[];
+}
+
+// Interface pour wrapper de fonction d'assignation
+export interface AssignFunction {
+  (lawyerPrenomnom: string, teamMemberId: string): Promise<void>;
+}
+
+export interface AssignWrapperFunction {
+  (lawyer: Lawyer, teamMemberId: string): void;
+}
+
+export interface VirtualizedLawyerListProps {
+  lawyers: Lawyer[];
+  onAssign: (lawyer: Lawyer, memberId: string) => void;
+  teamMembers: TeamMember[];
+}
