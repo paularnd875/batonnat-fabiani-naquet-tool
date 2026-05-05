@@ -14,7 +14,7 @@ export async function GET() {
     const sampleRows = response.slice(1, 6); // 5 exemples
     
     // Analyser les colonnes autour de AV, AW, AY
-    const columnAnalysis = {};
+    const columnAnalysis: { [key: string]: any } = {};
     const startIndex = 44; // Colonne AS
     const endIndex = 55;   // Colonne BC
     
