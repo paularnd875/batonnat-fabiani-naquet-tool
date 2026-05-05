@@ -1,12 +1,25 @@
 import { NextResponse } from 'next/server';
 import { googleSheets } from '@/lib/google-sheets';
 import { supabase } from '@/lib/db';
+import { memoryCache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 
 export async function GET() {
   try {
-    console.log('🏢 Calcul statistiques cabinets LIVE depuis Google Sheets...');
+    // 🚀 OPTIMISATION: Vérifier le cache en premier
+    const cachedFirmsStats = memoryCache.get(CACHE_KEYS.FIRMS_STATS);
+    if (cachedFirmsStats) {
+      console.log('🚀 Statistiques cabinets chargées depuis le cache (ULTRA RAPIDE!)');
+      return NextResponse.json({
+        success: true,
+        source: 'Cache (Google Sheets)',
+        ...cachedFirmsStats
+      });
+    }
 
-    // 1. Lire tous les avocats directement depuis Google Sheets
+    console.log('🏢 Calcul statistiques cabinets LIVE depuis Google Sheets...');
+    const startTime = Date.now();
+
+    // 1. Lire tous les avocats directement depuis Google Sheets (optimisé avec cache)
     const allLawyers = await googleSheets.readLawyers();
     console.log(`📋 ${allLawyers.length} avocats lus depuis Google Sheets`);
 
@@ -103,12 +116,23 @@ export async function GET() {
       console.log(`   ${cabinet.name}: SP:${cabinet.soutien_public_count}, C1:${cabinet.c1_count}, C2:${cabinet.c2_count}, C3:${cabinet.c3_count}, BL:${cabinet.bl_count}`);
     });
 
-    return NextResponse.json({
-      success: true,
+    const processingDuration = Date.now() - startTime;
+    console.log(`⚡ Calcul terminé en ${processingDuration}ms`);
+
+    // 🚀 OPTIMISATION: Mettre en cache le résultat pour 10 minutes
+    const result = {
       source: 'Google Sheets LIVE + Supabase assignments',
       timestamp: new Date().toISOString(),
       firms: cabinetsArray,
       count: cabinetsArray.length
+    };
+    
+    memoryCache.set(CACHE_KEYS.FIRMS_STATS, result, CACHE_TTL.STATS);
+    console.log(`💾 Statistiques de ${cabinetsArray.length} cabinets mises en cache pour 10 minutes`);
+
+    return NextResponse.json({
+      success: true,
+      ...result
     });
 
   } catch (error) {

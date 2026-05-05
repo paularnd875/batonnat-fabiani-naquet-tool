@@ -1,12 +1,25 @@
 import { NextResponse } from 'next/server';
 import { googleSheets } from '@/lib/google-sheets';
 import { supabase } from '@/lib/db';
+import { memoryCache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 
 export async function GET() {
   try {
-    console.log('📊 Calcul statistiques admin depuis Google Sheets...');
+    // 🚀 OPTIMISATION: Vérifier le cache en premier
+    const cachedAdminStats = memoryCache.get(CACHE_KEYS.ADMIN_STATS);
+    if (cachedAdminStats) {
+      console.log('🚀 Statistiques admin chargées depuis le cache (ULTRA RAPIDE!)');
+      return NextResponse.json({
+        success: true,
+        source: 'Cache (Google Sheets + Supabase)',
+        ...cachedAdminStats
+      });
+    }
 
-    // 1. Lire tous les avocats directement depuis Google Sheets (vraies données)
+    console.log('📊 Calcul statistiques admin depuis Google Sheets...');
+    const startTime = Date.now();
+
+    // 1. Lire tous les avocats directement depuis Google Sheets (optimisé avec cache)
     const allLawyers = await googleSheets.readLawyers();
 
     // 2. Calculer les statistiques globales VRAIES
@@ -85,8 +98,11 @@ export async function GET() {
     console.log(`   Avocats assignés: ${globalStats.total_assigned_lawyers}`);
     console.log(`   Non assignés: ${globalStats.total_unassigned}`);
 
-    return NextResponse.json({
-      success: true,
+    const processingDuration = Date.now() - startTime;
+    console.log(`⚡ Calcul admin terminé en ${processingDuration}ms`);
+
+    // 🚀 OPTIMISATION: Mettre en cache le résultat pour 10 minutes
+    const result = {
       source: 'Google Sheets + Supabase assignments',
       timestamp: new Date().toISOString(),
       stats: {
@@ -95,6 +111,14 @@ export async function GET() {
         team_coverage: teamCoverage
       },
       team_members: teamMembers || []
+    };
+    
+    memoryCache.set(CACHE_KEYS.ADMIN_STATS, result, CACHE_TTL.STATS);
+    console.log(`💾 Statistiques admin de ${totalLawyers} avocats mises en cache pour 10 minutes`);
+
+    return NextResponse.json({
+      success: true,
+      ...result
     });
 
   } catch (error) {

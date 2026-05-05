@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import { memoryCache, CACHE_KEYS, CACHE_TTL } from './cache';
 
 // Interface pour les données d'avocat depuis le Google Sheet
 export interface SheetLawyer {
@@ -67,12 +68,27 @@ class GoogleSheetsService {
 
   /**
    * Lit l'onglet avocats et retourne les données structurées
+   * 🚀 OPTIMISÉ: Utilise un cache mémoire pour éviter les appels répétés à Google Sheets
    */
   async readLawyers(): Promise<SheetLawyer[]> {
+    // 🚀 OPTIMISATION: Vérifier le cache en premier
+    const cachedLawyers = memoryCache.get<SheetLawyer[]>(CACHE_KEYS.LAWYERS_ALL);
+    if (cachedLawyers) {
+      console.log('🚀 Données avocats chargées depuis le cache (ULTRA RAPIDE!)');
+      return cachedLawyers;
+    }
+
+    // Si pas en cache, lire depuis Google Sheets (LENT)
+    console.log('📊 Lecture Google Sheets... (Première fois ou cache expiré)');
+    const startTime = Date.now();
+    
     const response = await this.sheets.spreadsheets.values.get({
       spreadsheetId: this.sheetId,
       range: 'Base principale!A:BU', // Étendu jusqu'à BU pour inclure les photos
     });
+
+    const duration = Date.now() - startTime;
+    console.log(`📊 Google Sheets lu en ${duration}ms`);
 
     const rows = response.data.values || [];
     if (rows.length === 0) return [];
@@ -110,7 +126,13 @@ class GoogleSheetsService {
     }).filter((lawyer: any) => lawyer.prenomnom); // Filtrer les lignes vides
 
     // Appliquer la logique de distribution des photos
-    return this.distributePhotos(lawyersData);
+    const processedLawyers = this.distributePhotos(lawyersData);
+    
+    // 🚀 OPTIMISATION: Mettre en cache pour 15 minutes
+    memoryCache.set(CACHE_KEYS.LAWYERS_ALL, processedLawyers, CACHE_TTL.LAWYERS);
+    console.log(`💾 ${processedLawyers.length} avocats mis en cache pour 15 minutes`);
+    
+    return processedLawyers;
   }
 
   /**
@@ -118,6 +140,14 @@ class GoogleSheetsService {
    * Note: Essaie plusieurs onglets possibles pour trouver les bonnes données
    */
   async readFirmsData(): Promise<SheetFirmData[]> {
+    // 🚀 OPTIMISATION: Vérifier le cache en premier
+    const cachedFirmsData = memoryCache.get<SheetFirmData[]>('firms_data');
+    if (cachedFirmsData) {
+      console.log('🚀 Données cabinets chargées depuis le cache');
+      return cachedFirmsData;
+    }
+
+    console.log('📊 Lecture données cabinets depuis Google Sheets...');
     // Essayer différents noms d'onglets possibles
     const possibleSheetNames = [
       'Synthèse vote toutes structures!A:G', // Onglet correct avec vraies données
@@ -143,6 +173,8 @@ class GoogleSheetsService {
         const processedData = this.processFirmsData(rows);
         if (processedData.length > 0) {
           console.log(`✅ ${processedData.length} cabinets valides trouvés`);
+          // 🚀 OPTIMISATION: Mettre en cache pour 10 minutes
+          memoryCache.set('firms_data', processedData, CACHE_TTL.STATS);
           return processedData;
         }
       } catch (error) {
