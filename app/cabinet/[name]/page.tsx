@@ -1,18 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Mail, Phone, AlertTriangle, User } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
+
+// Dynamic imports pour le code splitting
+const LawyerCard = dynamic(() => import('@/components/LawyerCard'), {
+  loading: () => (
+    <div className="p-4 border rounded-lg animate-pulse">
+      <div className="flex gap-4">
+        <div className="w-24 h-24 bg-gray-200 rounded-full" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-3/4" />
+          <div className="h-3 bg-gray-200 rounded w-1/2" />
+          <div className="h-3 bg-gray-200 rounded w-2/3" />
+        </div>
+      </div>
+    </div>
+  ),
+  ssr: false
+});
 
 interface Lawyer {
   prenomnom: string;
@@ -125,6 +137,11 @@ export default function CabinetPage() {
       console.error('Erreur assignation:', error);
       alert('Erreur assignation');
     }
+  };
+
+  // Wrapper pour la nouvelle signature de LawyerCard
+  const handleAssignWrapper = (lawyer: Lawyer, teamMemberId: string) => {
+    handleAssign(lawyer.prenomnom, teamMemberId);
   };
 
   const handleUnassign = async (lawyerPrenomnom: string) => {
@@ -249,21 +266,54 @@ export default function CabinetPage() {
 
       <div className="grid gap-4">
         {lawyers.map((lawyer) => (
+          <Suspense key={lawyer.prenomnom} fallback={
+            <div className="p-4 border rounded-lg animate-pulse">
+              <div className="flex gap-4">
+                <div className="w-24 h-24 bg-gray-200 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  <div className="h-3 bg-gray-200 rounded w-2/3" />
+                </div>
+              </div>
+            </div>
+          }>
+            <LawyerCard 
+              lawyer={lawyer}
+              onAssign={handleAssignWrapper}
+              teamMembers={teamMembers}
+            />
+          </Suspense>
+        ))}
+
+        {/* Garder la carte originale pour compatibilité temporaire */}
+        {false && lawyers.map((lawyer) => (
           <Card key={lawyer.prenomnom} className="p-4">
             <div className="flex gap-4 items-start">
-              <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 border-2 border-gray-300">
+              <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 border-2 border-gray-300 relative">
                 {lawyer.photo_url ? (
-                  <img 
+                  <Image 
                     src={lawyer.photo_url}
                     alt={`Photo de ${lawyer.nom_complet}`}
+                    width={96}
+                    height={96}
                     className="w-full h-full object-cover rounded-full"
+                    sizes="96px"
+                    priority={false}
+                    loading="lazy"
+                    placeholder="blur"
+                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkrHB0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                     onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      const target = e.target as HTMLElement;
+                      target.style.display = 'none';
+                      const userIcon = target.parentElement?.querySelector('.user-fallback');
+                      if (userIcon) {
+                        userIcon.classList.remove('hidden');
+                      }
                     }}
                   />
                 ) : null}
-                <User className={`w-8 h-8 text-gray-500 ${lawyer.photo_url ? 'hidden' : ''}`} />
+                <User className={`w-8 h-8 text-gray-500 user-fallback absolute inset-0 m-auto ${lawyer.photo_url ? 'hidden' : ''}`} />
               </div>
 
               <div className="flex-1 min-w-0 flex justify-between">
