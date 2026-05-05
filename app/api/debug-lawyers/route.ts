@@ -7,11 +7,11 @@ export async function GET() {
     const lawyers = await googleSheets.readLawyers();
     
     // Analyser les classements
-    const classements = {};
+    const classements: { [key: string]: number } = {};
     const origines = new Set();
-    const soutienPublicCount = lawyers.filter(l => l.soutien_public).length;
+    const soutienPublicCount = lawyers.filter((l: any) => l.soutien_public).length;
     
-    lawyers.forEach(lawyer => {
+    lawyers.forEach((lawyer: any) => {
       const classement = lawyer.classement || 'Non classé';
       classements[classement] = (classements[classement] || 0) + 1;
       
