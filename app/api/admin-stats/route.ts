@@ -22,7 +22,7 @@ export async function GET() {
       total_team_members: 0
     };
 
-    allLawyers.forEach(lawyer => {
+    allLawyers.forEach((lawyer: any) => {
       if (lawyer.soutien_public) globalStats.soutien_public_count++;
       
       switch (lawyer.classement) {
@@ -45,20 +45,20 @@ export async function GET() {
       .then((result: any) => result);
 
     // 4. Calculer la couverture par membre d'équipe
-    const teamCoverage = {};
+    const teamCoverage: any = {};
     if (teamMembers) {
       // Initialiser tous les membres à 0
-      teamMembers.forEach(member => {
+      teamMembers.forEach((member: any) => {
         teamCoverage[member.id] = 0;
       });
     }
 
     if (assignments) {
       globalStats.total_assignments = assignments.length;
-      globalStats.total_assigned_lawyers = new Set(assignments.map(a => a.lawyer_prenomnom)).size;
+      globalStats.total_assigned_lawyers = new Set(assignments.map((a: any) => a.lawyer_prenomnom)).size;
       
       // Compter les assignations par membre d'équipe
-      assignments.forEach(assignment => {
+      assignments.forEach((assignment: any) => {
         if (assignment.team_member_id && teamCoverage[assignment.team_member_id] !== undefined) {
           teamCoverage[assignment.team_member_id]++;
         }
