@@ -23,11 +23,25 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, te
     }
   };
 
+  // Fonction pour valider si l'URL d'image est valide
+  const isValidImageUrl = (url: string | undefined): boolean => {
+    if (!url || typeof url !== 'string') return false;
+    // Rejeter les URLs invalides comme x-raw-image://
+    if (url.startsWith('x-raw-image://') || url.startsWith('data:')) return false;
+    // Accepter seulement les URLs HTTP/HTTPS valides
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <Card className="p-4 hover:shadow-md transition-shadow duration-200">
       <div className="flex gap-4 items-start">
         <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 border-2 border-gray-300 relative">
-          {lawyer.photo_url ? (
+          {lawyer.photo_url && isValidImageUrl(lawyer.photo_url) ? (
             <Image 
               src={lawyer.photo_url}
               alt={`Photo de ${lawyer.nom_complet}`}
@@ -49,7 +63,7 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, te
               }}
             />
           ) : null}
-          <User className={`w-8 h-8 text-gray-500 user-fallback absolute inset-0 m-auto ${lawyer.photo_url ? 'hidden' : ''}`} />
+          <User className={`w-8 h-8 text-gray-500 user-fallback absolute inset-0 m-auto ${lawyer.photo_url && isValidImageUrl(lawyer.photo_url) ? 'hidden' : ''}`} />
         </div>
 
         <div className="flex-1 min-w-0 flex justify-between">

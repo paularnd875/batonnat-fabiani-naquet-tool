@@ -132,6 +132,13 @@ export default function Home() {
       {/* Contenu principal */}
       <main className="container mx-auto px-8 pb-8">
 
+        {/* Label explicatif pour les pourcentages de participation */}
+        <div className="flex justify-end mb-4">
+          <div className="text-sm font-bold text-fn-blue">
+            % participation
+          </div>
+        </div>
+
         {/* Grille de cabinets avec style Fabiani-Naquet */}
         <div className="grid gap-6">
           {currentFirms.map((firm) => (
