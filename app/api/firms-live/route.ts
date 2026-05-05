@@ -13,7 +13,7 @@ export async function GET() {
     // 2. Calculer les stats par cabinet
     const cabinetStats = new Map();
     
-    allLawyers.forEach(lawyer => {
+    allLawyers.forEach((lawyer: any) => {
       const cabinet = lawyer.cabinet || 'Individuel';
       
       if (!cabinetStats.has(cabinet)) {
@@ -50,10 +50,10 @@ export async function GET() {
       .from('assignments')
       .select('lawyer_prenomnom');
 
-    const assignedLawyersSet = new Set(assignments?.map(a => a.lawyer_prenomnom) || []);
+    const assignedLawyersSet = new Set(assignments?.map((a: any) => a.lawyer_prenomnom) || []);
     
     // 4. Calculer les taux de participation et assigned_count pour chaque cabinet
-    allLawyers.forEach(lawyer => {
+    allLawyers.forEach((lawyer: any) => {
       if (assignedLawyersSet.has(lawyer.prenomnom)) {
         const cabinet = lawyer.cabinet || 'Individuel';
         const stats = cabinetStats.get(cabinet);
