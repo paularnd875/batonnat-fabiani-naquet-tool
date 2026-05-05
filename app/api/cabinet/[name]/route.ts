@@ -110,7 +110,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     };
 
     // Calculer les vraies statistiques
-    filteredLawyers.forEach(lawyer => {
+    filteredLawyers.forEach((lawyer: any) => {
       if (lawyer.soutien_public) realStats.soutien_public_count++;
       
       switch (lawyer.classement) {
@@ -128,8 +128,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       .select('lawyer_prenomnom');
     
     if (assignments) {
-      const assignedLawyersSet = new Set(assignments.map(a => a.lawyer_prenomnom));
-      filteredLawyers.forEach(lawyer => {
+      const assignedLawyersSet = new Set(assignments.map((a: any) => a.lawyer_prenomnom));
+      filteredLawyers.forEach((lawyer: any) => {
         if (assignedLawyersSet.has(lawyer.prenomnom)) {
           realStats.assigned_count++;
         }
