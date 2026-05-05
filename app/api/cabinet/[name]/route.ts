@@ -106,7 +106,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       bl_count: 0,
       soutien_public_count: 0,
       unclassified_count: 0,
-      assigned_count: 0
+      assigned_count: 0,
+      participation_rate: 0
     };
 
     // Calculer les vraies statistiques
