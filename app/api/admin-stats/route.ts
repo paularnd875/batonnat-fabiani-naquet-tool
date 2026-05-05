@@ -37,12 +37,12 @@ export async function GET() {
     const { data: assignments } = await supabase
       .from('assignments')
       .select('lawyer_prenomnom, team_member_id')
-      .then(result => result);
+      .then((result: any) => result);
 
     const { data: teamMembers } = await supabase
       .from('team_members')
       .select('*')
-      .then(result => result);
+      .then((result: any) => result);
 
     // 4. Calculer la couverture par membre d'équipe
     const teamCoverage = {};
