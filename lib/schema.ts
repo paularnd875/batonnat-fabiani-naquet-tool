@@ -26,6 +26,7 @@ export const firms = pgTable('firms', {
   c2_count: integer('c2_count').default(0),
   c3_count: integer('c3_count').default(0),
   bl_count: integer('bl_count').default(0),
+  soutien_public_count: integer('soutien_public_count').default(0),
   unclassified_count: integer('unclassified_count').default(0),
   participation_rate: real('participation_rate'),
   assigned_count: integer('assigned_count').default(0),

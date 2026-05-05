@@ -34,8 +34,15 @@ interface TeamMember {
 
 interface AssignmentStats {
   total_assignments: number;
-  assigned_lawyers: number;
-  unassigned_lawyers: number;
+  total_assigned_lawyers: number;
+  total_unassigned: number;
+  total_lawyers: number;
+  c1_count: number;
+  c2_count: number;
+  c3_count: number;
+  blacklist_count: number;
+  soutien_public_count: number;
+  total_team_members: number;
   team_coverage: {
     [key: string]: number;
   };

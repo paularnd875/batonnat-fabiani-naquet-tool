@@ -21,7 +21,7 @@ export async function POST() {
     while (hasMore) {
       const { data: lawyers, error: lawyersError } = await supabase
         .from('lawyers')
-        .select('cabinet, classement, prenomnom')
+        .select('cabinet, classement, prenomnom, soutien_public')
         .range(page * pageSize, (page + 1) * pageSize - 1);
 
       if (lawyersError) {
@@ -82,6 +82,7 @@ export async function POST() {
           c2_count: 0,
           c3_count: 0,
           bl_count: 0,
+          soutien_public_count: 0,
           unclassified_count: 0,
           assigned_count: 0
         });
@@ -89,6 +90,11 @@ export async function POST() {
 
       const firm = firmsMap.get(cabinet);
       firm.lawyer_count++;
+
+      // Compter les soutiens publics
+      if (lawyer.soutien_public) {
+        firm.soutien_public_count++;
+      }
 
       // Compter les classements
       switch (lawyer.classement) {
@@ -183,7 +189,7 @@ export async function POST() {
     // Afficher quelques exemples
     const examples = firmsArray.slice(0, 5);
     examples.forEach(firm => {
-      console.log(`🏢 ${firm.name}: ${firm.lawyer_count} avocats (Assignés:${firm.assigned_count}, Taux:${(firm.participation_rate * 100).toFixed(1)}%, C1:${firm.c1_count}, C2:${firm.c2_count}, C3:${firm.c3_count})`)
+      console.log(`🏢 ${firm.name}: ${firm.lawyer_count} avocats (Assignés:${firm.assigned_count}, Taux:${(firm.participation_rate * 100).toFixed(1)}%, SP:${firm.soutien_public_count}, C1:${firm.c1_count}, C2:${firm.c2_count}, C3:${firm.c3_count})`)
     });
 
     const { error: insertError } = await supabase

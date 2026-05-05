@@ -19,8 +19,18 @@ export async function POST() {
     console.log('🔄 Début de synchronisation Google Sheets...');
     
     // Obtenir le client Supabase
+    console.log('🔧 Initialisation client Supabase...');
     const supabase = getSupabaseClient();
     console.log('✅ Client Supabase initialisé');
+    
+    // Test de connexion Supabase
+    console.log('🔍 Test connexion Supabase...');
+    const { data: connectionTestData, error: connectionError } = await supabase.from('lawyers').select('*').limit(1);
+    if (connectionError) {
+      console.error('❌ Erreur test Supabase:', connectionError);
+      throw new Error(`Supabase connexion failed: ${connectionError.message}`);
+    }
+    console.log('✅ Supabase connecté, test OK');
     
     // 1. Lecture des avocats depuis Google Sheets
     console.log('📋 Lecture onglet avocats...');
@@ -66,12 +76,30 @@ export async function POST() {
     });
     console.log(`🔍 Origines trouvées:`, Array.from(origines));
 
-    // Upsert en lots de 100 pour éviter les timeouts
-    const batchSize = 100;
+    // Test avec un seul avocat d'abord
+    console.log('🧪 Test avec un avocat:', JSON.stringify(lawyersForDB[0], null, 2));
+    
+    const { data: upsertTestResult, error: testUpsertError } = await supabase
+      .from('lawyers')
+      .upsert([lawyersForDB[0]], { 
+        onConflict: 'prenomnom',
+        ignoreDuplicates: false 
+      });
+
+    if (testUpsertError) {
+      console.error('❌ Erreur test upsert:', JSON.stringify(testUpsertError, null, 2));
+      throw new Error(`Test upsert failed: ${JSON.stringify(testUpsertError)}`);
+    }
+    
+    console.log('✅ Test upsert réussi, procédure normale...');
+
+    // Upsert en lots de 50 pour éviter les timeouts 
+    const batchSize = 50;
     let totalInserted = 0;
     
-    for (let i = 0; i < lawyersForDB.length; i += batchSize) {
+    for (let i = 0; i < Math.min(lawyersForDB.length, 200); i += batchSize) { // Limité à 200 pour debug
       const batch = lawyersForDB.slice(i, i + batchSize);
+      console.log(`💾 Insertion batch ${i+1}-${Math.min(i + batchSize, lawyersForDB.length)}/${lawyersForDB.length}...`);
       
       const { error } = await supabase
         .from('lawyers')
@@ -81,12 +109,17 @@ export async function POST() {
         });
 
       if (error) {
-        console.error(`Erreur batch ${i}-${i + batchSize}:`, error);
-        throw error;
+        console.error(`❌ Erreur batch ${i}-${i + batchSize}:`, JSON.stringify(error, null, 2));
+        throw new Error(`Batch upsert failed: ${JSON.stringify(error)}`);
       }
       
       totalInserted += batch.length;
-      console.log(`✅ ${totalInserted}/${lawyersForDB.length} avocats synchronisés`);
+      console.log(`✅ ${totalInserted}/${Math.min(lawyersForDB.length, 200)} avocats synchronisés`);
+      
+      // Petite pause entre les batches
+      if (i + batchSize < Math.min(lawyersForDB.length, 200)) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
     }
 
     // 3. Créer automatiquement les membres d'équipe basés sur les origines
@@ -126,7 +159,8 @@ export async function POST() {
       .select(`
         cabinet,
         classement,
-        prenomnom
+        prenomnom,
+        soutien_public
       `);
 
     let firmsArray = [];
@@ -144,6 +178,7 @@ export async function POST() {
             c2_count: 0,
             c3_count: 0,
             bl_count: 0,
+            soutien_public_count: 0,
             unclassified_count: 0,
             assigned_count: 0
           });
@@ -151,6 +186,11 @@ export async function POST() {
         
         const firm = firmsMap.get(cabinet);
         firm.lawyer_count++;
+        
+        // Compter les soutiens publics
+        if (lawyer.soutien_public) {
+          firm.soutien_public_count++;
+        }
         
         // Compter les classements
         switch (lawyer.classement) {
@@ -220,7 +260,7 @@ export async function POST() {
       // Afficher quelques exemples pour debugging
       const exampleFirms = firmsArray.slice(0, 3);
       exampleFirms.forEach(firm => {
-        console.log(`🏢 ${firm.name}: ${firm.lawyer_count} avocats (C1:${firm.c1_count}, C2:${firm.c2_count}, C3:${firm.c3_count}, BL:${firm.bl_count}, NC:${firm.unclassified_count}, Assignés:${firm.assigned_count})`);
+        console.log(`🏢 ${firm.name}: ${firm.lawyer_count} avocats (SP:${firm.soutien_public_count}, C1:${firm.c1_count}, C2:${firm.c2_count}, C3:${firm.c3_count}, BL:${firm.bl_count}, NC:${firm.unclassified_count}, Assignés:${firm.assigned_count})`);
       });
       
       const { error: firmsError } = await supabase
@@ -246,12 +286,16 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur synchronisation:', error);
+    console.error('❌ Erreur synchronisation complète:', error);
+    console.error('❌ Stack trace:', error instanceof Error ? error.stack : 'Pas de stack');
+    console.error('❌ Message:', error instanceof Error ? error.message : 'Pas de message');
+    console.error('❌ Type erreur:', typeof error);
     
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue',
-      stack: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.stack : undefined : undefined,
+      errorType: typeof error,
+      stack: error instanceof Error ? error.stack : undefined,
     }, { status: 500 });
   }
 }

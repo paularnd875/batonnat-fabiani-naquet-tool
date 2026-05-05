@@ -1,0 +1,1 @@
+ALTER TABLE "firms" ADD COLUMN "soutien_public_count" integer DEFAULT 0;
