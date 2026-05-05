@@ -20,7 +20,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Mail, User, Users, ArrowLeft, Send, Check, Plus, Trash2, UserPlus, RefreshCw, Database } from 'lucide-react';
+import { Mail, User, Users, ArrowLeft, Send, Check, Plus, Trash2, UserPlus, RefreshCw, Database, UsersRound } from 'lucide-react';
 import Link from 'next/link';
 import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
 
@@ -55,6 +55,7 @@ export default function AdminPage() {
   const [deletingMember, setDeletingMember] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncResults, setSyncResults] = useState<string[]>([]);
+  const [creatingTeam, setCreatingTeam] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -62,20 +63,13 @@ export default function AdminPage() {
 
   const loadData = async () => {
     try {
-      // Charger les membres d'équipe
-      const teamResponse = await fetch('/api/team');
-      const teamData = await teamResponse.json();
-      
-      if (teamData.success) {
-        setTeamMembers(teamData.team_members || []);
-      }
-
-      // Charger les statistiques
-      const statsResponse = await fetch('/api/stats/assignments');
+      // Charger les statistiques VRAIES depuis Google Sheets (inclut aussi team_members)
+      const statsResponse = await fetch('/api/admin-stats');
       const statsData = await statsResponse.json();
       
       if (statsData.success) {
         setStats(statsData.stats);
+        setTeamMembers(statsData.team_members || []);
       }
 
     } catch (error) {
@@ -211,6 +205,42 @@ export default function AdminPage() {
     }
   };
 
+  const createTeamFromOrigins = async () => {
+    setCreatingTeam(true);
+    setSyncResults(prev => [...prev, '👥 Création des membres d\'équipe depuis les origines...']);
+
+    try {
+      const response = await fetch('/api/create-team-from-origins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+      console.log('Réponse create-team-from-origins:', data);
+
+      if (data.success) {
+        setSyncResults(prev => [
+          ...prev,
+          `✅ ${data.created_count} membres d'équipe créés automatiquement`,
+          `📋 Origines trouvées: ${data.origines_found?.join(', ') || 'Aucune'}`,
+          ...data.members_created?.map((member: any) => 
+            `  • ${member.prenom} ${member.nom} (${member.email})`
+          ) || []
+        ]);
+        
+        // Recharger les données
+        loadData();
+      } else {
+        setSyncResults(prev => [...prev, `❌ Erreur création équipe: ${data.error || 'Erreur inconnue'}`]);
+      }
+    } catch (error) {
+      setSyncResults(prev => [...prev, '❌ Erreur serveur lors de la création d\'équipe']);
+      console.error('Erreur création équipe:', error);
+    } finally {
+      setCreatingTeam(false);
+    }
+  };
+
   const deleteTeamMember = async (memberId: string, memberName: string) => {
     if (!confirm(`Êtes-vous sûr de vouloir supprimer ${memberName} ?`)) {
       return;
@@ -275,16 +305,12 @@ export default function AdminPage() {
 
       {/* Statistiques */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-8">
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-blue-600">{stats.total_assignments}</div>
-              <p className="text-sm text-gray-600">Assignations totales</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold text-green-600">{stats.assigned_lawyers}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.total_assigned_lawyers} / {stats.total_lawyers}
+              </div>
               <p className="text-sm text-gray-600">Avocats assignés</p>
             </CardContent>
           </Card>
@@ -320,12 +346,6 @@ export default function AdminPage() {
           </Card>
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-gray-600">{stats.unassigned_lawyers}</div>
-              <p className="text-sm text-gray-600">Vraiment non assignés</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
               <div className="text-2xl font-bold text-purple-600">{teamMembers.length}</div>
               <p className="text-sm text-gray-600">Membres d'équipe</p>
             </CardContent>
@@ -341,14 +361,14 @@ export default function AdminPage() {
             Synchronisation des données
           </CardTitle>
           <CardDescription>
-            Synchronisez les données depuis Google Sheets vers la base de données
+            Synchronisez les données depuis Google Sheets vers la base de données et créez automatiquement les membres d'équipe
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
             <Button 
               onClick={syncData}
-              disabled={syncing}
+              disabled={syncing || creatingTeam}
               className="flex items-center gap-2"
             >
               {syncing ? (
@@ -360,6 +380,25 @@ export default function AdminPage() {
                 <>
                   <RefreshCw className="w-4 h-4" />
                   Synchroniser les données
+                </>
+              )}
+            </Button>
+            
+            <Button 
+              onClick={createTeamFromOrigins}
+              disabled={syncing || creatingTeam}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              {creatingTeam ? (
+                <>
+                  <UsersRound className="w-4 h-4 animate-pulse" />
+                  Création en cours...
+                </>
+              ) : (
+                <>
+                  <UsersRound className="w-4 h-4" />
+                  Créer équipe depuis origines
                 </>
               )}
             </Button>

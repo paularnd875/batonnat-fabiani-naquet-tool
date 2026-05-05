@@ -1,0 +1,108 @@
+import { NextResponse } from 'next/server';
+import { googleSheets } from '@/lib/google-sheets';
+import { supabase } from '@/lib/db';
+
+export async function GET() {
+  try {
+    console.log('📊 Calcul statistiques admin depuis Google Sheets...');
+
+    // 1. Lire tous les avocats directement depuis Google Sheets (vraies données)
+    const allLawyers = await googleSheets.readLawyers();
+
+    // 2. Calculer les statistiques globales VRAIES
+    let globalStats = {
+      total_assignments: 0,
+      total_assigned_lawyers: 0,
+      c1_count: 0,
+      c2_count: 0,
+      c3_count: 0,
+      blacklist_count: 0,
+      soutien_public_count: 0,
+      total_unassigned: 0,
+      total_team_members: 0
+    };
+
+    allLawyers.forEach(lawyer => {
+      if (lawyer.soutien_public) globalStats.soutien_public_count++;
+      
+      switch (lawyer.classement) {
+        case 'C1': globalStats.c1_count++; break;
+        case 'C2': globalStats.c2_count++; break;
+        case 'C3': globalStats.c3_count++; break;
+        case 'Blacklist': globalStats.blacklist_count++; break;
+      }
+    });
+
+    // 3. Récupérer les assignations depuis Supabase avec les détails des membres d'équipe
+    const { data: assignments } = await supabase
+      .from('assignments')
+      .select('lawyer_prenomnom, team_member_id')
+      .then(result => result);
+
+    const { data: teamMembers } = await supabase
+      .from('team_members')
+      .select('*')
+      .then(result => result);
+
+    // 4. Calculer la couverture par membre d'équipe
+    const teamCoverage = {};
+    if (teamMembers) {
+      // Initialiser tous les membres à 0
+      teamMembers.forEach(member => {
+        teamCoverage[member.id] = 0;
+      });
+    }
+
+    if (assignments) {
+      globalStats.total_assignments = assignments.length;
+      globalStats.total_assigned_lawyers = new Set(assignments.map(a => a.lawyer_prenomnom)).size;
+      
+      // Compter les assignations par membre d'équipe
+      assignments.forEach(assignment => {
+        if (assignment.team_member_id && teamCoverage[assignment.team_member_id] !== undefined) {
+          teamCoverage[assignment.team_member_id]++;
+        }
+      });
+    }
+
+    if (teamMembers) {
+      globalStats.total_team_members = teamMembers.length;
+    }
+
+    globalStats.total_unassigned = allLawyers.length - globalStats.total_assigned_lawyers;
+    
+    // Ajouter le nombre total d'avocats
+    const totalLawyers = allLawyers.length;
+
+    console.log('📊 ADMIN STATS (données Google Sheets réelles):');
+    console.log(`   Total avocats: ${totalLawyers}`);
+    console.log(`   C1: ${globalStats.c1_count}`);
+    console.log(`   C2: ${globalStats.c2_count}`);
+    console.log(`   C3: ${globalStats.c3_count}`);
+    console.log(`   Soutiens publics: ${globalStats.soutien_public_count}`);
+    console.log(`   Blacklist: ${globalStats.blacklist_count}`);
+    console.log(`   Assignations: ${globalStats.total_assignments}`);
+    console.log(`   Avocats assignés: ${globalStats.total_assigned_lawyers}`);
+    console.log(`   Non assignés: ${globalStats.total_unassigned}`);
+
+    return NextResponse.json({
+      success: true,
+      source: 'Google Sheets + Supabase assignments',
+      timestamp: new Date().toISOString(),
+      stats: {
+        ...globalStats,
+        total_lawyers: totalLawyers,
+        team_coverage: teamCoverage
+      },
+      team_members: teamMembers || []
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur admin stats:', error);
+    
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue',
+    }, { status: 500 });
+  }
+}

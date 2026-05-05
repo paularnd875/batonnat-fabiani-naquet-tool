@@ -204,11 +204,17 @@ export async function POST(request: Request) {
 }
 
 function generateIndividualRecapEmail(assignments: Assignment[], teamMember: Assignment['team_members']): string {
-  const totalAssignments = assignments.length;
+  // Filtrer les assignations pour exclure les C1, C2, C3 (déjà acquis)
+  const filteredAssignments = assignments.filter(assignment => {
+    const classement = assignment.lawyers.classement;
+    return classement !== 'C1' && classement !== 'C2' && classement !== 'C3';
+  });
   
-  // Créer une liste simple numérotée des contacts
+  const totalAssignments = filteredAssignments.length;
+  
+  // Créer une liste simple numérotée des contacts (sans les C1, C2, C3)
   let contactsList = '';
-  assignments.forEach((assignment, index) => {
+  filteredAssignments.forEach((assignment, index) => {
     const lawyer = assignment.lawyers;
     const contactNumber = index + 1;
     const name = lawyer.nom_complet || lawyer.prenomnom || 'Nom non disponible';
@@ -223,6 +229,8 @@ function generateIndividualRecapEmail(assignments: Assignment[], teamMember: Ass
 Voici les ${totalAssignments} contacts que tu t'es engagé à transformer :
 
 ${contactsList}
+
+Note: Les avocats classés C1, C2, C3 ne sont pas inclus dans cette liste car ils sont considérés comme déjà acquis.
 
 Pensez-bien à indiquer une fois que vous avez contacté les avocats susmentionnés leurs cercles via ce lien : https://leganov.typeform.com/contactsfabnaq
 

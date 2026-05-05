@@ -67,6 +67,8 @@ export default function CabinetPage() {
   useEffect(() => {
     loadCabinetData();
     loadTeamMembers();
+    // Remonter en haut de la page lors du changement de page
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
 
   const loadCabinetData = async () => {
@@ -172,33 +174,7 @@ export default function CabinetPage() {
     );
   };
 
-  // Fonction pour trier les avocats selon l'ordre demandé
-  const sortLawyers = (lawyers: Lawyer[]) => {
-    return [...lawyers].sort((a, b) => {
-      // 1er : Soutiens publics
-      if (a.soutien_public && !b.soutien_public) return -1;
-      if (!a.soutien_public && b.soutien_public) return 1;
-      
-      // 2ème : C1
-      if (a.classement === 'C1' && b.classement !== 'C1' && !b.soutien_public) return -1;
-      if (a.classement !== 'C1' && b.classement === 'C1' && !a.soutien_public) return 1;
-      
-      // 3ème : C2
-      if (a.classement === 'C2' && b.classement !== 'C2' && b.classement !== 'C1' && !b.soutien_public) return -1;
-      if (a.classement !== 'C2' && b.classement === 'C2' && a.classement !== 'C1' && !a.soutien_public) return 1;
-      
-      // 4ème : C3
-      if (a.classement === 'C3' && !['C1', 'C2'].includes(b.classement) && !b.soutien_public) return -1;
-      if (a.classement !== 'C3' && b.classement === 'C3' && !['C1', 'C2'].includes(a.classement) && !a.soutien_public) return 1;
-      
-      // 5ème : Blacklist
-      if (a.classement === 'Blacklist' && !['C1', 'C2', 'C3'].includes(b.classement) && !b.soutien_public) return -1;
-      if (a.classement !== 'Blacklist' && b.classement === 'Blacklist' && !['C1', 'C2', 'C3'].includes(a.classement) && !a.soutien_public) return 1;
-      
-      // 6ème : Non classés (ordre alphabétique)
-      return a.nom_complet.localeCompare(b.nom_complet);
-    });
-  };
+  // Le tri est maintenant fait côté API
 
   if (loading) {
     return (
@@ -236,17 +212,43 @@ export default function CabinetPage() {
         )}
         
         {firmStats && (
-          <div className="flex gap-4 mt-4">
-            {getClassementBadge('C1') && <span>C1: {firmStats.c1_count}</span>}
-            {getClassementBadge('C2') && <span>C2: {firmStats.c2_count}</span>}
-            {getClassementBadge('C3') && <span>C3: {firmStats.c3_count}</span>}
-            {firmStats.bl_count > 0 && <span className="text-red-600">Blacklist: {firmStats.bl_count}</span>}
+          <div className="flex gap-4 mt-4 flex-wrap">
+            {firmStats.soutien_public_count > 0 && (
+              <span className="px-3 py-1 bg-green-600 text-white rounded text-sm font-semibold">
+                Soutiens publics: {firmStats.soutien_public_count}
+              </span>
+            )}
+            {firmStats.c1_count > 0 && (
+              <span className="px-3 py-1 bg-blue-600 text-white rounded text-sm font-semibold">
+                C1: {firmStats.c1_count}
+              </span>
+            )}
+            {firmStats.c2_count > 0 && (
+              <span className="px-3 py-1 bg-yellow-500 text-white rounded text-sm font-semibold">
+                C2: {firmStats.c2_count}
+              </span>
+            )}
+            {firmStats.c3_count > 0 && (
+              <span className="px-3 py-1 bg-orange-500 text-white rounded text-sm font-semibold">
+                C3: {firmStats.c3_count}
+              </span>
+            )}
+            {firmStats.bl_count > 0 && (
+              <span className="px-3 py-1 bg-red-600 text-white rounded text-sm font-semibold">
+                Blacklist: {firmStats.bl_count}
+              </span>
+            )}
+            {firmStats.unclassified_count > 0 && (
+              <span className="px-3 py-1 bg-gray-500 text-white rounded text-sm">
+                Non classés: {firmStats.unclassified_count}
+              </span>
+            )}
           </div>
         )}
       </div>
 
       <div className="grid gap-4">
-        {sortLawyers(lawyers).map((lawyer) => (
+        {lawyers.map((lawyer) => (
           <Card key={lawyer.prenomnom} className="p-4">
             <div className="flex gap-4 items-start">
               <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 border-2 border-gray-300">

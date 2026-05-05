@@ -16,6 +16,7 @@ interface Firm {
   c2_count: number;
   c3_count: number;
   bl_count: number;
+  soutien_public_count: number;
   unclassified_count: number;
   participation_rate: number;
   assigned_count: number;
@@ -34,8 +35,8 @@ export default function Home() {
 
   const loadFirms = async () => {
     try {
-      // Utilisons une API route plutôt qu'un accès direct Supabase côté client
-      const response = await fetch('/api/firms');
+      // Utilisons la nouvelle API qui lit directement depuis Google Sheets pour avoir les vraies stats
+      const response = await fetch('/api/firms-live');
       const data = await response.json();
       
       if (data.success) {
@@ -160,6 +161,11 @@ export default function Home() {
                   
                   {/* Badges de classification avec nouveau style */}
                   <div className="flex flex-wrap gap-2 mt-4">
+                    {firm.soutien_public_count > 0 && (
+                      <span className="fn-badge" style={{backgroundColor: '#22C55E', color: 'white'}}>
+                        Soutien public: {firm.soutien_public_count}
+                      </span>
+                    )}
                     {firm.c1_count > 0 && (
                       <span className="fn-badge fn-badge-c1">
                         C1: {firm.c1_count}
