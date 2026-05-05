@@ -23,7 +23,7 @@ export async function POST() {
     const lawyers = await googleSheets.readLawyers();
     const origines = new Set<string>();
     
-    lawyers.forEach(lawyer => {
+    lawyers.forEach((lawyer: any) => {
       if (lawyer.origine && lawyer.origine.trim()) {
         origines.add(lawyer.origine.trim());
       }
@@ -39,7 +39,7 @@ export async function POST() {
     console.log('👥 Membres existants:', existingMembers?.map(m => `${m.prenom} ${m.nom}`));
     
     // 3. Mapping des noms vers emails et infos complètes
-    const nameToInfo = {
+    const nameToInfo: { [key: string]: { prenom: string; nom: string; email: string } } = {
       'Marie-Hélène': {
         prenom: 'Marie-Hélène',
         nom: 'Fabiani',
