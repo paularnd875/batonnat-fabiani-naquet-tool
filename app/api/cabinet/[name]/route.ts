@@ -34,15 +34,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     const totalLawyers = filteredLawyers.length;
     
     // Trier les avocats : soutien_public > Blacklist > C1 > C2 > C3 > non classés
-    const sortOrder = {
+    const sortOrder: { [key: string]: number } = {
       'soutien_public': 0,  // Priorité maximale pour soutien public
       'Blacklist': 1,
       'C1': 2,
       'C2': 3, 
       'C3': 4,
       '': 5,           // Non classés en dernier
-      null: 5,
-      undefined: 5
+      'null': 5,
+      'undefined': 5
     };
     
     const sortedLawyers = filteredLawyers.sort((a, b) => {
@@ -51,8 +51,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       if (!a.soutien_public && b.soutien_public) return 1;
       
       // Puis par classement
-      const orderA = sortOrder[a.classement] ?? 5;
-      const orderB = sortOrder[b.classement] ?? 5;
+      const orderA = sortOrder[a.classement || ''] ?? 5;
+      const orderB = sortOrder[b.classement || ''] ?? 5;
       
       if (orderA !== orderB) {
         return orderA - orderB;
