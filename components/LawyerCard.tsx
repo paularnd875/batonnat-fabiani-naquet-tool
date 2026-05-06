@@ -108,6 +108,16 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, te
                 </Badge>
               )}
               
+              {lawyer.statut_cabinet && (
+                <Badge variant="outline" className={
+                  lawyer.statut_cabinet === 'Associé' 
+                    ? 'bg-fn-blue text-white border-fn-blue' 
+                    : 'bg-fn-yellow text-black border-fn-yellow'
+                }>
+                  {lawyer.statut_cabinet === 'Associé' ? '⚖️' : '👨‍💼'} {lawyer.statut_cabinet}
+                </Badge>
+              )}
+              
               {lawyer.soutien_public && (
                 <Badge variant="default" className="bg-purple-100 text-purple-800">
                   Soutien public

@@ -10,6 +10,7 @@ export interface SheetLawyer {
   email: string;
   annee_serment: number;
   cabinet: string;
+  statut_cabinet: string;
   classement: string;
   origine: string;
   soutien_public: boolean;
@@ -94,7 +95,7 @@ class GoogleSheetsService {
     
     const response = await this.sheets.spreadsheets.values.get({
       spreadsheetId: this.sheetId,
-      range: 'Base principale!A:BU', // Étendu jusqu'à BU pour inclure les photos
+      range: 'Base principale!A:BU', // Étendu jusqu'à BU pour inclure les photos et AH pour statut_cabinet
     });
 
     const duration = Date.now() - startTime;
@@ -124,6 +125,7 @@ class GoogleSheetsService {
         email: row[14] || '', // Adresse e-mail
         annee_serment: parseInt(row[27]) || 0, // Année de serment
         cabinet: row[34] || '', // Structure
+        statut_cabinet: row[33] || '', // Colonne AH (index 33) - Statut cabinet (associé/collaborateur/etc)
         classement: row[47] || '', // Colonne AV (index 47) - Classement agrégé C1/C2/C3
         origine: row[48] || '', // Colonne AW (index 48) - Origine/Prénom
         soutien_public: row[50] === '1', // Colonne AY (index 50) - Soutien public

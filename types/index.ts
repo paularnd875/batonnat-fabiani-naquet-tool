@@ -27,6 +27,7 @@ export interface Lawyer {
   email: string;
   annee_serment: number;
   cabinet?: string;
+  statut_cabinet?: string; // Nouveau champ pour associé/collaborateur/etc (colonne AH)
   classement: string;
   origine: string;
   soutien_public: boolean;

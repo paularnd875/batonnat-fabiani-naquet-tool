@@ -41,6 +41,8 @@ export default function CabinetPage() {
   const [totalLawyers, setTotalLawyers] = useState(0);
   const [pagination, setPagination] = useState<any>(null);
   const [lawyersPerPage] = useState(50);
+  const [statutFilter, setStatutFilter] = useState<string>('tous');
+  const [allLawyers, setAllLawyers] = useState<Lawyer[]>([]); // Tous les avocats pour stats
 
   // Plus besoin d'URLs de test - les photos viennent maintenant du Google Sheet via l'API
 
@@ -49,19 +51,47 @@ export default function CabinetPage() {
     loadTeamMembers();
     // Remonter en haut de la page lors du changement de page
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [currentPage]);
+  }, [currentPage, statutFilter]);
 
   const loadCabinetData = async () => {
     try {
-      const url = `/api/cabinet/${encodeURIComponent(cabinetName)}?page=${currentPage}&limit=${lawyersPerPage}`;
+      // Charger toutes les pages pour avoir toutes les données pour filtrage
+      const url = `/api/cabinet/${encodeURIComponent(cabinetName)}?page=1&limit=1000`;
       const response = await fetch(url);
       const data = await response.json();
       
       if (data.success) {
-        setLawyers(data.cabinet.lawyers);
+        const allLawyersData = data.cabinet.lawyers;
+        setAllLawyers(allLawyersData);
+        
+        // Appliquer le filtre par statut cabinet côté client
+        let filteredLawyers = allLawyersData;
+        
+        if (statutFilter !== 'tous') {
+          filteredLawyers = allLawyersData.filter((lawyer: Lawyer) => 
+            lawyer.statut_cabinet === statutFilter
+          );
+        }
+        
+        // Pagination côté client pour les résultats filtrés
+        const startIndex = (currentPage - 1) * lawyersPerPage;
+        const endIndex = startIndex + lawyersPerPage;
+        const paginatedLawyers = filteredLawyers.slice(startIndex, endIndex);
+        
+        setLawyers(paginatedLawyers);
         setFirmStats(data.cabinet.stats);
-        setTotalLawyers(data.cabinet.totalLawyers);
-        setPagination(data.cabinet.pagination);
+        setTotalLawyers(filteredLawyers.length);
+        
+        // Ajuster la pagination pour les résultats filtrés
+        const filteredPagination = {
+          currentPage: currentPage,
+          totalPages: Math.ceil(filteredLawyers.length / lawyersPerPage),
+          limit: lawyersPerPage,
+          offset: startIndex,
+          hasNext: currentPage < Math.ceil(filteredLawyers.length / lawyersPerPage),
+          hasPrev: currentPage > 1
+        };
+        setPagination(filteredPagination);
       }
     } catch (error) {
       console.error('Erreur chargement cabinet:', error);
@@ -230,6 +260,46 @@ export default function CabinetPage() {
             )}
           </div>
         )}
+        
+        {/* Filtres par statut cabinet */}
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Filtrer par statut</h3>
+          <div className="flex gap-3 flex-wrap">
+            <Button
+              variant={statutFilter === 'tous' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setStatutFilter('tous');
+                setCurrentPage(1);
+              }}
+              className="icon-hover focus-ring"
+            >
+              Tous ({allLawyers.length})
+            </Button>
+            <Button
+              variant={statutFilter === 'Associé' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setStatutFilter('Associé');
+                setCurrentPage(1);
+              }}
+              className="icon-hover focus-ring fn-badge"
+            >
+              ⚖️ Associés ({allLawyers.filter(l => l.statut_cabinet === 'Associé').length})
+            </Button>
+            <Button
+              variant={statutFilter === 'Collaborateur' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setStatutFilter('Collaborateur');
+                setCurrentPage(1);
+              }}
+              className="icon-hover focus-ring fn-badge"
+            >
+              👨‍💼 Collaborateurs ({allLawyers.filter(l => l.statut_cabinet === 'Collaborateur').length})
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4">
