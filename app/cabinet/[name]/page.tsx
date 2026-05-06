@@ -180,18 +180,18 @@ export default function CabinetPage() {
         <Button 
           variant="outline" 
           onClick={() => router.back()}
-          className="mb-4"
+          className="mb-4 icon-hover focus-ring"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Retour
         </Button>
         
-        <h1 className="text-4xl font-bold mb-2">{cabinetName}</h1>
-        <p className="text-xl text-gray-600">
+        <h1 className="text-4xl font-bold mb-2 text-balance">{cabinetName}</h1>
+        <p className="text-xl text-gray-600 stats-numbers">
           {totalLawyers} avocat{totalLawyers > 1 ? 's' : ''} au total
         </p>
         {pagination && totalLawyers > lawyersPerPage && (
-          <p className="text-lg text-gray-500">
+          <p className="text-lg text-gray-500 stats-numbers">
             Affichage de {((currentPage - 1) * lawyersPerPage) + 1} à {Math.min(currentPage * lawyersPerPage, totalLawyers)} sur {totalLawyers}
           </p>
         )}
@@ -260,7 +260,7 @@ export default function CabinetPage() {
       {pagination && pagination.totalPages > 1 && (
         <div className="flex flex-col items-center gap-4 mt-8 pt-8 border-t">
           {/* Informations de pagination */}
-          <div className="text-sm text-gray-600 font-medium">
+          <div className="text-sm text-gray-600 font-medium stats-numbers">
             Page {currentPage} sur {pagination.totalPages} • {totalLawyers} avocats au total
           </div>
           
@@ -273,6 +273,7 @@ export default function CabinetPage() {
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1 || loading}
               title="Première page"
+              className="icon-hover focus-ring"
             >
               ≪
             </Button>
@@ -284,6 +285,7 @@ export default function CabinetPage() {
               onClick={() => setCurrentPage(currentPage - 1)}
               disabled={!pagination.hasPrev || loading}
               title="Page précédente"
+              className="icon-hover focus-ring"
             >
               ‹
             </Button>
@@ -309,7 +311,7 @@ export default function CabinetPage() {
                     size="sm"
                     onClick={() => setCurrentPage(pageNum)}
                     disabled={loading}
-                    className="min-w-[40px]"
+                    className="min-w-[40px] icon-hover focus-ring"
                   >
                     {pageNum}
                   </Button>
@@ -324,6 +326,7 @@ export default function CabinetPage() {
               onClick={() => setCurrentPage(currentPage + 1)}
               disabled={!pagination.hasNext || loading}
               title="Page suivante"
+              className="icon-hover focus-ring"
             >
               ›
             </Button>
@@ -335,6 +338,7 @@ export default function CabinetPage() {
               onClick={() => setCurrentPage(pagination.totalPages)}
               disabled={currentPage === pagination.totalPages || loading}
               title="Dernière page"
+              className="icon-hover focus-ring"
             >
               ≫
             </Button>
@@ -355,7 +359,7 @@ export default function CabinetPage() {
                     setCurrentPage(page);
                   }
                 }}
-                className="w-16 px-2 py-1 text-center border rounded"
+                className="w-16 px-2 py-1 text-center border rounded focus-ring stats-numbers"
                 disabled={loading}
               />
               <span className="text-gray-500">sur {pagination.totalPages}</span>

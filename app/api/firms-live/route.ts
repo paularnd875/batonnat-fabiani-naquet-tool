@@ -28,10 +28,11 @@ export async function GET() {
     
     allLawyers.forEach((lawyer: any) => {
       const cabinet = lawyer.cabinet || 'Individuel';
+      const displayName = cabinet === 'Individuel' ? 'Avocats en individuel' : cabinet;
       
       if (!cabinetStats.has(cabinet)) {
         cabinetStats.set(cabinet, {
-          name: cabinet,
+          name: displayName,
           lawyer_count: 0,
           c1_count: 0,
           c2_count: 0,

@@ -39,7 +39,7 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, te
   };
 
   return (
-    <Card className="p-4 hover:shadow-md transition-shadow duration-200">
+    <Card className="lawyer-card p-4">
       <div className="flex gap-4 items-start">
         <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 border-2 border-gray-300 relative">
           {lawyer.photo_url && isValidImageUrl(lawyer.photo_url) ? (
@@ -70,7 +70,7 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, te
         <div className="flex-1 min-w-0 flex justify-between">
           <div className="flex-1 min-w-0">
             <div className="mb-2">
-              <h3 className="text-lg font-semibold text-gray-900 truncate">
+              <h3 className="text-lg font-semibold text-gray-900 truncate text-balance">
                 {lawyer.nom_complet}
               </h3>
             </div>
@@ -78,10 +78,10 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, te
             <div className="space-y-1">
               {lawyer.telephone && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Phone className="w-4 h-4" />
+                  <Phone className="w-4 h-4 icon-hover" />
                   <a 
                     href={`tel:${lawyer.telephone}`} 
-                    className="hover:text-blue-600 transition-colors"
+                    className="fn-link"
                   >
                     {lawyer.telephone}
                   </a>
@@ -90,10 +90,10 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, te
               
               {lawyer.email && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Mail className="w-4 h-4" />
+                  <Mail className="w-4 h-4 icon-hover" />
                   <a 
                     href={`mailto:${lawyer.email}`} 
-                    className="hover:text-blue-600 transition-colors truncate"
+                    className="fn-link truncate"
                   >
                     {lawyer.email}
                   </a>
@@ -140,7 +140,7 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, te
           <div className="flex flex-col gap-2 ml-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="whitespace-nowrap">
+                <Button variant="outline" size="sm" className="whitespace-nowrap icon-hover focus-ring">
                   Assigner
                 </Button>
               </DropdownMenuTrigger>
@@ -159,7 +159,7 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, te
 
             {lawyer.classement === 'Blacklist' && (
               <div className="flex items-center gap-1 text-red-600 text-xs">
-                <AlertTriangle className="w-3 h-3" />
+                <AlertTriangle className="w-3 h-3 icon-hover" />
                 <span>Blacklisted</span>
               </div>
             )}

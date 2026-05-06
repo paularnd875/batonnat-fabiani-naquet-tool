@@ -17,31 +17,31 @@ export default function BallotBoxIcon({ voted, className = '' }: BallotBoxIconPr
     <svg 
       width="28" 
       height="28" 
-      viewBox="0 0 24 24" 
+      viewBox="0 0 28 28" 
       fill="none" 
       stroke={color} 
-      strokeWidth="1.8" 
+      strokeWidth="1.5" 
       strokeLinecap="round" 
       strokeLinejoin="round"
       className={className}
       style={{ flexShrink: 0 }}
     >
       {/* Boîte aux lettres minimaliste */}
-      <rect x="3" y="14" width="18" height="7" rx="1" />
+      <rect x="4" y="18" width="20" height="7" rx="1" />
       
       {/* Fente d'insertion */}
-      <line x1="6" y1="14" x2="18" y2="14" strokeWidth="1" />
+      <line x1="7" y1="18" x2="21" y2="18" strokeWidth="1" />
       
       {/* Enveloppe qui s'insère */}
       <polygon 
-        points="7,8 17,8 17,12 12,10 7,12" 
+        points="8,6 20,6 20,15 14,12 8,15" 
         fill={voted ? color : 'none'} 
         opacity={voted ? "0.6" : "1"}
-        strokeWidth="1.5"
+        strokeWidth="1.3"
       />
       
       {/* Rabat central de l'enveloppe */}
-      <path d="M7 8L12 11L17 8" strokeWidth="1.5" />
+      <path d="M8 6L14 11L20 6" strokeWidth="1.3" />
     </svg>
   );
 }

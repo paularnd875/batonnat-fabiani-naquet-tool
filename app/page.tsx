@@ -117,13 +117,13 @@ export default function Home() {
               placeholder="Rechercher un cabinet..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="fn-input"
+              className="fn-input focus-ring"
             />
           </div>
-          <Link href="/team/add" className="btn-fn-primary">
+          <Link href="/team/add" className="btn-fn-primary icon-hover">
             Ajouter un collaborateur
           </Link>
-          <Link href="/test" className="btn-fn-outline">
+          <Link href="/test" className="btn-fn-outline icon-hover">
             Test API
           </Link>
         </div>
@@ -143,18 +143,18 @@ export default function Home() {
         <div className="grid gap-6">
           {currentFirms.map((firm) => (
             <div key={firm.name} className="fn-card">
-              <Link href={`/cabinet/${encodeURIComponent(firm.name)}`} className="block">
+              <Link href={`/cabinet/${encodeURIComponent(firm.name)}`} className="fn-link block focus-ring">
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-fn-black mb-2">{firm.name}</h3>
+                      <h3 className="text-xl font-semibold text-fn-black mb-2 text-balance">{firm.name}</h3>
                       <p className="text-gray-600 font-medium">
                         {firm.lawyer_count} avocat{firm.lawyer_count > 1 ? 's' : ''}
                       </p>
                     </div>
                     <div className="text-right space-y-2">
                       {firm.participation_rate !== null && firm.participation_rate !== undefined && (
-                        <div className="text-2xl font-bold text-fn-blue">
+                        <div className="text-2xl font-bold text-fn-blue stats-numbers">
                           {(firm.participation_rate * 100).toFixed(1)}%
                         </div>
                       )}
@@ -222,7 +222,7 @@ export default function Home() {
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="btn-fn-outline text-sm px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-fn-outline text-sm px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed icon-hover focus-ring"
             >
               ⏮ Première
             </button>
@@ -230,7 +230,7 @@ export default function Home() {
             <button
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="btn-fn-outline text-sm px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-fn-outline text-sm px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed icon-hover focus-ring"
             >
               ← Précédent
             </button>
@@ -246,7 +246,7 @@ export default function Home() {
             <button
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="btn-fn-outline text-sm px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-fn-outline text-sm px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed icon-hover focus-ring"
             >
               Suivant →
             </button>
@@ -254,7 +254,7 @@ export default function Home() {
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
-              className="btn-fn-outline text-sm px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-fn-outline text-sm px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed icon-hover focus-ring"
             >
               Dernière ⏭
             </button>

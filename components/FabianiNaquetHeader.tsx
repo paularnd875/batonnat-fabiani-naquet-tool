@@ -8,10 +8,8 @@ const FabianiNaquetHeader: React.FC = () => {
 
   const navLinks = [
     { text: 'CABINETS', href: '/' },
-    { text: 'ÉQUIPE', href: '/team' },
+    { text: 'TABLEAU DE BORD', href: '/dashboard' },
     { text: 'HISTORIQUE', href: '/historique' },
-    { text: 'RÉCAPITULATIF', href: '/recapitulatif' },
-    { text: 'ADMIN', href: '/admin' },
   ];
 
   return (
@@ -22,7 +20,7 @@ const FabianiNaquetHeader: React.FC = () => {
           {/* Logo */}
           <Link 
             href="/" 
-            className="flex items-center font-bold text-[1.1rem] text-black no-underline tracking-[0.02em] uppercase"
+            className="flex items-center font-bold text-[1.1rem] text-black no-underline tracking-[0.02em] uppercase focus-ring"
             style={{ fontFamily: "var(--font-resolve)" }}
           >
             BÂTONNAT FABIANI-NAQUET 2026
@@ -45,7 +43,7 @@ const FabianiNaquetHeader: React.FC = () => {
           {/* Burger menu pour mobile */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden flex flex-col justify-center gap-[5px] p-2 mr-4"
+            className="md:hidden flex flex-col justify-center gap-[5px] p-2 mr-4 focus-ring icon-hover"
             aria-label="Menu"
           >
             <span className={`block h-[2px] w-6 bg-black transition-all duration-300 ${mobileMenuOpen ? 'translate-y-[7px] rotate-45' : ''}`}></span>
@@ -72,7 +70,7 @@ const FabianiNaquetHeader: React.FC = () => {
               key={index}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="text-2xl font-bold text-black uppercase tracking-wider transition-colors"
+              className="text-2xl font-bold text-black uppercase tracking-wider transition-colors focus-ring fn-link"
               style={{ 
                 fontFamily: "var(--font-resolve)",
                 color: index === 0 ? 'var(--fn-red)' : index === 1 ? 'var(--fn-blue)' : 'var(--fn-black)'

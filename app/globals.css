@@ -258,13 +258,66 @@
   }
   
   .fn-card {
-    @apply bg-white rounded-lg shadow-md transition-all duration-300 relative overflow-hidden;
+    @apply bg-white rounded-lg shadow-md relative overflow-hidden;
     border-left: 4px solid var(--fn-red);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .fn-card:hover {
-    @apply transform -translate-y-1 shadow-xl;
+    @apply shadow-2xl;
     border-left-color: var(--fn-blue);
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 20px 40px rgba(217, 48, 37, 0.15);
+  }
+
+  /* Animations élégantes pour les cartes d'avocats - Style Fabiani-Naquet */
+  .lawyer-card {
+    @apply bg-white rounded-lg shadow-md relative overflow-hidden transition-all duration-300;
+    border: 1px solid #f1f5f9;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .lawyer-card:hover {
+    @apply shadow-xl;
+    transform: translateY(-3px);
+    border-color: var(--fn-blue);
+    box-shadow: 0 15px 35px rgba(48, 120, 198, 0.12), 0 5px 15px rgba(0, 0, 0, 0.07);
+  }
+
+  /* Animation des badges avec couleurs Fabiani-Naquet */
+  .fn-badge {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide transition-all duration-200;
+  }
+  
+  .fn-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Micro-interactions pour les boutons avec style Fabiani-Naquet */
+  .btn-fn-primary {
+    @apply inline-flex items-center justify-center px-6 py-2 rounded-md border-2 cursor-pointer;
+    font-family: var(--font-resolve);
+    font-weight: 700;
+    font-size: 15.2px;
+    letter-spacing: 0.304px;
+    text-transform: uppercase;
+    background-color: var(--fn-red);
+    border-color: var(--fn-red);
+    color: var(--fn-text-white);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .btn-fn-primary:hover {
+    background-color: #B8251C;
+    border-color: #B8251C;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(217, 48, 37, 0.3);
+  }
+  
+  .btn-fn-primary:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(217, 48, 37, 0.4);
   }
   
   /* Navigation - Style Fabiani-Naquet avec police Resolve */
@@ -350,4 +403,45 @@
   .border-fn-red { border-color: var(--fn-red) !important; }
   .border-fn-blue { border-color: var(--fn-blue) !important; }
   .border-fn-yellow { border-color: var(--fn-yellow) !important; }
+  
+  /* Typography moderne - Style Fabiani-Naquet */
+  .stats-numbers {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  
+  /* Animations de focus pour l'accessibilité */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500;
+  }
+  
+  /* Micro-animation pour les icônes */
+  .icon-hover {
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+  
+  .icon-hover:hover {
+    transform: scale(1.1);
+    color: var(--fn-blue);
+  }
+  
+  /* Animation des liens avec couleurs Fabiani-Naquet */
+  .fn-link {
+    @apply transition-colors duration-200;
+    color: inherit;
+    text-decoration: none;
+  }
+  
+  .fn-link:hover {
+    color: inherit;
+    text-decoration: none;
+  }
 }
