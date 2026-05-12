@@ -30,7 +30,15 @@ export async function GET(request: Request) {
     console.log(`📋 ${allLawyers.length} avocats chargés pour recherche`);
 
     const queryLower = query ? query.toLowerCase() : '';
-    const results = {
+    const results: {
+      lawyers: any[];
+      cabinets: any[];
+      query: string | null | undefined;
+      totalFound: number;
+      searchTime: number;
+      totalLawyersFound?: number;
+      totalCabinetsFound?: number;
+    } = {
       lawyers: [],
       cabinets: [],
       query,

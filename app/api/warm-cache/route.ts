@@ -56,7 +56,7 @@ export async function GET() {
       success: true,
       cacheStatus: {
         lawyersInCache: !!cached,
-        lawyerCount: cached ? cached.length : 0,
+        lawyerCount: cached && Array.isArray(cached) ? cached.length : 0,
         cacheInfo: info
       }
     });
