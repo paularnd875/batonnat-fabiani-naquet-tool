@@ -58,7 +58,7 @@ export default function DashboardPage() {
                   flex items-center gap-3 px-6 py-4 font-bold text-sm uppercase tracking-wider transition-all duration-200 focus-ring
                   ${activeTab === tab.id 
                     ? 'border-b-3 border-fn-red text-fn-red bg-red-50' 
-                    : 'text-gray-600 hover:text-fn-blue hover:bg-blue-50 icon-hover'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 icon-hover'
                   }
                 `}
                 style={{ fontFamily: "var(--font-resolve)" }}

@@ -132,11 +132,11 @@ export default function HistoriquePage() {
       {/* Contenu principal avec informations et recherche */}
       <div className="container mx-auto px-8 py-6">
         <div className="mb-6">
-          <h2 className="text-fn-blue font-bold mb-2">Historique des assignations</h2>
+          <h2 className="text-blue-600 font-bold mb-2">Historique des assignations</h2>
           <p className="text-lg text-gray-600 font-medium">
             <span className="decorative-text">{assignments.length} assignation{assignments.length > 1 ? 's' : ''}</span>
             {searchTerm && (
-              <span className="text-fn-blue"> • {filteredAssignments.length} résultats pour "{searchTerm}"</span>
+              <span className="text-blue-600"> • {filteredAssignments.length} résultats pour "{searchTerm}"</span>
             )}
           </p>
         </div>
@@ -230,7 +230,7 @@ export default function HistoriquePage() {
                       📅 Assigné le {formatDate(assignment.assigned_at)}
                     </span>
                     {assignment.assigned_by && (
-                      <span className="text-fn-blue font-medium">
+                      <span className="text-blue-600 font-medium">
                         👤 par {assignment.assigned_by}
                       </span>
                     )}
@@ -279,7 +279,7 @@ export default function HistoriquePage() {
             </button>
             
             <div className="bg-white px-4 py-2 rounded-md border-2 border-gray-200 text-sm font-medium">
-              <span className="text-fn-blue font-semibold">Page {currentPage}</span>
+              <span className="text-blue-600 font-semibold">Page {currentPage}</span>
               <span className="text-gray-500"> sur {totalPages}</span>
               <div className="text-xs text-gray-400 mt-1">
                 ({startIndex + 1}-{Math.min(endIndex, filteredAssignments.length)} sur {filteredAssignments.length} assignations)

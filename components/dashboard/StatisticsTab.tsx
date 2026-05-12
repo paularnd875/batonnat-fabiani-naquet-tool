@@ -122,7 +122,7 @@ export default function StatisticsTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-fn-blue">Chargement des statistiques...</div>
+        <div className="text-lg text-blue-600">Chargement des statistiques...</div>
       </div>
     );
   }
@@ -134,10 +134,10 @@ export default function StatisticsTab() {
         <Card className="fn-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Total assignations</CardTitle>
-            <TrendingUp className="h-5 w-5 text-fn-blue" />
+            <TrendingUp className="h-5 w-5 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-fn-blue stats-numbers">{getTotalAssignments()}</div>
+            <div className="text-3xl font-bold text-blue-600 stats-numbers">{getTotalAssignments()}</div>
             <p className="text-xs text-gray-500 mt-1">
               Réparties sur {teamStats.length} membre{teamStats.length > 1 ? 's' : ''}
             </p>
@@ -203,7 +203,7 @@ export default function StatisticsTab() {
                   
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-fn-blue stats-numbers">
+                      <div className="text-2xl font-bold text-blue-600 stats-numbers">
                         {member.total_assignments}
                       </div>
                       <div className="text-sm text-gray-500">

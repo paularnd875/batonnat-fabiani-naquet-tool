@@ -113,13 +113,13 @@ export default function EditTeamMemberPage() {
         <div className="mb-8">
           <button 
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-fn-blue hover:underline mb-4"
+            className="flex items-center gap-2 text-blue-600 hover:underline mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
             Retour à l'équipe
           </button>
           
-          <h2 className="text-fn-blue font-bold mb-2">Modifier un collaborateur</h2>
+          <h2 className="text-blue-600 font-bold mb-2">Modifier un collaborateur</h2>
           <p className="text-lg text-gray-600 font-medium">
             Modification de <span className="decorative-text">{member?.prenom} {member?.nom}</span>
           </p>

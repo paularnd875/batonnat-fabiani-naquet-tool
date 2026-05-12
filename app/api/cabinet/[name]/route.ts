@@ -17,16 +17,24 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     console.log('🔍 Récupération avocats Google Sheet avec photos...');
     const allLawyersFromSheet = await googleSheets.readLawyers();
     
+    // CORRECTION: Normaliser le nom du cabinet pour gérer les incohérences
+    let normalizedCabinetName = cabinetName;
+    if (cabinetName === 'Avocats en individuel') {
+      normalizedCabinetName = 'Individuel';
+    }
+    
+    console.log(`🔍 Recherche cabinet: "${cabinetName}" → "${normalizedCabinetName}"`);
+    
     // Filtrer par cabinet
     let filteredLawyers;
-    if (cabinetName === 'Individuel') {
+    if (normalizedCabinetName === 'Individuel') {
       // Pour "Individuel", chercher les cabinets vides ou null
       filteredLawyers = allLawyersFromSheet.filter((lawyer: any) => 
         !lawyer.cabinet || lawyer.cabinet.trim() === ''
       );
     } else {
       filteredLawyers = allLawyersFromSheet.filter((lawyer: any) => 
-        lawyer.cabinet === cabinetName
+        lawyer.cabinet === normalizedCabinetName
       );
     }
 
@@ -123,7 +131,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       }
     });
 
-    // Calculer les assignations pour ce cabinet
+    // Calculer les assignations pour ce cabinet (pour l'interface admin)
     const { data: assignments } = await supabase
       .from('assignments')
       .select('lawyer_prenomnom');
@@ -137,7 +145,16 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       });
     }
 
-    realStats.participation_rate = realStats.lawyer_count > 0 ? realStats.assigned_count / realStats.lawyer_count : 0;
+    // CORRECTION: Calculer le vrai taux de participation depuis les données de vote Google Sheets
+    let voteCount = 0;
+    filteredLawyers.forEach((lawyer: any) => {
+      // Compter les avocats qui ont voté au moins à un tour
+      if (lawyer.premier_tour_vote || lawyer.second_tour_vote) {
+        voteCount++;
+      }
+    });
+    
+    realStats.participation_rate = realStats.lawyer_count > 0 ? voteCount / realStats.lawyer_count : 0;
 
     return NextResponse.json({
       success: true,

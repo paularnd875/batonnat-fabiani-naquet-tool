@@ -123,11 +123,11 @@ export default function TeamPage() {
       {/* Contenu principal */}
       <div className="container mx-auto px-8 py-6">
         <div className="mb-6">
-          <h2 className="text-fn-blue font-bold mb-2">Collaborateurs de l'équipe</h2>
+          <h2 className="text-blue-600 font-bold mb-2">Collaborateurs de l'équipe</h2>
           <p className="text-lg text-gray-600 font-medium">
             <span className="decorative-text">{teamMembers.length} collaborateur{teamMembers.length > 1 ? 's' : ''}</span>
             {searchTerm && (
-              <span className="text-fn-blue"> • {filteredMembers.length} résultats pour "{searchTerm}"</span>
+              <span className="text-blue-600"> • {filteredMembers.length} résultats pour "{searchTerm}"</span>
             )}
           </p>
         </div>

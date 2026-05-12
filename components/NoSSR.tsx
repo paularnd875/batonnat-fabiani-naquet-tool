@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 
 interface NoSSRProps {
@@ -5,14 +7,18 @@ interface NoSSRProps {
   fallback?: React.ReactNode;
 }
 
+/**
+ * Composant pour éviter les erreurs d'hydratation SSR/CSR
+ * Rend le fallback côté serveur et le contenu réel côté client
+ */
 export default function NoSSR({ children, fallback = null }: NoSSRProps) {
-  const [mounted, setMounted] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    setHasMounted(true);
   }, []);
 
-  if (!mounted) {
+  if (!hasMounted) {
     return <>{fallback}</>;
   }
 

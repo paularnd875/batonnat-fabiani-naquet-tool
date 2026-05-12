@@ -55,43 +55,75 @@ export default function CabinetPage() {
 
   const loadCabinetData = async () => {
     try {
-      // Charger toutes les pages pour avoir toutes les données pour filtrage
-      const url = `/api/cabinet/${encodeURIComponent(cabinetName)}?page=1&limit=1000`;
+      // Si on utilise un filtre, charger TOUTES les données pour pouvoir filtrer côté client
+      let url;
+      if (statutFilter !== 'tous') {
+        url = `/api/cabinet/${encodeURIComponent(cabinetName)}?page=1&limit=10000`; // Limite très élevée pour avoir toutes les données
+      } else {
+        url = `/api/cabinet/${encodeURIComponent(cabinetName)}?page=${currentPage}&limit=${lawyersPerPage}`;
+      }
+      
       const response = await fetch(url);
       const data = await response.json();
       
       if (data.success) {
         const allLawyersData = data.cabinet.lawyers;
-        setAllLawyers(allLawyersData);
+        
+        // Sauvegarder tous les avocats pour les stats (seulement si on n'a pas encore les données)
+        if (allLawyers.length === 0 && allLawyersData.length > 0) {
+          // Pour avoir VRAIMENT toutes les données, faire une requête spéciale
+          const allDataResponse = await fetch(`/api/cabinet/${encodeURIComponent(cabinetName)}?page=1&limit=10000`);
+          const allDataResult = await allDataResponse.json();
+          if (allDataResult.success) {
+            setAllLawyers(allDataResult.cabinet.lawyers);
+          }
+        }
         
         // Appliquer le filtre par statut cabinet côté client
         let filteredLawyers = allLawyersData;
         
         if (statutFilter !== 'tous') {
-          filteredLawyers = allLawyersData.filter((lawyer: Lawyer) => 
-            lawyer.statut_cabinet === statutFilter
-          );
+          filteredLawyers = allLawyersData.filter((lawyer: Lawyer) => {
+            const statut = lawyer.statut_cabinet?.trim();
+            
+            // Le filtrage doit correspondre exactement aux valeurs dans les données
+            if (statutFilter === 'Individuel') {
+              return statut === 'Individuel';
+            }
+            if (statutFilter === 'Associé') {
+              return statut === 'Associé';
+            }
+            if (statutFilter === 'Collaborateur') {
+              return statut === 'Collaborateur';
+            }
+            
+            return false;
+          });
         }
         
-        // Pagination côté client pour les résultats filtrés
-        const startIndex = (currentPage - 1) * lawyersPerPage;
-        const endIndex = startIndex + lawyersPerPage;
-        const paginatedLawyers = filteredLawyers.slice(startIndex, endIndex);
+        // Si on utilise un filtre, appliquer la pagination côté client
+        if (statutFilter !== 'tous') {
+          const startIndex = (currentPage - 1) * lawyersPerPage;
+          const endIndex = startIndex + lawyersPerPage;
+          const paginatedFiltered = filteredLawyers.slice(startIndex, endIndex);
+          
+          setLawyers(paginatedFiltered);
+          setTotalLawyers(filteredLawyers.length);
+          setPagination({
+            currentPage,
+            totalPages: Math.ceil(filteredLawyers.length / lawyersPerPage),
+            limit: lawyersPerPage,
+            offset: startIndex,
+            hasNext: endIndex < filteredLawyers.length,
+            hasPrev: currentPage > 1
+          });
+        } else {
+          setLawyers(filteredLawyers);
+          setTotalLawyers(data.cabinet.totalLawyers); // Utiliser le total de l'API
+          setPagination(data.cabinet.pagination);
+        }
         
-        setLawyers(paginatedLawyers);
         setFirmStats(data.cabinet.stats);
-        setTotalLawyers(filteredLawyers.length);
-        
-        // Ajuster la pagination pour les résultats filtrés
-        const filteredPagination = {
-          currentPage: currentPage,
-          totalPages: Math.ceil(filteredLawyers.length / lawyersPerPage),
-          limit: lawyersPerPage,
-          offset: startIndex,
-          hasNext: currentPage < Math.ceil(filteredLawyers.length / lawyersPerPage),
-          hasPrev: currentPage > 1
-        };
-        setPagination(filteredPagination);
       }
     } catch (error) {
       console.error('Erreur chargement cabinet:', error);
@@ -274,7 +306,7 @@ export default function CabinetPage() {
               }}
               className="icon-hover focus-ring"
             >
-              Tous ({allLawyers.length})
+              Tous ({totalLawyers})
             </Button>
             <Button
               variant={statutFilter === 'Associé' ? 'default' : 'outline'}
@@ -297,6 +329,17 @@ export default function CabinetPage() {
               className="icon-hover focus-ring fn-badge"
             >
               👨‍💼 Collaborateurs ({allLawyers.filter(l => l.statut_cabinet === 'Collaborateur').length})
+            </Button>
+            <Button
+              variant={statutFilter === 'Individuel' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setStatutFilter('Individuel');
+                setCurrentPage(1);
+              }}
+              className="icon-hover focus-ring fn-badge"
+            >
+              🏛️ Individuels ({allLawyers.filter(l => l.statut_cabinet === 'Individuel').length})
             </Button>
           </div>
         </div>

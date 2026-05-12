@@ -157,9 +157,9 @@ class GoogleSheetsService {
       };
     });
     
-    // 🚀 OPTIMISATION: Mettre en cache pour 15 minutes
+    // 🚀 OPTIMISATION: Mettre en cache pour 60 minutes (Google Sheets très lent)
     memoryCache.set(CACHE_KEYS.LAWYERS_ALL, lawyersWithVotes, CACHE_TTL.LAWYERS);
-    console.log(`💾 ${lawyersWithVotes.length} avocats mis en cache pour 15 minutes (avec données de vote)`);
+    console.log(`💾 ${lawyersWithVotes.length} avocats mis en cache pour 60 minutes (avec données de vote)`);
     
     return lawyersWithVotes;
   }

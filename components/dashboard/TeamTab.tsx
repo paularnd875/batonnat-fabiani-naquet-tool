@@ -133,7 +133,7 @@ export default function TeamTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-fn-blue">Chargement de l'équipe...</div>
+        <div className="text-lg text-blue-600">Chargement de l'équipe...</div>
       </div>
     );
   }

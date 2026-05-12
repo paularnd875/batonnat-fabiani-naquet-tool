@@ -1,53 +1,28 @@
 import { NextResponse } from 'next/server';
-import { googleSheetsService } from '@/lib/google-sheets';
+import { googleSheets } from '@/lib/google-sheets';
 
 export async function GET() {
   try {
     console.log('Testing statut cabinet column AH...');
 
-    // Utiliser le service existant pour récupérer les headers
-    const headerData = await googleSheetsService.getSheetHeaders();
-
-    // Test pour récupérer les colonnes A (nom_complet), AH (statut_cabinet) et AI (cabinet) des 20 premières lignes
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: 'Base principale!A1:AI21', // A jusqu'à AI pour inclure AH (index 33)
-    });
-
-    const rows = response.data.values || [];
+    // Test direct pour récupérer un échantillon d'avocats avec leur statut cabinet
+    const allLawyers = await googleSheets.readLawyers();
+    const sampleLawyers = allLawyers.slice(0, 20); // Prendre les 20 premiers
     
-    if (rows.length < 2) {
+    if (!sampleLawyers || sampleLawyers.length === 0) {
       return NextResponse.json({
         success: false,
-        error: 'Pas assez de données dans le sheet',
+        error: 'Aucun avocat trouvé'
       });
     }
 
-    // Identifier les colonnes
-    const headers = rows[0];
-    const colAIndex = 0; // nom_complet 
-    const colAHIndex = 33; // statut_cabinet (AH = 33)
-    const colAIIndex = 34; // cabinet (AI = 34)
-
-    console.log('En-têtes trouvés:', {
-      colA: headers[colAIndex],
-      colAH: headers[colAHIndex], 
-      colAI: headers[colAIIndex]
-    });
-
-    const results = rows.slice(1, 21).map((row: any[], index: number) => {
-      const nomComplet = row[colAIndex] || '';
-      const statutCabinet = row[colAHIndex] || '';
-      const cabinet = row[colAIIndex] || '';
-      
-      return {
-        ligne: index + 2,
-        nom_complet: nomComplet,
-        statut_cabinet: statutCabinet,
-        cabinet: cabinet,
-        has_statut: statutCabinet !== ''
-      };
-    });
+    const results = sampleLawyers.map((lawyer, index) => ({
+      ligne: index + 1,
+      nom_complet: lawyer.nom_complet,
+      statut_cabinet: lawyer.statut_cabinet || '',
+      cabinet: lawyer.cabinet || '',
+      has_statut: Boolean(lawyer.statut_cabinet?.trim())
+    }));
 
     // Statistiques
     const totalRows = results.length;
@@ -68,12 +43,7 @@ export async function GET() {
         percentage_with_statut: Math.round((rowsWithStatut / totalRows) * 100)
       },
       statut_types: statutTypes,
-      sample_data: results.slice(0, 10),
-      column_indexes: {
-        colA: colAIndex,
-        colAH: colAHIndex,
-        colAI: colAIIndex
-      }
+      sample_data: results.slice(0, 10)
     });
 
   } catch (error) {

@@ -8,6 +8,7 @@ const FabianiNaquetHeader: React.FC = () => {
 
   const navLinks = [
     { text: 'CABINETS', href: '/' },
+    { text: 'AJOUT C123', href: '/typeform-ajout-c123' },
     { text: 'TABLEAU DE BORD', href: '/dashboard' },
     { text: 'HISTORIQUE', href: '/historique' },
   ];
@@ -73,7 +74,10 @@ const FabianiNaquetHeader: React.FC = () => {
               className="text-2xl font-bold text-black uppercase tracking-wider transition-colors focus-ring fn-link"
               style={{ 
                 fontFamily: "var(--font-resolve)",
-                color: index === 0 ? 'var(--fn-red)' : index === 1 ? 'var(--fn-blue)' : 'var(--fn-black)'
+                color: index === 0 ? 'var(--fn-red)' : 
+                       index === 1 ? 'var(--fn-blue)' : 
+                       index === 2 ? 'var(--fn-yellow)' :
+                       'var(--fn-black)'
               }}
             >
               {link.text}

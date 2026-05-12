@@ -323,31 +323,31 @@ export default function AdminPage() {
           </Card>
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-blue-600">{stats.c1_count || 0}</div>
+              <div className="text-2xl font-bold" style={{ color: '#0d9488' }}>{stats.c1_count || 0}</div>
               <p className="text-sm text-gray-600">C1</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-yellow-600">{stats.c2_count || 0}</div>
+              <div className="text-2xl font-bold" style={{ color: '#22c55e' }}>{stats.c2_count || 0}</div>
               <p className="text-sm text-gray-600">C2</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-orange-600">{stats.c3_count || 0}</div>
+              <div className="text-2xl font-bold" style={{ color: '#eab308' }}>{stats.c3_count || 0}</div>
               <p className="text-sm text-gray-600">C3</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-green-600">{stats.soutien_public_count || 0}</div>
+              <div className="text-2xl font-bold" style={{ color: '#8B5CF6' }}>{stats.soutien_public_count || 0}</div>
               <p className="text-sm text-gray-600">Soutiens publics</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-red-600">{stats.blacklist_count || 0}</div>
+              <div className="text-2xl font-bold" style={{ color: '#D93025' }}>{stats.blacklist_count || 0}</div>
               <p className="text-sm text-gray-600">Blacklist</p>
             </CardContent>
           </Card>

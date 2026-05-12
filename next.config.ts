@@ -22,12 +22,32 @@ const nextConfig: NextConfig = {
   // Optimisations de compilation
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    // Désactiver certains features problématiques en dev
+    ...(process.env.NODE_ENV === 'development' ? {
+      turbopack: {
+        rules: {
+          '*.tsx': {
+            loaders: [{
+              loader: 'builtin:swc-loader',
+              options: {
+                jsc: {
+                  parser: {
+                    syntax: 'typescript',
+                    tsx: true,
+                  },
+                },
+              },
+            }],
+          },
+        },
+      },
+    } : {}),
   },
   // Compression
   compress: true,
   
-  // Configuration React pour éviter les erreurs d'hydratation
-  reactStrictMode: true,
+  // Configuration React pour éviter les erreurs d'hydratation  
+  reactStrictMode: false, // Temporairement désactivé pour éviter le double-rendering
   
   // Headers personnalisés pour la performance
   async headers() {

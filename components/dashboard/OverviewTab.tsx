@@ -90,7 +90,7 @@ export default function OverviewTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-fn-blue">Chargement des données...</div>
+        <div className="text-lg text-blue-600">Chargement des données...</div>
       </div>
     );
   }
@@ -102,7 +102,7 @@ export default function OverviewTab() {
         <Card className="fn-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Total Avocats</CardTitle>
-            <Users className="h-5 w-5 text-fn-blue" />
+            <Users className="h-5 w-5 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-fn-black stats-numbers">{stats?.total_lawyers || 0}</div>

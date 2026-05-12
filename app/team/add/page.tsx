@@ -64,7 +64,7 @@ export default function AddTeamMemberPage() {
       {/* Contenu principal */}
       <div className="container mx-auto px-8 py-6">
         <div className="mb-6">
-          <h2 className="text-fn-blue font-bold mb-2">Ajouter un collaborateur</h2>
+          <h2 className="text-blue-600 font-bold mb-2">Ajouter un collaborateur</h2>
           <p className="text-lg text-gray-600 font-medium">
             <span className="decorative-text">Nouveau membre de l'équipe</span>
           </p>
@@ -168,7 +168,7 @@ export default function AddTeamMemberPage() {
 
           {/* Informations supplémentaires */}
           <div className="mt-8 p-6 bg-blue-50 border-l-4 border-fn-blue rounded-md">
-            <h4 className="font-semibold text-fn-blue mb-2">💡 Information</h4>
+            <h4 className="font-semibold text-blue-600 mb-2">💡 Information</h4>
             <p className="text-sm text-gray-700">
               Une fois ajouté, le collaborateur apparaîtra dans la liste de l'équipe et pourra être assigné à des dossiers.
             </p>

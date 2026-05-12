@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@supabase/supabase-js';
 import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
+import SearchBar from '@/components/SearchBar';
+import SearchResults from '@/components/SearchResults';
 
 interface Firm {
   name: string;
@@ -22,14 +24,28 @@ interface Firm {
   assigned_count: number;
 }
 
+interface SearchResults {
+  lawyers: any[];
+  cabinets: any[];
+  query: string;
+  totalFound: number;
+  searchTime: number;
+  totalLawyersFound?: number;
+  totalCabinetsFound?: number;
+}
+
 export default function Home() {
   const [firms, setFirms] = useState<Firm[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Début avec false pour éviter l'hydratation error
+  const [mounted, setMounted] = useState(false); // État pour gérer l'hydratation
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const firmsPerPage = 50;
+  const [searchResults, setSearchResults] = useState<SearchResults | null>(null);
 
   useEffect(() => {
+    setMounted(true); // Marquer comme monté côté client
+    setLoading(true);
     loadFirms();
   }, []);
 
@@ -83,11 +99,28 @@ export default function Home() {
     );
   };
 
+  // Éviter l'hydratation error en gérant l'état de chargement différemment
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white to-gray-50">
+        <FabianiNaquetHeader />
+        <div className="container mx-auto p-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-lg">Initialisation...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="container mx-auto p-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Chargement des cabinets...</div>
+      <div className="min-h-screen bg-gradient-to-br from-white to-gray-50">
+        <FabianiNaquetHeader />
+        <div className="container mx-auto p-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-lg">Chargement des cabinets...</div>
+          </div>
         </div>
       </div>
     );
@@ -104,17 +137,27 @@ export default function Home() {
           <p className="text-lg text-gray-600 font-medium">
             <span className="decorative-text">Descente de cabinet</span> • {firms.length} cabinets
             {searchTerm && (
-              <span className="text-fn-blue"> • {filteredFirms.length} résultats pour "{searchTerm}"</span>
+              <span className="text-blue-600"> • {filteredFirms.length} résultats pour "{searchTerm}"</span>
             )}
           </p>
         </div>
 
-        {/* Barre de recherche et boutons */}
+        {/* Barre de recherche intelligente */}
+        <div className="mb-8">
+          <div className="flex justify-center">
+            <SearchBar 
+              onSearchResults={setSearchResults}
+              showDropdown={false}
+            />
+          </div>
+        </div>
+
+        {/* Recherche par cabinet (ancienne) et boutons d'action */}
         <div className="flex gap-4 items-center flex-wrap mb-8">
           <div className="flex-1 min-w-[300px] max-w-lg">
             <input
               type="text"
-              placeholder="Rechercher un cabinet..."
+              placeholder="Filtrer les cabinets ci-dessous..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="fn-input focus-ring"
@@ -122,6 +165,9 @@ export default function Home() {
           </div>
           <Link href="/team/add" className="btn-fn-primary icon-hover">
             Ajouter un collaborateur
+          </Link>
+          <Link href="/typeform-ajout-c123" className="btn-fn-secondary icon-hover">
+            Ajout C123
           </Link>
           <Link href="/test" className="btn-fn-outline icon-hover">
             Test API
@@ -131,17 +177,25 @@ export default function Home() {
 
       {/* Contenu principal */}
       <main className="container mx-auto px-8 pb-8">
+        
+        {/* Affichage conditionnel : résultats de recherche OU liste des cabinets */}
+        {searchResults ? (
+          <SearchResults 
+            results={searchResults}
+            onClear={() => setSearchResults(null)}
+          />
+        ) : (
+          <>
+            {/* Label explicatif pour les pourcentages de participation */}
+            <div className="flex justify-end mb-4">
+              <div className="text-sm font-bold text-blue-600">
+                % participation
+              </div>
+            </div>
 
-        {/* Label explicatif pour les pourcentages de participation */}
-        <div className="flex justify-end mb-4">
-          <div className="text-sm font-bold text-fn-blue">
-            % participation
-          </div>
-        </div>
-
-        {/* Grille de cabinets avec style Fabiani-Naquet */}
-        <div className="grid gap-6">
-          {currentFirms.map((firm) => (
+            {/* Grille de cabinets avec style Fabiani-Naquet */}
+            <div className="grid gap-6">
+              {currentFirms.map((firm) => (
             <div key={firm.name} className="fn-card">
               <Link href={`/cabinet/${encodeURIComponent(firm.name)}`} className="fn-link block focus-ring">
                 <div className="p-6">
@@ -154,7 +208,7 @@ export default function Home() {
                     </div>
                     <div className="text-right space-y-2">
                       {firm.participation_rate !== null && firm.participation_rate !== undefined && (
-                        <div className="text-2xl font-bold text-fn-blue stats-numbers">
+                        <div className="text-2xl font-bold text-blue-600 stats-numbers">
                           {(firm.participation_rate * 100).toFixed(1)}%
                         </div>
                       )}
@@ -169,7 +223,7 @@ export default function Home() {
                   {/* Badges de classification avec nouveau style */}
                   <div className="flex flex-wrap gap-2 mt-4">
                     {firm.soutien_public_count > 0 && (
-                      <span className="fn-badge" style={{backgroundColor: '#22C55E', color: 'white'}}>
+                      <span className="fn-badge fn-badge-sp">
                         Soutien public: {firm.soutien_public_count}
                       </span>
                     )}
@@ -203,21 +257,21 @@ export default function Home() {
               </Link>
             </div>
           ))}
-        </div>
+            </div>
 
-        {/* Message si aucun résultat */}
-        {filteredFirms.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-semibold text-fn-black mb-2">Aucun cabinet trouvé</h3>
-            <p className="text-gray-500">
-              {searchTerm ? `Aucun résultat pour "${searchTerm}"` : 'Aucun cabinet disponible'}
-            </p>
-          </div>
-        )}
+            {/* Message si aucun résultat */}
+            {filteredFirms.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-xl font-semibold text-fn-black mb-2">Aucun cabinet trouvé</h3>
+                <p className="text-gray-500">
+                  {searchTerm ? `Aucun résultat pour "${searchTerm}"` : 'Aucun cabinet disponible'}
+                </p>
+              </div>
+            )}
 
-        {/* Pagination avec style Fabiani-Naquet */}
-        {totalPages > 1 && (
+            {/* Pagination avec style Fabiani-Naquet */}
+            {totalPages > 1 && (
           <div className="mt-12 flex justify-center items-center gap-3">
             <button
               onClick={() => setCurrentPage(1)}
@@ -236,7 +290,7 @@ export default function Home() {
             </button>
             
             <div className="bg-white px-4 py-2 rounded-md border-2 border-gray-200 text-sm font-medium">
-              <span className="text-fn-blue font-semibold">Page {currentPage}</span>
+              <span className="text-blue-600 font-semibold">Page {currentPage}</span>
               <span className="text-gray-500"> sur {totalPages}</span>
               <div className="text-xs text-gray-400 mt-1">
                 ({startIndex + 1}-{Math.min(endIndex, filteredFirms.length)} sur {filteredFirms.length} cabinets)
@@ -258,7 +312,9 @@ export default function Home() {
             >
               Dernière ⏭
             </button>
-          </div>
+            </div>
+            )}
+          </>
         )}
       </main>
     </div>

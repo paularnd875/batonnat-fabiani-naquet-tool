@@ -43,6 +43,17 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  
+  /* Couleurs Fabiani-Naquet pour Tailwind */
+  --color-fn-red: #D93025;
+  --color-fn-blue: #3078C6;
+  --color-fn-yellow: #F2B705;
+  --color-fn-black: #111;
+  --color-fn-white: #FFFFFF;
+  --color-fn-gray-light: #F8F9FA;
+  --color-fn-gray-medium: #6C757D;
+  --color-fn-gray-dark: #343A40;
+  
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -422,6 +433,11 @@
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500;
   }
+  
+  /* Ring colors pour Fabiani-Naquet */
+  .ring-fn-blue { --tw-ring-color: var(--fn-blue) !important; }
+  .ring-fn-red { --tw-ring-color: var(--fn-red) !important; }
+  .ring-fn-yellow { --tw-ring-color: var(--fn-yellow) !important; }
   
   /* Micro-animation pour les icônes */
   .icon-hover {

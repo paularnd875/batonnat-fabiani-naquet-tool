@@ -177,11 +177,12 @@ export const CACHE_KEYS = {
   TEAM_MEMBERS: 'team_members'
 } as const;
 
-// TTL prédéfinis pour différents types de données
+// TTL ULTRA-OPTIMISÉS pour performance maximale
 export const CACHE_TTL = {
-  LAWYERS: 15 * 60 * 1000,      // 15 minutes (données source)
-  STATS: 10 * 60 * 1000,        // 10 minutes (statistiques calculées)
-  CABINET: 8 * 60 * 1000,       // 8 minutes (données cabinet)
-  QUICK: 5 * 60 * 1000,         // 5 minutes (données fréquentes)
-  SHORT: 2 * 60 * 1000          // 2 minutes (données très dynamiques)
+  LAWYERS: 2 * 60 * 60 * 1000,      // 2 heures (données source - Google Sheets très lent)
+  STATS: 60 * 60 * 1000,            // 1 heure (statistiques calculées)
+  CABINET: 45 * 60 * 1000,          // 45 minutes (données cabinet)
+  QUICK: 30 * 60 * 1000,            // 30 minutes (données fréquentes)
+  SHORT: 15 * 60 * 1000,            // 15 minutes (données dynamiques)
+  ULTRA_LONG: 4 * 60 * 60 * 1000    // 4 heures (pour les données très stables)
 } as const;
