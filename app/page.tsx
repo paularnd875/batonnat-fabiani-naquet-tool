@@ -10,6 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
 import SearchBar from '@/components/SearchBar';
 import SearchResults from '@/components/SearchResults';
+import IntelligentPreloader from '@/components/IntelligentPreloader';
 
 interface Firm {
   name: string;
@@ -45,8 +46,8 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true); // Marquer comme monté côté client
-    setLoading(true);
-    loadFirms();
+    // 🚀 OPTIMISATION: Ne plus charger automatiquement tous les cabinets au démarrage
+    // Ils seront chargés uniquement quand l'utilisateur fait défiler ou filtre
   }, []);
 
   const loadFirms = async () => {
@@ -128,23 +129,41 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-gray-50">
+      {/* 🚀 Système de pré-chargement intelligent */}
+      <IntelligentPreloader />
+      
       {/* Header Fabiani-Naquet avec style Mondrian */}
       <FabianiNaquetHeader />
       
       {/* Contenu principal avec informations et recherche */}
       <div className="container mx-auto px-8 py-6">
-        <div className="mb-6">
-          <p className="text-lg text-gray-600 font-medium">
-            <span className="decorative-text">Descente de cabinet</span> • {firms.length} cabinets
-            {searchTerm && (
-              <span className="text-blue-600"> • {filteredFirms.length} résultats pour "{searchTerm}"</span>
-            )}
-          </p>
+        {/* En-tête avec informations et action principale */}
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-fn-black mb-2" style={{ fontFamily: "var(--font-resolve)" }}>
+              RECHERCHE AVOCATS & CABINETS
+            </h1>
+            <p className="text-lg text-gray-600 font-medium">
+              <span className="decorative-text">Descente de cabinet</span> • {firms.length} cabinets
+              {searchTerm && (
+                <span className="text-blue-600"> • {filteredFirms.length} résultats pour "{searchTerm}"</span>
+              )}
+            </p>
+          </div>
+          <Link href="/team/add" className="btn-fn-primary icon-hover">
+            Ajouter un collaborateur
+          </Link>
         </div>
 
-        {/* Barre de recherche intelligente */}
+        {/* Recherche globale intelligente */}
         <div className="mb-8">
-          <div className="flex justify-center">
+          <div className="bg-white p-6 rounded-lg border-2 border-gray-200 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="text-xl font-semibold text-gray-800" style={{ fontFamily: "var(--font-resolve)" }}>
+                🔍 RECHERCHE INTELLIGENTE
+              </h2>
+              <p className="text-sm text-gray-500">Recherchez parmi tous les avocats et cabinets</p>
+            </div>
             <SearchBar 
               onSearchResults={setSearchResults}
               showDropdown={false}
@@ -152,27 +171,53 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Recherche par cabinet (ancienne) et boutons d'action */}
-        <div className="flex gap-4 items-center flex-wrap mb-8">
-          <div className="flex-1 min-w-[300px] max-w-lg">
-            <input
-              type="text"
-              placeholder="Filtrer les cabinets ci-dessous..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="fn-input focus-ring"
-            />
+        {/* Séparateur visuel */}
+        {!searchResults && (
+          <div className="flex items-center gap-4 mb-8">
+            <div className="flex-1 h-px bg-gray-300"></div>
+            <span className="text-sm font-medium text-gray-500 px-4 bg-gray-50 rounded-full">
+              OU PARCOURIR LES CABINETS
+            </span>
+            <div className="flex-1 h-px bg-gray-300"></div>
           </div>
-          <Link href="/team/add" className="btn-fn-primary icon-hover">
-            Ajouter un collaborateur
-          </Link>
-          <Link href="/typeform-ajout-c123" className="btn-fn-secondary icon-hover">
-            Ajout C123
-          </Link>
-          <Link href="/test" className="btn-fn-outline icon-hover">
-            Test API
-          </Link>
-        </div>
+        )}
+
+        {/* Chargement à la demande des cabinets */}
+        {!searchResults && firms.length === 0 && !loading && (
+          <div className="mb-8 text-center">
+            <button
+              onClick={() => {
+                setLoading(true);
+                loadFirms();
+              }}
+              className="btn-fn-primary icon-hover focus-ring"
+            >
+              📋 Charger la liste des cabinets
+            </button>
+            <p className="text-sm text-gray-500 mt-2">
+              Cliquez pour charger et parcourir tous les cabinets d'avocats
+            </p>
+          </div>
+        )}
+
+        {/* Filtre simple pour la liste des cabinets (seulement si cabinets chargés et pas de résultats de recherche) */}
+        {!searchResults && firms.length > 0 && (
+          <div className="mb-8">
+            <div className="max-w-lg">
+              <label htmlFor="cabinet-filter" className="block text-sm font-medium text-gray-700 mb-2">
+                Filtrer la liste des cabinets ci-dessous
+              </label>
+              <input
+                id="cabinet-filter"
+                type="text"
+                placeholder="Nom du cabinet..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="fn-input focus-ring w-full"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Contenu principal */}

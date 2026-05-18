@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, User, Building2, Loader2, X, Shield, Award, AlertCircle } from 'lucide-react';
+import { Search, User, Building2, Loader2, X, Shield, Award, AlertCircle, Users, UserCheck, Briefcase } from 'lucide-react';
 import Link from 'next/link';
 
 interface Lawyer {
@@ -51,6 +51,7 @@ export default function SearchBar({ onSearchResults, showDropdown = true }: Sear
   const [showResults, setShowResults] = useState(false);
   const [searchType, setSearchType] = useState<'all' | 'lawyers' | 'cabinets'>('all');
   const [classificationFilter, setClassificationFilter] = useState<'all' | 'C1' | 'C2' | 'C3' | 'BL' | 'SP'>('all');
+  const [exerciceFilter, setExerciceFilter] = useState<'all' | 'Individuel' | 'Collaborateur' | 'Associé' | 'SCP'>('all');
   
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -58,7 +59,7 @@ export default function SearchBar({ onSearchResults, showDropdown = true }: Sear
   // Recherche avec debounce
   useEffect(() => {
     // Si pas de texte ET pas de filtre de classification, on n'affiche rien
-    if (query.length < 2 && classificationFilter === 'all') {
+    if (query.length < 2 && classificationFilter === 'all' && exerciceFilter === 'all') {
       setResults(null);
       setShowResults(false);
       return;
@@ -68,8 +69,8 @@ export default function SearchBar({ onSearchResults, showDropdown = true }: Sear
       setIsLoading(true);
       try {
         // Utiliser une limite plus élevée quand on filtre par classification sans texte
-        const limit = (!query && classificationFilter !== 'all') ? 500 : 50;
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=${searchType}&classification=${classificationFilter}&limit=${limit}`);
+        const limit = (!query && (classificationFilter !== 'all' || exerciceFilter !== 'all')) ? 5000 : 50;
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=${searchType}&classification=${classificationFilter}&exercice=${exerciceFilter}&limit=${limit}`);
         const data = await response.json();
         
         if (data.success) {
@@ -83,10 +84,10 @@ export default function SearchBar({ onSearchResults, showDropdown = true }: Sear
       } finally {
         setIsLoading(false);
       }
-    }, 300); // Debounce de 300ms
+    }, 200); // Debounce de 200ms
 
     return () => clearTimeout(timeoutId);
-  }, [query, searchType, classificationFilter]);
+  }, [query, searchType, classificationFilter, exerciceFilter]);
 
   // Fermer les résultats si clic externe
   useEffect(() => {
@@ -105,6 +106,7 @@ export default function SearchBar({ onSearchResults, showDropdown = true }: Sear
     setResults(null);
     setShowResults(false);
     setClassificationFilter('all');
+    setExerciceFilter('all');
     // Notifier le parent de l'effacement
     onSearchResults?.(null);
     inputRef.current?.focus();
@@ -138,7 +140,8 @@ export default function SearchBar({ onSearchResults, showDropdown = true }: Sear
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results && setShowResults(true)}
           placeholder="Rechercher un avocat ou un cabinet..."
-          className="fn-input pl-10 pr-12 text-base"
+          className="fn-input text-base"
+          style={{ paddingLeft: '5rem', paddingRight: '3rem' }}
         />
         {query && (
           <button
@@ -150,47 +153,50 @@ export default function SearchBar({ onSearchResults, showDropdown = true }: Sear
         )}
       </div>
 
-      {/* Filtres de type de recherche */}
-      <div className="flex gap-2 mt-3 flex-wrap">
-        {/* Filtres par type */}
-        <div className="flex gap-2">
-          {[
-            { key: 'all', label: 'Tout', icon: Search },
-            { key: 'lawyers', label: 'Avocats', icon: User },
-            { key: 'cabinets', label: 'Cabinets', icon: Building2 }
-          ].map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              onClick={() => setSearchType(key as any)}
-              className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors ${
-                searchType === key
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </button>
-          ))}
+      {/* Filtres organisés par sections */}
+      <div className="mt-4 space-y-6">
+        
+        {/* Section 1: Type de résultat */}
+        <div>
+          <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Type de résultat</h4>
+          <div className="flex gap-1 sm:gap-2 flex-wrap">
+            {[
+              { key: 'all', label: 'Tout', icon: Search },
+              { key: 'lawyers', label: 'Avocats', icon: User },
+              { key: 'cabinets', label: 'Cabinets', icon: Building2 }
+            ].map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setSearchType(key as any)}
+                className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-colors ${
+                  searchType === key
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
         </div>
         
-        {/* Séparateur visuel */}
-        <div className="w-px h-6 bg-gray-300 self-center mx-1"></div>
-        
-        {/* Filtres par classification */}
-        <div className="flex gap-2">
+        {/* Section 2: Classification */}
+        <div>
+          <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Classification</h4>
+          <div className="flex gap-1 sm:gap-2 flex-wrap">
           {[
             { key: 'all', label: 'Toutes', icon: Search, color: 'gray' },
-            { key: 'SP', label: 'Soutien', icon: Shield, color: 'violet' },
+            { key: 'SP', label: 'Soutien public', icon: Shield, color: 'violet' },
             { key: 'C1', label: 'C1', icon: Award, color: 'emerald' },
             { key: 'C2', label: 'C2', icon: Award, color: 'green' },
             { key: 'C3', label: 'C3', icon: Award, color: 'yellow' },
-            { key: 'BL', label: 'BL', icon: AlertCircle, color: 'red' }
+            { key: 'BL', label: 'Blacklist', icon: AlertCircle, color: 'red' }
           ].map(({ key, label, icon: Icon, color }) => {
             const isActive = classificationFilter === key;
             
             let buttonStyle = {};
-            let buttonClass = 'flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors';
+            let buttonClass = 'flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md transition-colors';
             
             if (isActive) {
               switch (key) {
@@ -242,11 +248,80 @@ export default function SearchBar({ onSearchResults, showDropdown = true }: Sear
                 className={buttonClass}
                 style={buttonStyle}
               >
-                <Icon className="h-4 w-4" />
-                {label}
+                <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">{label}</span>
+                <span className="sm:hidden">
+                  {key === 'all' ? 'Tt' : 
+                   key === 'SP' ? 'SP' : 
+                   key === 'BL' ? 'BL' : 
+                   label}
+                </span>
               </button>
             );
           })}
+          </div>
+        </div>
+
+        {/* Section 3: Mode d'exercice */}
+        <div>
+          <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Mode d'exercice</h4>
+          <div className="flex gap-1 sm:gap-2 flex-wrap">
+          {[
+            { key: 'all', label: 'Tous', icon: Search, color: 'gray' },
+            { key: 'Individuel', label: 'Individuel', icon: User, color: 'blue' },
+            { key: 'Collaborateur', label: 'Collaborateur', icon: UserCheck, color: 'orange' },
+            { key: 'Associé', label: 'Associé', icon: Users, color: 'purple' }
+          ].map(({ key, label, icon: Icon, color }) => {
+            const isActive = exerciceFilter === key;
+            
+            let buttonStyle = {};
+            let buttonClass = 'flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md transition-colors';
+            
+            if (isActive) {
+              switch (key) {
+                case 'Individuel':
+                  buttonStyle = { backgroundColor: '#3b82f6', color: 'white' };
+                  break;
+                case 'Collaborateur':
+                  buttonStyle = { backgroundColor: '#f97316', color: 'white' };
+                  break;
+                case 'Associé':
+                  buttonStyle = { backgroundColor: '#9333ea', color: 'white' };
+                  break;
+                default:
+                  buttonClass += ' bg-gray-600 text-white';
+              }
+            } else {
+              // Styles non-actifs avec couleurs spécifiques
+              switch (key) {
+                case 'Individuel':
+                  buttonClass += ' bg-blue-100 text-blue-700 hover:bg-blue-200';
+                  break;
+                case 'Collaborateur':
+                  buttonClass += ' bg-orange-100 text-orange-700 hover:bg-orange-200';
+                  break;
+                case 'Associé':
+                  buttonClass += ' bg-purple-100 text-purple-700 hover:bg-purple-200';
+                  break;
+                default:
+                  buttonClass += ' bg-gray-100 text-gray-700 hover:bg-gray-200';
+              }
+            }
+            
+            return (
+              <button
+                key={key}
+                onClick={() => setExerciceFilter(key as any)}
+                className={buttonClass}
+                style={buttonStyle}
+              >
+                <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">{label}</span>
+                <span className="sm:hidden">{key === 'all' ? 'Ts' : label}</span>
+              </button>
+            );
+          })}
+          </div>
         </div>
       </div>
 

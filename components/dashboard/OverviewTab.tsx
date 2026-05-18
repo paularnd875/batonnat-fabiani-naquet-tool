@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, Database, UserPlus, Mail, Send, RefreshCw, Check } from 'lucide-react';
+import { Users, Database, UserPlus, Mail, Send, RefreshCw, Check, TestTube } from 'lucide-react';
+import Link from 'next/link';
 
 interface AssignmentStats {
   total_assignments: number;
@@ -196,7 +197,7 @@ export default function OverviewTab() {
       </Card>
 
       {/* Actions rapides */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Envoi des récapitulatifs */}
         <Card className="fn-card">
           <CardHeader>
@@ -262,6 +263,29 @@ export default function OverviewTab() {
                 <p className="text-sm text-gray-500 text-center py-4">Aucun membre d'équipe</p>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Outils de développement */}
+        <Card className="fn-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-fn-black">
+              <TestTube className="h-5 w-5" />
+              Outils de développement
+            </CardTitle>
+            <CardDescription>Accès aux outils de test et de debug</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Link 
+              href="/test" 
+              className="btn-fn-outline w-full icon-hover focus-ring flex items-center justify-center gap-2"
+            >
+              <TestTube className="h-4 w-4" />
+              Test API
+            </Link>
+            <p className="text-xs text-gray-500">
+              Interface de test pour vérifier le fonctionnement des APIs et effectuer des diagnostics.
+            </p>
           </CardContent>
         </Card>
       </div>

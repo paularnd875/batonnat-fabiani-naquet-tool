@@ -2,13 +2,30 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const FabianiNaquetHeader: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        router.push('/login');
+        router.refresh();
+      }
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    }
+  };
 
   const navLinks = [
     { text: 'CABINETS', href: '/' },
-    { text: 'AJOUT C123', href: '/typeform-ajout-c123' },
     { text: 'TABLEAU DE BORD', href: '/dashboard' },
     { text: 'HISTORIQUE', href: '/historique' },
   ];
@@ -39,6 +56,17 @@ const FabianiNaquetHeader: React.FC = () => {
                 {link.text}
               </Link>
             ))}
+            
+            {/* Bouton de déconnexion */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-[1.2rem] text-[0.8rem] font-medium text-red-600 no-underline tracking-[0.05em] uppercase transition-all duration-200 hover:bg-red-50 hover:shadow-[inset_3px_0_0_red,inset_-3px_0_0_red]"
+              style={{ fontFamily: "var(--font-resolve)" }}
+              title="Se déconnecter"
+            >
+              <LogOut className="h-4 w-4" />
+              DÉCONNEXION
+            </button>
           </div>
 
           {/* Burger menu pour mobile */}
@@ -71,7 +99,7 @@ const FabianiNaquetHeader: React.FC = () => {
               key={index}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="text-2xl font-bold text-black uppercase tracking-wider transition-colors focus-ring fn-link"
+              className="text-xl sm:text-2xl font-bold text-black uppercase tracking-wider transition-colors focus-ring fn-link"
               style={{ 
                 fontFamily: "var(--font-resolve)",
                 color: index === 0 ? 'var(--fn-red)' : 
@@ -83,6 +111,19 @@ const FabianiNaquetHeader: React.FC = () => {
               {link.text}
             </Link>
           ))}
+          
+          {/* Bouton de déconnexion mobile */}
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              handleLogout();
+            }}
+            className="flex items-center justify-center gap-2 sm:gap-3 text-lg sm:text-2xl font-bold text-red-600 uppercase tracking-wider transition-colors focus-ring mt-4"
+            style={{ fontFamily: "var(--font-resolve)" }}
+          >
+            <LogOut className="h-5 w-5 sm:h-6 sm:w-6" />
+            DÉCONNEXION
+          </button>
         </div>
       </div>
 

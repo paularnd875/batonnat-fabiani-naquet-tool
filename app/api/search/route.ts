@@ -13,21 +13,33 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const type = searchParams.get('type') || 'all'; // 'lawyers', 'cabinets', 'all'
     const classification = searchParams.get('classification') || 'all'; // 'all', 'C1', 'C2', 'C3', 'BL', 'SP'
+    const exercice = searchParams.get('exercice') || 'all'; // 'all', 'Individuel', 'Collaborateur', 'Associé', 'SCP'
     
-    // Si aucune recherche textuelle mais un filtre de classification, on autorise la recherche
-    if ((!query || query.length < 2) && classification === 'all') {
+    // Si aucune recherche textuelle mais un filtre de classification ou exercice, on autorise la recherche
+    if ((!query || query.length < 2) && classification === 'all' && exercice === 'all') {
       return NextResponse.json({
         success: false,
         error: 'Requête de recherche trop courte (minimum 2 caractères) ou sélectionnez un filtre'
       }, { status: 400 });
     }
 
-    console.log(`🔍 Recherche: "${query}" (type: ${type}, classification: ${classification}, limit: ${limit})`);
+    console.log(`🔍 Recherche: "${query}" (type: ${type}, classification: ${classification}, exercice: ${exercice}, limit: ${limit})`);
     const startTime = Date.now();
 
-    // Récupérer les données depuis le cache ou Google Sheets
+    // 🚀 OPTIMISATION: Récupérer les données depuis le cache ou Google Sheets
+    const loadStartTime = Date.now();
+    const cachedLawyers = memoryCache.get(CACHE_KEYS.LAWYERS_ALL);
     const allLawyers = await googleSheets.readLawyers();
-    console.log(`📋 ${allLawyers.length} avocats chargés pour recherche`);
+    const loadTime = Date.now() - loadStartTime;
+    const isCached = loadTime < 100; // Si très rapide, c'est du cache
+    
+    console.log(`📋 ${allLawyers.length} avocats chargés pour recherche (${isCached ? 'CACHE ⚡' : 'GOOGLE_SHEETS 🐌'} - ${loadTime}ms)`);
+    
+    // 🚨 ALERTE PERFORMANCE: Si le chargement est très lent, suggérer le réchauffage
+    if (!isCached && loadTime > 5000) {
+      console.warn(`🚨 PERFORMANCE CRITIQUE: ${loadTime}ms pour charger les données!`);
+      console.warn(`💡 SOLUTION: Le système de pré-chargement intelligent devrait éviter cela`);
+    }
 
     const queryLower = query ? query.toLowerCase() : '';
     const results: {
@@ -73,8 +85,14 @@ export async function GET(request: Request) {
             matchesClassification = lawyer.classement === classification;
           }
         }
+
+        // Filtre de mode d'exercice
+        let matchesExercice = true;
+        if (exercice !== 'all') {
+          matchesExercice = lawyer.statut_cabinet === exercice;
+        }
         
-        return matchesText && matchesClassification;
+        return matchesText && matchesClassification && matchesExercice;
       });
 
       // Trier par pertinence (nom d'abord, puis cabinet)
@@ -126,6 +144,7 @@ export async function GET(request: Request) {
             lawyer_count: 0,
             c1_count: 0, c2_count: 0, c3_count: 0, bl_count: 0,
             soutien_public_count: 0,
+            individuel_count: 0, collaborateur_count: 0, associe_count: 0, scp_count: 0,
             sample_lawyers: []
           });
         }
@@ -139,6 +158,14 @@ export async function GET(request: Request) {
           case 'C2': cabinet.c2_count++; break;
           case 'C3': cabinet.c3_count++; break;
           case 'Blacklist': cabinet.bl_count++; break;
+        }
+        
+        // Comptage des modes d'exercice
+        switch (lawyer.statut_cabinet) {
+          case 'Individuel': cabinet.individuel_count++; break;
+          case 'Collaborateur': cabinet.collaborateur_count++; break;
+          case 'Associé': cabinet.associe_count++; break;
+          case 'SCP': cabinet.scp_count++; break;
         }
         
         // Garder quelques exemples d'avocats
@@ -171,8 +198,22 @@ export async function GET(request: Request) {
               matchesClassification = cabinet.bl_count > 0;
             }
           }
+
+          // Filtre de mode d'exercice
+          let matchesExercice = true;
+          if (exercice !== 'all') {
+            if (exercice === 'Individuel') {
+              matchesExercice = cabinet.individuel_count > 0;
+            } else if (exercice === 'Collaborateur') {
+              matchesExercice = cabinet.collaborateur_count > 0;
+            } else if (exercice === 'Associé') {
+              matchesExercice = cabinet.associe_count > 0;
+            } else if (exercice === 'SCP') {
+              matchesExercice = cabinet.scp_count > 0;
+            }
+          }
           
-          return matchesText && matchesClassification;
+          return matchesText && matchesClassification && matchesExercice;
         })
         .sort((a: any, b: any) => {
           // Cabinets avec correspondance exacte en premier

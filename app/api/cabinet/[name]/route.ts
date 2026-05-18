@@ -10,22 +10,44 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     // Paramètres de pagination depuis l'URL
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const requestedLimit = parseInt(searchParams.get('limit') || '50');
+    
+    // 🚀 OPTIMISATION CRITIQUE: Limiter drastiquement pour éviter les timeouts de 3+ minutes
+    const limit = Math.min(requestedLimit, 100); // Maximum 100 par page
     const offset = (page - 1) * limit;
     
-    // Récupérer TOUS les avocats du Google Sheet avec leurs photos
-    console.log('🔍 Récupération avocats Google Sheet avec photos...');
-    const allLawyersFromSheet = await googleSheets.readLawyers();
+    console.log(`🚀 API Cabinet: ${cabinetName} (limit: ${requestedLimit} → ${limit}, page: ${page})`);
     
-    // CORRECTION: Normaliser le nom du cabinet pour gérer les incohérences
+    // 🛡️ PROTECTION CRITIQUE: Détecter les gros cabinets qui causent des timeouts 
     let normalizedCabinetName = cabinetName;
     if (cabinetName === 'Avocats en individuel') {
       normalizedCabinetName = 'Individuel';
+      
+      // 🚨 ÉVITEMENT DE TIMEOUT: Pour les 13K+ avocats individuels, utiliser l'API optimisée
+      console.log('🚨 GROS CABINET DÉTECTÉ (13K+ avocats): Redirection vers API optimisée');
+      try {
+        const baseUrl = request.url.split('/api/cabinet/')[0];
+        const optimizedUrl = `${baseUrl}/api/cabinet/${encodeURIComponent(cabinetName)}/optimized?${searchParams.toString()}`;
+        
+        const optimizedResponse = await fetch(optimizedUrl);
+        if (optimizedResponse.ok) {
+          const optimizedData = await optimizedResponse.json();
+          return NextResponse.json(optimizedData);
+        }
+      } catch (error) {
+        console.warn('⚠️ Redirection API optimisée échouée, continuation avec API normale (limitée)');
+      }
     }
+    
+    // Récupérer TOUS les avocats du Google Sheet avec photos (seulement si pas un gros cabinet)
+    console.log('🔍 Récupération avocats Google Sheet avec photos...');
+    const startTime = Date.now();
+    const allLawyersFromSheet = await googleSheets.readLawyers();
+    console.log(`⚡ Google Sheets lu en ${Date.now() - startTime}ms`);
     
     console.log(`🔍 Recherche cabinet: "${cabinetName}" → "${normalizedCabinetName}"`);
     
-    // Filtrer par cabinet
+    // Filtrer par cabinet avec optimisation pour gros cabinets
     let filteredLawyers;
     if (normalizedCabinetName === 'Individuel') {
       // Pour "Individuel", chercher les cabinets vides ou null
@@ -38,8 +60,42 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       );
     }
 
-    // Calculer les totaux et trier : soutiens publics et classés en premier
+    // 🛡️ PROTECTION GÉNÉRALE: Détecter automatiquement les gros cabinets (>1000 avocats)
     const totalLawyers = filteredLawyers.length;
+    const isLargeFirm = totalLawyers > 1000;
+    
+    if (isLargeFirm && requestedLimit > 50) {
+      console.log(`🚨 GROS CABINET AUTO-DÉTECTÉ: ${cabinetName} (${totalLawyers} avocats) - Limite forcée à 50`);
+      // Pour les gros cabinets, forcer une limite encore plus stricte
+      const safeLimitForLargeFirms = Math.min(limit, 50);
+      const safePaginatedLawyers = filteredLawyers.slice(offset, offset + safeLimitForLargeFirms);
+      
+      return NextResponse.json({
+        success: true,
+        cabinet: {
+          name: cabinetName,
+          lawyers: safePaginatedLawyers,
+          stats: {
+            name: cabinetName,
+            lawyer_count: totalLawyers,
+            message: `Cabinet volumineux (${totalLawyers} avocats) - Pagination limitée pour performance`
+          },
+          count: safePaginatedLawyers.length,
+          totalLawyers,
+          pagination: {
+            currentPage: page,
+            totalPages: Math.ceil(totalLawyers / safeLimitForLargeFirms),
+            limit: safeLimitForLargeFirms,
+            offset,
+            hasNext: page < Math.ceil(totalLawyers / safeLimitForLargeFirms),
+            hasPrev: page > 1,
+            warning: 'Pagination réduite pour ce cabinet volumineux'
+          }
+        }
+      });
+    }
+
+    // Calculer les totaux et trier : soutiens publics et classés en premier
     
     // Trier les avocats : soutien_public > Blacklist > C1 > C2 > C3 > non classés
     const sortOrder: { [key: string]: number } = {
