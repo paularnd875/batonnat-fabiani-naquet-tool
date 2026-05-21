@@ -44,11 +44,13 @@ export async function GET(request: NextRequest) {
     const classificationFilter = searchParams.get('classification') || 'all';
     const cabinetFilter = searchParams.get('cabinet') || '';
     const voteFilter = searchParams.get('vote') || 'all';
+    const statusFilter = searchParams.get('status') || 'all';
     const searchQuery = searchParams.get('search') || '';
     
     // Support for multiple filters (comma-separated)
     const classificationFilters = classificationFilter === 'all' ? [] : classificationFilter.split(',');
     const voteFilters = voteFilter === 'all' ? [] : voteFilter.split(',');
+    const statusFilters = statusFilter === 'all' ? [] : statusFilter.split(',');
     
     // Récupération des données depuis Google Sheets
     console.log('🔍 Récupération des avocats depuis Google Sheets...');
@@ -94,6 +96,24 @@ export async function GET(request: NextRequest) {
       // Filtre par cabinet
       if (cabinetFilter && !lawyer.cabinet.toLowerCase().includes(cabinetFilter.toLowerCase())) {
         return false;
+      }
+      
+      // Filtre par statut cabinet (support multiple)
+      if (statusFilters.length > 0) {
+        let matchesStatus = false;
+        
+        for (const filter of statusFilters) {
+          if (filter === '' && (!lawyer.statut_cabinet || lawyer.statut_cabinet.trim() === '')) {
+            matchesStatus = true;
+            break;
+          }
+          if (filter !== '' && lawyer.statut_cabinet && lawyer.statut_cabinet.toLowerCase().includes(filter.toLowerCase())) {
+            matchesStatus = true;
+            break;
+          }
+        }
+        
+        if (!matchesStatus) return false;
       }
       
       // Filtre par vote (support multiple)

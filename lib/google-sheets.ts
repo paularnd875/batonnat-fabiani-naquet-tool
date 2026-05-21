@@ -118,7 +118,7 @@ class GoogleSheetsService {
         }
       });
 
-      return {
+      const lawyer = {
         prenomnom: row[0] || '', // nomcomplet
         civilite: row[1] || '', // Nature  
         nom_complet: row[8] || '', // Nom complet
@@ -136,6 +136,8 @@ class GoogleSheetsService {
         photo_url: row[72] || '', // Colonne BU (index 72)
         raw_data: row,
       };
+      
+      return lawyer;
     }).filter((lawyer: any) => lawyer.prenomnom); // Filtrer les lignes vides
 
     // Appliquer la logique de distribution des photos

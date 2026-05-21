@@ -50,6 +50,7 @@ export default function LawyersTab({}: LawyersTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClassifications, setSelectedClassifications] = useState<string[]>([]);
   const [selectedVoteFilters, setSelectedVoteFilters] = useState<string[]>([]);
+  const [selectedStatusFilters, setSelectedStatusFilters] = useState<string[]>([]);
   const [cabinetFilter, setCabinetFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -70,6 +71,7 @@ export default function LawyersTab({}: LawyersTabProps) {
         cabinet: cabinetFilter,
         vote: selectedVoteFilters.length > 0 ? selectedVoteFilters.join(',') : 'all',
         search: searchTerm,
+        status: selectedStatusFilters.length > 0 ? selectedStatusFilters.join(',') : 'all',
       });
 
       console.log('🔍 Chargement des avocats avec filtres:', Object.fromEntries(params));
@@ -98,7 +100,7 @@ export default function LawyersTab({}: LawyersTabProps) {
       setCurrentPage(1);
       loadLawyers();
     }
-  }, [mounted, selectedClassifications, selectedVoteFilters, cabinetFilter, searchTerm]);
+  }, [mounted, selectedClassifications, selectedVoteFilters, selectedStatusFilters, cabinetFilter, searchTerm]);
 
   // Rechargement lors du changement de page
   useEffect(() => {
@@ -211,10 +213,19 @@ export default function LawyersTab({}: LawyersTabProps) {
     );
   };
 
+  const toggleStatusFilter = (status: string) => {
+    setSelectedStatusFilters(prev => 
+      prev.includes(status)
+        ? prev.filter(s => s !== status)
+        : [...prev, status]
+    );
+  };
+
   const resetAllFilters = () => {
     setSearchTerm('');
     setSelectedClassifications([]);
     setSelectedVoteFilters([]);
+    setSelectedStatusFilters([]);
     setCabinetFilter('');
   };
 
@@ -387,7 +398,7 @@ export default function LawyersTab({}: LawyersTabProps) {
           </div>
 
           {/* Participations au vote */}
-          <div className="mb-4">
+          <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Participation au vote
             </label>
@@ -439,6 +450,66 @@ export default function LawyersTab({}: LawyersTabProps) {
                 <BallotBoxIcon voted={false} className="w-6 h-6" />
                 <span className="text-sm">N'a pas voté</span>
               </button>
+            </div>
+          </div>
+
+          {/* Filtres par statut cabinet */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Statut dans le cabinet
+            </label>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => toggleStatusFilter('Associé')}
+                className={`fn-badge transition-transform duration-200 cursor-pointer hover:shadow-lg ${
+                  selectedStatusFilters.includes('Associé') ? 'scale-110 font-bold border-2 border-blue-600' : 'hover:scale-105'
+                }`}
+                style={{
+                  backgroundColor: selectedStatusFilters.includes('Associé') ? '#2563eb' : '#e2e8f0', 
+                  color: selectedStatusFilters.includes('Associé') ? 'white' : '#334155'
+                }}
+              >
+                👔 Associé
+              </button>
+              <button
+                onClick={() => toggleStatusFilter('Collaborateur')}
+                className={`fn-badge transition-transform duration-200 cursor-pointer hover:shadow-lg ${
+                  selectedStatusFilters.includes('Collaborateur') ? 'scale-110 font-bold border-2 border-green-600' : 'hover:scale-105'
+                }`}
+                style={{
+                  backgroundColor: selectedStatusFilters.includes('Collaborateur') ? '#16a34a' : '#e2e8f0', 
+                  color: selectedStatusFilters.includes('Collaborateur') ? 'white' : '#334155'
+                }}
+              >
+                👨‍💼 Collaborateur
+              </button>
+              <button
+                onClick={() => toggleStatusFilter('Individuel')}
+                className={`fn-badge transition-transform duration-200 cursor-pointer hover:shadow-lg ${
+                  selectedStatusFilters.includes('Individuel') ? 'scale-110 font-bold border-2 border-orange-600' : 'hover:scale-105'
+                }`}
+                style={{
+                  backgroundColor: selectedStatusFilters.includes('Individuel') ? '#ea580c' : '#e2e8f0', 
+                  color: selectedStatusFilters.includes('Individuel') ? 'white' : '#334155'
+                }}
+              >
+                ⭐ Individuel
+              </button>
+              <button
+                onClick={() => toggleStatusFilter('Non trouvé')}
+                className={`fn-badge transition-transform duration-200 cursor-pointer hover:shadow-lg ${
+                  selectedStatusFilters.includes('Non trouvé') ? 'scale-110 font-bold border-2 border-gray-600' : 'hover:scale-105'
+                }`}
+                style={{
+                  backgroundColor: selectedStatusFilters.includes('Non trouvé') ? '#6b7280' : '#e2e8f0', 
+                  color: selectedStatusFilters.includes('Non trouvé') ? 'white' : '#334155'
+                }}
+              >
+                ❓ Non trouvé
+              </button>
+            </div>
+            <div className="mt-2 text-xs text-gray-500">
+              💡 Données analysées depuis la colonne AH du Google Sheet
             </div>
           </div>
         </div>
