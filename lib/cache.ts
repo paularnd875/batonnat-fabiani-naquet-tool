@@ -189,32 +189,6 @@ class MemoryCache {
       totalEntries: entries.length
     };
   }
-}
-
-// Instance singleton du cache
-export const memoryCache = new MemoryCache();
-
-// Nettoyage automatique et préchargement
-if (typeof window === 'undefined') { // Côté serveur uniquement
-  // Nettoyage automatique toutes les 5 minutes
-  setInterval(() => {
-    memoryCache.cleanup();
-  }, 5 * 60 * 1000);
-  
-  // Préchargement automatique au démarrage
-  setTimeout(() => {
-    memoryCache.preload();
-  }, 2000); // 2 secondes après le démarrage
-}
-
-// Constantes pour les clés de cache
-export const CACHE_KEYS = {
-  LAWYERS_ALL: 'lawyers_all_data',
-  FIRMS_STATS: 'firms_stats_live',
-  ADMIN_STATS: 'admin_stats',
-  CABINET_PREFIX: 'cabinet_',
-  TEAM_MEMBERS: 'team_members'
-} as const;
 
   /**
    * Évince les entrées les moins utilisées pour garder une taille raisonnable
@@ -261,6 +235,31 @@ export const CACHE_KEYS = {
     }
   }
 }
+
+// Instance singleton du cache
+export const memoryCache = new MemoryCache();
+
+// Nettoyage automatique et préchargement
+if (typeof window === 'undefined') { // Côté serveur uniquement
+  // Nettoyage automatique toutes les 5 minutes
+  setInterval(() => {
+    memoryCache.cleanup();
+  }, 5 * 60 * 1000);
+  
+  // Préchargement automatique au démarrage
+  setTimeout(() => {
+    memoryCache.preload();
+  }, 2000); // 2 secondes après le démarrage
+}
+
+// Constantes pour les clés de cache
+export const CACHE_KEYS = {
+  LAWYERS_ALL: 'lawyers_all_data',
+  FIRMS_STATS: 'firms_stats_live',
+  ADMIN_STATS: 'admin_stats',
+  CABINET_PREFIX: 'cabinet_',
+  TEAM_MEMBERS: 'team_members'
+} as const;
 
 // TTL ULTRA-OPTIMISÉS pour performance maximale
 export const CACHE_TTL = {
