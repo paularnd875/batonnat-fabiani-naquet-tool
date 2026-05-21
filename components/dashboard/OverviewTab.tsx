@@ -41,9 +41,10 @@ export default function OverviewTab() {
     loadData();
   }, []);
 
-  const loadData = async () => {
+  const loadData = async (forceRefresh = false) => {
     try {
-      const statsResponse = await fetch('/api/admin-stats');
+      const url = forceRefresh ? '/api/admin-stats?refresh=true' : '/api/admin-stats';
+      const statsResponse = await fetch(url);
       const statsData = await statsResponse.json();
       
       if (statsData.success) {
@@ -77,6 +78,8 @@ export default function OverviewTab() {
             `  • ${email.member} (${email.assignments_count} assignations)`
           )
         ]);
+        // Rafraîchir les données après l'envoi pour mettre à jour l'aperçu de l'équipe
+        loadData(true);
       } else {
         setEmailResults(prev => [...prev, `❌ Envoi global: ${data.error}`]);
       }

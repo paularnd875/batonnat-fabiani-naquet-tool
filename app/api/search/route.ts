@@ -14,16 +14,17 @@ export async function GET(request: Request) {
     const type = searchParams.get('type') || 'all'; // 'lawyers', 'cabinets', 'all'
     const classification = searchParams.get('classification') || 'all'; // 'all', 'C1', 'C2', 'C3', 'BL', 'SP'
     const exercice = searchParams.get('exercice') || 'all'; // 'all', 'Individuel', 'Collaborateur', 'Associé', 'SCP'
+    const taille = searchParams.get('taille') || 'all'; // 'all', '0', '1', '2-5', '5-25', '25-50', '50&+', 'Non trouvé'
     
-    // Si aucune recherche textuelle mais un filtre de classification ou exercice, on autorise la recherche
-    if ((!query || query.length < 2) && classification === 'all' && exercice === 'all') {
+    // Si aucune recherche textuelle mais un filtre, on autorise la recherche
+    if ((!query || query.length < 2) && classification === 'all' && exercice === 'all' && taille === 'all') {
       return NextResponse.json({
         success: false,
         error: 'Requête de recherche trop courte (minimum 2 caractères) ou sélectionnez un filtre'
       }, { status: 400 });
     }
 
-    console.log(`🔍 Recherche: "${query}" (type: ${type}, classification: ${classification}, exercice: ${exercice}, limit: ${limit})`);
+    console.log(`🔍 Recherche: "${query}" (type: ${type}, classification: ${classification}, exercice: ${exercice}, taille: ${taille}, limit: ${limit})`);
     const startTime = Date.now();
 
     // 🚀 OPTIMISATION: Récupérer les données depuis le cache ou Google Sheets
@@ -91,8 +92,23 @@ export async function GET(request: Request) {
         if (exercice !== 'all') {
           matchesExercice = lawyer.statut_cabinet === exercice;
         }
+
+        // Filtre de taille de cabinet (temporaire : basé sur le nom du cabinet pour tester)
+        let matchesTaille = true;
+        if (taille !== 'all') {
+          // TODO: Remplacer par les vraies données de taille quand disponibles
+          // Pour l'instant, simuler avec quelques règles simples
+          if (taille === '0') {
+            matchesTaille = false; // Pas de cabinet avec 0 avocats logiquement
+          } else if (taille === '1') {
+            matchesTaille = lawyer.cabinet === 'Individuel' || !lawyer.cabinet;
+          } else if (taille === 'Non trouvé') {
+            matchesTaille = !lawyer.taille_cabinet; // Si pas de données de taille
+          }
+          // Pour les autres tailles, on autorise tout pour l'instant
+        }
         
-        return matchesText && matchesClassification && matchesExercice;
+        return matchesText && matchesClassification && matchesExercice && matchesTaille;
       });
 
       // Trier par pertinence (nom d'abord, puis cabinet)
@@ -212,8 +228,30 @@ export async function GET(request: Request) {
               matchesExercice = cabinet.scp_count > 0;
             }
           }
+
+          // Filtre de taille de cabinet (temporaire : basé sur le nombre d'avocats)
+          let matchesTaille = true;
+          if (taille !== 'all') {
+            // TODO: Remplacer par les vraies données de taille quand disponibles
+            // Pour l'instant, simuler avec des règles basées sur le nombre d'avocats
+            if (taille === '0') {
+              matchesTaille = cabinet.lawyer_count === 0;
+            } else if (taille === '1') {
+              matchesTaille = cabinet.lawyer_count === 1;
+            } else if (taille === '2-5') {
+              matchesTaille = cabinet.lawyer_count >= 2 && cabinet.lawyer_count <= 5;
+            } else if (taille === '5-25') {
+              matchesTaille = cabinet.lawyer_count > 5 && cabinet.lawyer_count <= 25;
+            } else if (taille === '25-50') {
+              matchesTaille = cabinet.lawyer_count > 25 && cabinet.lawyer_count <= 50;
+            } else if (taille === '50&+') {
+              matchesTaille = cabinet.lawyer_count > 50;
+            } else if (taille === 'Non trouvé') {
+              matchesTaille = !cabinet.taille_cabinet; // Si pas de données de taille
+            }
+          }
           
-          return matchesText && matchesClassification && matchesExercice;
+          return matchesText && matchesClassification && matchesExercice && matchesTaille;
         })
         .sort((a: any, b: any) => {
           // Cabinets avec correspondance exacte en premier

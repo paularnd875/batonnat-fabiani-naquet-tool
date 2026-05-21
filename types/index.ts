@@ -45,6 +45,7 @@ export interface Lawyer {
 export interface LawyerCardProps {
   lawyer: Lawyer;
   onAssign: (lawyer: Lawyer, memberId: string) => void;
+  onUnassign?: (lawyer: Lawyer) => void;
   teamMembers: TeamMember[];
 }
 

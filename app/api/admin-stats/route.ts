@@ -3,11 +3,15 @@ import { googleSheets } from '@/lib/google-sheets';
 import { supabase } from '@/lib/db';
 import { memoryCache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // 🚀 OPTIMISATION: Vérifier le cache en premier
+    // Récupérer les paramètres de l'URL pour permettre de forcer le recalcul
+    const url = new URL(request.url);
+    const forceRefresh = url.searchParams.get('refresh') === 'true';
+
+    // 🚀 OPTIMISATION: Vérifier le cache en premier (sauf si refresh forcé)
     const cachedAdminStats = memoryCache.get(CACHE_KEYS.ADMIN_STATS);
-    if (cachedAdminStats) {
+    if (cachedAdminStats && !forceRefresh) {
       console.log('🚀 Statistiques admin chargées depuis le cache (ULTRA RAPIDE!)');
       return NextResponse.json({
         success: true,
@@ -101,6 +105,12 @@ export async function GET() {
     const processingDuration = Date.now() - startTime;
     console.log(`⚡ Calcul admin terminé en ${processingDuration}ms`);
 
+    // Enrichir les membres d'équipe avec leur nombre d'assignations
+    const enrichedTeamMembers = (teamMembers || []).map((member: any) => ({
+      ...member,
+      assignment_count: teamCoverage[member.id] || 0
+    }));
+
     // 🚀 OPTIMISATION: Mettre en cache le résultat pour 10 minutes
     const result = {
       source: 'Google Sheets + Supabase assignments',
@@ -110,7 +120,7 @@ export async function GET() {
         total_lawyers: totalLawyers,
         team_coverage: teamCoverage
       },
-      team_members: teamMembers || []
+      team_members: enrichedTeamMembers
     };
     
     memoryCache.set(CACHE_KEYS.ADMIN_STATS, result, CACHE_TTL.STATS);

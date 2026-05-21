@@ -28,6 +28,7 @@ export interface SheetLawyer {
 export interface SheetFirmData {
   cabinet: string;
   taux_participation_moyen: number;
+  taille_cabinet?: string;
 }
 
 // Interface pour les membres d'équipe
@@ -211,8 +212,8 @@ class GoogleSheetsService {
     console.log('📊 Lecture données cabinets depuis Google Sheets...');
     // Essayer différents noms d'onglets possibles
     const possibleSheetNames = [
-      'Synthèse vote toutes structures!A:G', // Onglet correct avec vraies données
-      'Synthèse vote par structure!A:G', // Fallback sur ancien onglet
+      'Synthèse vote toutes structures!A:I', // Onglet correct avec vraies données + colonne I (taille)
+      'Synthèse vote par structure!A:I', // Fallback sur ancien onglet + colonne I
       // Ajouter d'autres noms possibles si nécessaire
     ];
     
@@ -257,6 +258,7 @@ class GoogleSheetsService {
     return rows.slice(1).map((row: any[]) => {
       const cabinet = (row[0] || '').toString().trim();
       let taux = parseFloat(row[6]) || 0;
+      const taille = (row[8] || '').toString().trim(); // Colonne I = index 8
       
       // Si le taux > 1, c'est probablement en pourcentage, le convertir en décimal
       if (taux > 1) {
@@ -266,6 +268,7 @@ class GoogleSheetsService {
       return {
         cabinet,
         taux_participation_moyen: taux,
+        taille_cabinet: taille,
       };
     }).filter(firm => 
       firm.cabinet && 

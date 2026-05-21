@@ -27,6 +27,21 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { team_member_id, type = 'individual' } = body;
 
+    // Vérifier la configuration Gmail
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+      return NextResponse.json({
+        success: false,
+        error: 'Configuration Gmail manquante. Veuillez configurer GMAIL_USER et GMAIL_APP_PASSWORD dans les variables d\'environnement.',
+      }, { status: 500 });
+    }
+
+    if (process.env.GMAIL_USER === 'votre-email@gmail.com' || process.env.GMAIL_APP_PASSWORD === 'votre-mot-de-passe-application') {
+      return NextResponse.json({
+        success: false,
+        error: 'Veuillez remplacer les valeurs par défaut de GMAIL_USER et GMAIL_APP_PASSWORD par vos vraies credentials Gmail.',
+      }, { status: 500 });
+    }
+
     // Configuration du transporteur Gmail
     const transporter = nodemailer.createTransport({
       service: 'gmail',

@@ -5,6 +5,7 @@ import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
 import OverviewTab from '@/components/dashboard/OverviewTab';
 import TeamTab from '@/components/dashboard/TeamTab';
 import StatisticsTab from '@/components/dashboard/StatisticsTab';
+import HistoriqueTab from '@/components/dashboard/HistoriqueTab';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -27,6 +28,12 @@ export default function DashboardPage() {
       label: 'Statistiques',
       icon: '📈',
       component: StatisticsTab
+    },
+    {
+      id: 'historique',
+      label: 'Historique',
+      icon: '📜',
+      component: HistoriqueTab
     }
   ];
 

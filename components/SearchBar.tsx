@@ -42,24 +42,25 @@ interface SearchResults {
 interface SearchBarProps {
   onSearchResults?: (results: SearchResults | null) => void;
   showDropdown?: boolean;
+  searchType?: 'all' | 'lawyers' | 'cabinets';
 }
 
-export default function SearchBar({ onSearchResults, showDropdown = true }: SearchBarProps) {
+export default function SearchBar({ onSearchResults, showDropdown = true, searchType = 'all' }: SearchBarProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResults | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [searchType, setSearchType] = useState<'all' | 'lawyers' | 'cabinets'>('all');
   const [classificationFilter, setClassificationFilter] = useState<'all' | 'C1' | 'C2' | 'C3' | 'BL' | 'SP'>('all');
   const [exerciceFilter, setExerciceFilter] = useState<'all' | 'Individuel' | 'Collaborateur' | 'Associé' | 'SCP'>('all');
+  const [tailleFilter, setTailleFilter] = useState<'all' | '0' | '1' | '2-5' | '5-25' | '25-50' | '50&+' | 'Non trouvé'>('all');
   
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Recherche avec debounce
   useEffect(() => {
-    // Si pas de texte ET pas de filtre de classification, on n'affiche rien
-    if (query.length < 2 && classificationFilter === 'all' && exerciceFilter === 'all') {
+    // Si pas de texte ET pas de filtre, on n'affiche rien
+    if (query.length < 2 && classificationFilter === 'all' && exerciceFilter === 'all' && tailleFilter === 'all') {
       setResults(null);
       setShowResults(false);
       return;
@@ -68,9 +69,9 @@ export default function SearchBar({ onSearchResults, showDropdown = true }: Sear
     const timeoutId = setTimeout(async () => {
       setIsLoading(true);
       try {
-        // Utiliser une limite plus élevée quand on filtre par classification sans texte
-        const limit = (!query && (classificationFilter !== 'all' || exerciceFilter !== 'all')) ? 5000 : 50;
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=${searchType}&classification=${classificationFilter}&exercice=${exerciceFilter}&limit=${limit}`);
+        // Utiliser une limite plus élevée quand on filtre sans texte
+        const limit = (!query && (classificationFilter !== 'all' || exerciceFilter !== 'all' || tailleFilter !== 'all')) ? 5000 : 50;
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=${searchType}&classification=${classificationFilter}&exercice=${exerciceFilter}&taille=${tailleFilter}&limit=${limit}`);
         const data = await response.json();
         
         if (data.success) {
@@ -87,7 +88,7 @@ export default function SearchBar({ onSearchResults, showDropdown = true }: Sear
     }, 200); // Debounce de 200ms
 
     return () => clearTimeout(timeoutId);
-  }, [query, searchType, classificationFilter, exerciceFilter]);
+  }, [query, classificationFilter, exerciceFilter, tailleFilter]);
 
   // Fermer les résultats si clic externe
   useEffect(() => {
@@ -107,6 +108,7 @@ export default function SearchBar({ onSearchResults, showDropdown = true }: Sear
     setShowResults(false);
     setClassificationFilter('all');
     setExerciceFilter('all');
+    setTailleFilter('all');
     // Notifier le parent de l'effacement
     onSearchResults?.(null);
     inputRef.current?.focus();
@@ -156,32 +158,7 @@ export default function SearchBar({ onSearchResults, showDropdown = true }: Sear
       {/* Filtres organisés par sections */}
       <div className="mt-4 space-y-6">
         
-        {/* Section 1: Type de résultat */}
-        <div>
-          <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Type de résultat</h4>
-          <div className="flex gap-1 sm:gap-2 flex-wrap">
-            {[
-              { key: 'all', label: 'Tout', icon: Search },
-              { key: 'lawyers', label: 'Avocats', icon: User },
-              { key: 'cabinets', label: 'Cabinets', icon: Building2 }
-            ].map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                onClick={() => setSearchType(key as any)}
-                className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-colors ${
-                  searchType === key
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        {/* Section 2: Classification */}
+        {/* Section 1: Classification */}
         <div>
           <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Classification</h4>
           <div className="flex gap-1 sm:gap-2 flex-wrap">
@@ -262,7 +239,7 @@ export default function SearchBar({ onSearchResults, showDropdown = true }: Sear
           </div>
         </div>
 
-        {/* Section 3: Mode d'exercice */}
+        {/* Section 2: Mode d'exercice */}
         <div>
           <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Mode d'exercice</h4>
           <div className="flex gap-1 sm:gap-2 flex-wrap">
@@ -318,6 +295,96 @@ export default function SearchBar({ onSearchResults, showDropdown = true }: Sear
                 <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">{label}</span>
                 <span className="sm:hidden">{key === 'all' ? 'Ts' : label}</span>
+              </button>
+            );
+          })}
+          </div>
+        </div>
+
+        {/* Section 3: Taille de cabinet */}
+        <div>
+          <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Taille de cabinet</h4>
+          <div className="flex gap-1 sm:gap-2 flex-wrap">
+          {[
+            { key: 'all', label: 'Toutes', icon: Search, color: 'gray' },
+            { key: '0', label: '0', icon: Briefcase, color: 'gray' },
+            { key: '1', label: '1', icon: Briefcase, color: 'blue' },
+            { key: '2-5', label: '2-5', icon: Briefcase, color: 'green' },
+            { key: '5-25', label: '5-25', icon: Briefcase, color: 'yellow' },
+            { key: '25-50', label: '25-50', icon: Briefcase, color: 'orange' },
+            { key: '50&+', label: '50&+', icon: Briefcase, color: 'red' },
+            { key: 'Non trouvé', label: 'Non trouvé', icon: Briefcase, color: 'purple' }
+          ].map(({ key, label, icon: Icon, color }) => {
+            const isActive = tailleFilter === key;
+            
+            let buttonStyle = {};
+            let buttonClass = 'flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md transition-colors';
+            
+            if (isActive) {
+              switch (key) {
+                case '0':
+                  buttonStyle = { backgroundColor: '#6b7280', color: 'white' };
+                  break;
+                case '1':
+                  buttonStyle = { backgroundColor: '#3b82f6', color: 'white' };
+                  break;
+                case '2-5':
+                  buttonStyle = { backgroundColor: '#22c55e', color: 'white' };
+                  break;
+                case '5-25':
+                  buttonStyle = { backgroundColor: '#eab308', color: 'white' };
+                  break;
+                case '25-50':
+                  buttonStyle = { backgroundColor: '#f97316', color: 'white' };
+                  break;
+                case '50&+':
+                  buttonStyle = { backgroundColor: '#dc2626', color: 'white' };
+                  break;
+                case 'Non trouvé':
+                  buttonStyle = { backgroundColor: '#9333ea', color: 'white' };
+                  break;
+                default:
+                  buttonClass += ' bg-gray-600 text-white';
+              }
+            } else {
+              // Styles non-actifs avec couleurs spécifiques
+              switch (key) {
+                case '0':
+                  buttonClass += ' bg-gray-100 text-gray-700 hover:bg-gray-200';
+                  break;
+                case '1':
+                  buttonClass += ' bg-blue-100 text-blue-700 hover:bg-blue-200';
+                  break;
+                case '2-5':
+                  buttonClass += ' bg-green-100 text-green-700 hover:bg-green-200';
+                  break;
+                case '5-25':
+                  buttonClass += ' bg-yellow-100 text-yellow-700 hover:bg-yellow-200';
+                  break;
+                case '25-50':
+                  buttonClass += ' bg-orange-100 text-orange-700 hover:bg-orange-200';
+                  break;
+                case '50&+':
+                  buttonClass += ' bg-red-100 text-red-700 hover:bg-red-200';
+                  break;
+                case 'Non trouvé':
+                  buttonClass += ' bg-purple-100 text-purple-700 hover:bg-purple-200';
+                  break;
+                default:
+                  buttonClass += ' bg-gray-100 text-gray-700 hover:bg-gray-200';
+              }
+            }
+            
+            return (
+              <button
+                key={key}
+                onClick={() => setTailleFilter(key as any)}
+                className={buttonClass}
+                style={buttonStyle}
+              >
+                <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">{label}</span>
+                <span className="sm:hidden">{key === 'all' ? 'Tt' : label}</span>
               </button>
             );
           })}

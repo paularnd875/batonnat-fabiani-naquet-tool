@@ -89,6 +89,7 @@ export async function GET() {
       .select('*');
 
     let participationRatesMap = new Map<string, number>();
+    let tailleCabinetsMap = new Map<string, string>();
     
     try {
       const firmsParticipationData = await googleSheets.readFirmsData();
@@ -106,14 +107,20 @@ export async function GET() {
         if (firmsParticipationData.indexOf(firmData) < 3) {
           console.log(`📋 ${normalizedName}: ${(firmData.taux_participation_moyen * 100).toFixed(1)}% participation`);
         }
+
+        // 6. Ajouter les tailles de cabinet
+        if (firmData.taille) {
+          tailleCabinetsMap.set(normalizedName, firmData.taille);
+        }
       });
     } catch (error) {
-      console.warn('⚠️ Taux de participation Google Sheets non disponibles, utilisation calcul local');
+      console.warn('⚠️ Données Google Sheets non disponibles, utilisation calcul local');
     }
 
-    // 6. Finaliser avec les taux de participation depuis Google Sheets
+    // 7. Finaliser avec les taux de participation et tailles depuis Google Sheets
     const cabinetsArray = Array.from(cabinetStats.values()).map((firm: any) => {
       let participationRate = participationRatesMap.get(firm.name);
+      let tailleCabinet = tailleCabinetsMap.get(firm.name);
       
       // Si pas trouvé dans Google Sheets, utiliser le calcul local basé sur les votes
       if (participationRate === undefined) {
@@ -125,11 +132,12 @@ export async function GET() {
       
       return {
         ...firm,
-        participation_rate: participationRate || 0
+        participation_rate: participationRate || 0,
+        taille_cabinet: tailleCabinet || undefined
       };
     });
 
-    // 7. Trier par nombre d'avocats décroissant
+    // 8. Trier par nombre d'avocats décroissant
     cabinetsArray.sort((a, b) => b.lawyer_count - a.lawyer_count);
 
     console.log(`✅ ${cabinetsArray.length} cabinets calculés avec statistiques LIVE`);

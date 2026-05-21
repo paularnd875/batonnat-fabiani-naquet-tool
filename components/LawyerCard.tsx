@@ -13,7 +13,7 @@ import { Mail, Phone, AlertTriangle, User } from 'lucide-react';
 import { Lawyer, LawyerCardProps } from '@/types';
 import BallotBoxIcon from '@/components/ui/BallotBoxIcon';
 
-const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, teamMembers }) => {
+const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, onUnassign, teamMembers }) => {
   const getClassementColor = (classement: string) => {
     switch (classement) {
       case 'C1': return 'bg-green-100 text-green-800';
@@ -21,6 +21,17 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, te
       case 'C3': return 'bg-yellow-100 text-yellow-800';
       case 'Blacklist': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Vérifier si l'avocat est assigné
+  const isAssigned = lawyer.assignments && lawyer.assignments.length > 0;
+  const assignedMember = isAssigned && lawyer.assignments ? lawyer.assignments[0].team_members : null;
+
+  // Fonction de désassignation avec confirmation
+  const handleUnassign = () => {
+    if (onUnassign && confirm('Êtes-vous sûr de vouloir désassigner cet avocat ?')) {
+      onUnassign(lawyer);
     }
   };
 
@@ -151,7 +162,7 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, te
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="whitespace-nowrap icon-hover focus-ring">
-                  Assigner
+                  {isAssigned ? 'Réassigner' : 'Assigner'}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -164,8 +175,34 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, te
                     {member.prenom} {member.nom}
                   </DropdownMenuItem>
                 ))}
+                {isAssigned && onUnassign && (
+                  <>
+                    <div className="border-t my-1" />
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        if (confirm('Êtes-vous sûr de vouloir désassigner cet avocat ?')) {
+                          onUnassign(lawyer);
+                        }
+                      }}
+                      className="cursor-pointer text-red-600 hover:bg-red-50"
+                    >
+                      ❌ Désassigner
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Étiquette d'assignation */}
+            {isAssigned && (
+              <div 
+                onClick={handleUnassign}
+                className="flex items-center justify-center gap-1 bg-green-100 text-green-800 text-xs px-2 py-1 rounded cursor-pointer hover:bg-green-200 transition-colors"
+                title="Cliquer pour désassigner"
+              >
+                <span>✅ Assigné</span>
+              </div>
+            )}
 
             {lawyer.classement === 'Blacklist' && (
               <div className="flex items-center gap-1 text-red-600 text-xs">
