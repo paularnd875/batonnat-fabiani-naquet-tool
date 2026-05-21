@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, Database, UserPlus, Mail, Send, RefreshCw, Check, TestTube } from 'lucide-react';
+import { Users, Database, UserPlus, Mail, Send, RefreshCw, Check, TestTube, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface AssignmentStats {
@@ -36,6 +36,7 @@ export default function OverviewTab() {
   const [loading, setLoading] = useState(true);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const [emailResults, setEmailResults] = useState<string[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -43,6 +44,7 @@ export default function OverviewTab() {
 
   const loadData = async (forceRefresh = false) => {
     try {
+      if (forceRefresh) setRefreshing(true);
       const url = forceRefresh ? '/api/admin-stats?refresh=true' : '/api/admin-stats';
       const statsResponse = await fetch(url);
       const statsData = await statsResponse.json();
@@ -55,6 +57,7 @@ export default function OverviewTab() {
       console.error('Erreur chargement données admin:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -279,13 +282,33 @@ export default function OverviewTab() {
             <CardDescription>Accès aux outils de test et de debug</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Link 
-              href="/test" 
-              className="btn-fn-outline w-full icon-hover focus-ring flex items-center justify-center gap-2"
-            >
-              <TestTube className="h-4 w-4" />
-              Test API
-            </Link>
+            <div className="space-y-3">
+              <Link 
+                href="/test" 
+                className="btn-fn-outline w-full icon-hover focus-ring flex items-center justify-center gap-2"
+              >
+                <TestTube className="h-4 w-4" />
+                Test API
+              </Link>
+              
+              <button
+                onClick={() => loadData(true)}
+                disabled={refreshing}
+                className="btn-fn-outline w-full icon-hover focus-ring flex items-center justify-center gap-2"
+              >
+                {refreshing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Actualisation...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4" />
+                    Actualiser les données
+                  </>
+                )}
+              </button>
+            </div>
             <p className="text-xs text-gray-500">
               Interface de test pour vérifier le fonctionnement des APIs et effectuer des diagnostics.
             </p>

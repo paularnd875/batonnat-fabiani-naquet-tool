@@ -44,8 +44,8 @@ export interface Lawyer {
 // Props pour composants - signature unifiée
 export interface LawyerCardProps {
   lawyer: Lawyer;
-  onAssign: (lawyer: Lawyer, memberId: string) => void;
-  onUnassign?: (lawyer: Lawyer) => void;
+  onAssign: (lawyer: Lawyer, memberId: string) => Promise<void>;
+  onUnassign?: (lawyer: Lawyer) => Promise<void>;
   teamMembers: TeamMember[];
 }
 
@@ -60,6 +60,6 @@ export interface AssignWrapperFunction {
 
 export interface VirtualizedLawyerListProps {
   lawyers: Lawyer[];
-  onAssign: (lawyer: Lawyer, memberId: string) => void;
+  onAssign: (lawyer: Lawyer, memberId: string) => Promise<void>;
   teamMembers: TeamMember[];
 }

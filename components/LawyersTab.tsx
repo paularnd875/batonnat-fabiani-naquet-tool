@@ -8,6 +8,7 @@ import { SheetLawyer } from '@/lib/google-sheets';
 import { TeamMember, Lawyer } from '@/types';
 import LawyerCard from '@/components/LawyerCard';
 import BallotBoxIcon from '@/components/ui/BallotBoxIcon';
+import { Loader2 } from 'lucide-react';
 
 interface LawyersStats {
   total: number;
@@ -178,19 +179,19 @@ export default function LawyersTab({}: LawyersTabProps) {
   };
 
   // Wrapper pour la signature attendue par LawyerCard
-  const handleAssignWrapper = (lawyer: Lawyer, teamMemberId: string) => {
+  const handleAssignWrapper = async (lawyer: Lawyer, teamMemberId: string) => {
     console.log('📋 LawyersTab: Assignation demandée:', {
       lawyerName: lawyer.prenomnom,
       teamMemberId,
       teamMembersCount: teamMembers.length
     });
-    handleAssign(lawyer.prenomnom, teamMemberId);
+    await handleAssign(lawyer.prenomnom, teamMemberId);
   };
 
   // Wrapper pour la désassignation attendue par LawyerCard
-  const handleUnassignWrapper = (lawyer: Lawyer) => {
+  const handleUnassignWrapper = async (lawyer: Lawyer) => {
     console.log('📋 LawyersTab: Désassignation demandée:', lawyer.prenomnom);
-    handleUnassign(lawyer.prenomnom);
+    await handleUnassign(lawyer.prenomnom);
   };
 
   // Gestion des étiquettes cliquables
@@ -263,9 +264,17 @@ export default function LawyersTab({}: LawyersTabProps) {
         <div className="text-center">
           <button
             onClick={loadLawyers}
-            className="btn-fn-primary icon-hover focus-ring"
+            disabled={loading}
+            className="btn-fn-primary icon-hover focus-ring flex items-center gap-2"
           >
-            👥 Charger la liste des avocats
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Chargement...
+              </>
+            ) : (
+              '👥 Charger la liste des avocats'
+            )}
           </button>
           <p className="text-sm text-gray-500 mt-2">
             Cliquez pour charger et parcourir tous les avocats

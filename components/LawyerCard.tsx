@@ -9,11 +9,13 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Mail, Phone, AlertTriangle, User } from 'lucide-react';
+import { Mail, Phone, AlertTriangle, User, Loader2 } from 'lucide-react';
 import { Lawyer, LawyerCardProps } from '@/types';
 import BallotBoxIcon from '@/components/ui/BallotBoxIcon';
 
 const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, onUnassign, teamMembers }) => {
+  const [isAssigning, setIsAssigning] = React.useState(false);
+  const [isUnassigning, setIsUnassigning] = React.useState(false);
   const getClassementColor = (classement: string) => {
     switch (classement) {
       case 'C1': return 'bg-green-100 text-green-800';
@@ -29,9 +31,27 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
   const assignedMember = isAssigned && lawyer.assignments ? lawyer.assignments[0].team_members : null;
 
   // Fonction de désassignation avec confirmation
-  const handleUnassign = () => {
-    if (onUnassign && confirm('Êtes-vous sûr de vouloir désassigner cet avocat ?')) {
-      onUnassign(lawyer);
+  const handleUnassign = async () => {
+    if (!onUnassign) return;
+    if (!confirm('Êtes-vous sûr de vouloir désassigner cet avocat ?')) return;
+    
+    setIsUnassigning(true);
+    try {
+      await onUnassign(lawyer);
+    } finally {
+      setIsUnassigning(false);
+    }
+  };
+
+  // Fonction d'assignation avec indicateur de chargement
+  const handleAssignClick = async (teamMemberId: string) => {
+    if (!onAssign) return;
+    
+    setIsAssigning(true);
+    try {
+      await onAssign(lawyer, teamMemberId);
+    } finally {
+      setIsAssigning(false);
     }
   };
 
@@ -161,16 +181,29 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
           <div className="flex flex-col gap-2 ml-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="whitespace-nowrap icon-hover focus-ring">
-                  {isAssigned ? 'Réassigner' : 'Assigner'}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="whitespace-nowrap icon-hover focus-ring"
+                  disabled={isAssigning || isUnassigning}
+                >
+                  {isAssigning ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                      Assignation...
+                    </>
+                  ) : (
+                    isAssigned ? 'Réassigner' : 'Assigner'
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {teamMembers.map((member) => (
                   <DropdownMenuItem 
                     key={member.id}
-                    onClick={() => onAssign(lawyer, member.id)}
+                    onClick={() => handleAssignClick(member.id)}
                     className="cursor-pointer"
+                    disabled={isAssigning || isUnassigning}
                   >
                     {member.prenom} {member.nom}
                   </DropdownMenuItem>
@@ -179,14 +212,18 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
                   <>
                     <div className="border-t my-1" />
                     <DropdownMenuItem 
-                      onClick={() => {
-                        if (confirm('Êtes-vous sûr de vouloir désassigner cet avocat ?')) {
-                          onUnassign(lawyer);
-                        }
-                      }}
+                      onClick={handleUnassign}
                       className="cursor-pointer text-red-600 hover:bg-red-50"
+                      disabled={isAssigning || isUnassigning}
                     >
-                      ❌ Désassigner
+                      {isUnassigning ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                          Désassignation...
+                        </>
+                      ) : (
+                        '❌ Désassigner'
+                      )}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -197,10 +234,21 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
             {isAssigned && (
               <div 
                 onClick={handleUnassign}
-                className="flex items-center justify-center gap-1 bg-green-100 text-green-800 text-xs px-2 py-1 rounded cursor-pointer hover:bg-green-200 transition-colors"
-                title="Cliquer pour désassigner"
+                className={`flex items-center justify-center gap-1 bg-green-100 text-green-800 text-xs px-2 py-1 rounded transition-colors ${
+                  isUnassigning 
+                    ? 'cursor-not-allowed opacity-70' 
+                    : 'cursor-pointer hover:bg-green-200'
+                }`}
+                title={isUnassigning ? 'Désassignation en cours...' : 'Cliquer pour désassigner'}
               >
-                <span>✅ Assigné</span>
+                {isUnassigning ? (
+                  <>
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>Désassignation...</span>
+                  </>
+                ) : (
+                  <span>✅ Assigné</span>
+                )}
               </div>
             )}
 

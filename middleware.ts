@@ -13,8 +13,7 @@ export function middleware(request: NextRequest) {
 
   // Routes d'assets statiques à ignorer pour l'authentification
   if (
-    pathname.startsWith('/_next') || 
-    pathname.startsWith('/api') && !pathname.startsWith('/api/auth/login') && !pathname.startsWith('/api/auth/logout') ||
+    pathname.startsWith('/_next') ||
     pathname.match(/\.(ico|png|jpg|jpeg|svg|gif|woff|woff2|ttf|css|js|map)$/)
   ) {
     const response = NextResponse.next();
@@ -33,10 +32,17 @@ export function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get('auth-session');
   
   if (!sessionCookie?.value) {
-    // Pas de session - rediriger vers login
-    console.log(`🔐 Accès non autorisé à ${pathname} - redirection vers login`);
-    const loginUrl = new URL('/login', request.url);
-    return NextResponse.redirect(loginUrl);
+    // Pas de session
+    if (pathname.startsWith('/api')) {
+      // Pour les APIs, retourner 401 Unauthorized
+      console.log(`🔐 Accès API non autorisé à ${pathname}`);
+      return new NextResponse('Unauthorized', { status: 401 });
+    } else {
+      // Pour les pages, rediriger vers login
+      console.log(`🔐 Accès non autorisé à ${pathname} - redirection vers login`);
+      const loginUrl = new URL('/login', request.url);
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
   // Session présente - autoriser l'accès avec headers de sécurité
@@ -59,11 +65,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * Include API routes for authentication
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };

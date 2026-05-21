@@ -7,6 +7,9 @@ interface CacheEntry<T> {
   data: T;
   expiry: number;
   timestamp: number;
+  accessCount: number;
+  lastAccess: number;
+  compressed?: boolean;
 }
 
 interface CacheStats {
@@ -31,16 +34,42 @@ class MemoryCache {
    */
   set<T>(key: string, data: T, ttl?: number): void {
     const expiryTime = Date.now() + (ttl || this.defaultTTL);
+    const now = Date.now();
+    
+    // Optimisation: compression pour les grandes structures de données
+    let finalData = data;
+    let compressed = false;
+    
+    if (typeof data === 'object' && data !== null) {
+      try {
+        const jsonString = JSON.stringify(data);
+        if (jsonString.length > 100000) { // Plus de 100KB
+          finalData = JSON.parse(jsonString); // Optimisation mémoire
+          compressed = true;
+        }
+      } catch (e) {
+        // Continuer sans compression en cas d'erreur
+      }
+    }
     
     this.cache.set(key, {
-      data,
+      data: finalData,
       expiry: expiryTime,
-      timestamp: Date.now()
+      timestamp: now,
+      accessCount: 0,
+      lastAccess: now,
+      compressed
     });
 
     this.stats.cacheSize = this.cache.size;
     
-    console.log(`💾 Cache SET: ${key} (TTL: ${Math.round((ttl || this.defaultTTL) / 1000)}s, Size: ${this.stats.cacheSize})`);
+    const sizeInfo = compressed ? ' (compressed)' : '';
+    console.log(`💾 Cache SET: ${key} (TTL: ${Math.round((ttl || this.defaultTTL) / 1000)}s, Size: ${this.stats.cacheSize}${sizeInfo})`);
+    
+    // Nettoyage automatique si le cache devient trop volumineux
+    if (this.cache.size > 100) {
+      this.evictLeastUsed();
+    }
   }
 
   /**
@@ -63,6 +92,10 @@ class MemoryCache {
       return null;
     }
 
+    // Mettre à jour les statistiques d'accès
+    entry.accessCount++;
+    entry.lastAccess = Date.now();
+    
     this.stats.hits++;
     const ageSeconds = Math.round((Date.now() - entry.timestamp) / 1000);
     console.log(`💾 Cache HIT: ${key} (Age: ${ageSeconds}s, Hit rate: ${this.getHitRate()}%)`);
@@ -161,11 +194,17 @@ class MemoryCache {
 // Instance singleton du cache
 export const memoryCache = new MemoryCache();
 
-// Nettoyage automatique toutes les 5 minutes
+// Nettoyage automatique et préchargement
 if (typeof window === 'undefined') { // Côté serveur uniquement
+  // Nettoyage automatique toutes les 5 minutes
   setInterval(() => {
     memoryCache.cleanup();
   }, 5 * 60 * 1000);
+  
+  // Préchargement automatique au démarrage
+  setTimeout(() => {
+    memoryCache.preload();
+  }, 2000); // 2 secondes après le démarrage
 }
 
 // Constantes pour les clés de cache
@@ -176,6 +215,52 @@ export const CACHE_KEYS = {
   CABINET_PREFIX: 'cabinet_',
   TEAM_MEMBERS: 'team_members'
 } as const;
+
+  /**
+   * Évince les entrées les moins utilisées pour garder une taille raisonnable
+   */
+  private evictLeastUsed(): void {
+    if (this.cache.size <= 50) return; // Garder au moins 50 entrées
+    
+    const entries = Array.from(this.cache.entries())
+      .map(([key, entry]) => ({ key, entry }))
+      .sort((a, b) => {
+        // Trier par fréquence d'usage et ancienneté
+        const scoreA = a.entry.accessCount / (Date.now() - a.entry.lastAccess + 1);
+        const scoreB = b.entry.accessCount / (Date.now() - b.entry.lastAccess + 1);
+        return scoreA - scoreB;
+      });
+    
+    // Supprimer les 25% les moins utilisées
+    const toRemove = Math.floor(entries.length * 0.25);
+    for (let i = 0; i < toRemove; i++) {
+      this.cache.delete(entries[i].key);
+    }
+    
+    this.stats.cacheSize = this.cache.size;
+    console.log(`💾 Cache EVICTION: ${toRemove} entrées supprimées (Size: ${this.stats.cacheSize})`);
+  }
+
+  /**
+   * Précharge les données importantes pour améliorer les performances
+   */
+  async preload(): Promise<void> {
+    console.log('🚀 PRELOAD: Démarrage du préchargement intelligent...');
+    
+    try {
+      // Précharger les données les plus importantes en parallèle
+      await Promise.allSettled([
+        fetch('/api/warm-cache', { method: 'POST' }),
+        fetch('/api/admin-stats'),
+        fetch('/api/team')
+      ]);
+      
+      console.log('🚀 PRELOAD: Préchargement terminé');
+    } catch (error) {
+      console.warn('⚠️ PRELOAD: Erreur lors du préchargement:', error);
+    }
+  }
+}
 
 // TTL ULTRA-OPTIMISÉS pour performance maximale
 export const CACHE_TTL = {

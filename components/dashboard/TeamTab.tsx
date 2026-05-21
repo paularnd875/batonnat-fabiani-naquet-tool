@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Edit, Trash2, UserPlus, Mail, Calendar, Search } from 'lucide-react';
+import { Edit, Trash2, UserPlus, Mail, Calendar, Search, Loader2 } from 'lucide-react';
 
 interface TeamMember {
   id: string;
@@ -34,6 +34,7 @@ export default function TeamTab() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newMember, setNewMember] = useState({ prenom: '', nom: '', email: '' });
   const [addingMember, setAddingMember] = useState(false);
+  const [deletingMembers, setDeletingMembers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadTeamMembers();
@@ -61,6 +62,8 @@ export default function TeamTab() {
       return;
     }
 
+    setDeletingMembers(prev => new Set(prev).add(member.id));
+
     try {
       const response = await fetch('/api/team', {
         method: 'DELETE',
@@ -79,6 +82,12 @@ export default function TeamTab() {
     } catch (error) {
       console.error('Erreur suppression:', error);
       alert('Erreur lors de la suppression');
+    } finally {
+      setDeletingMembers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(member.id);
+        return newSet;
+      });
     }
   };
 
@@ -277,9 +286,14 @@ export default function TeamTab() {
                     variant="destructive" 
                     size="sm" 
                     onClick={() => handleDelete(member)}
+                    disabled={deletingMembers.has(member.id)}
                     className="icon-hover focus-ring"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {deletingMembers.has(member.id) ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>

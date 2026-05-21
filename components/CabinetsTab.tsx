@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Loader2 } from 'lucide-react';
 
 interface Firm {
   name: string;
@@ -89,9 +90,17 @@ export default function CabinetsTab({}: CabinetsTabProps) {
         <div className="text-center">
           <button
             onClick={loadFirms}
-            className="btn-fn-primary icon-hover focus-ring"
+            disabled={loading}
+            className="btn-fn-primary icon-hover focus-ring flex items-center gap-2"
           >
-            📋 Charger la liste des cabinets
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Chargement...
+              </>
+            ) : (
+              '📋 Charger la liste des cabinets'
+            )}
           </button>
           <p className="text-sm text-gray-500 mt-2">
             Cliquez pour charger et parcourir tous les cabinets d'avocats

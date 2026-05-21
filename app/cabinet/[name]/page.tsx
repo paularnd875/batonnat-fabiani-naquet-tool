@@ -209,8 +209,8 @@ export default function CabinetPage() {
   };
 
   // Wrapper pour la nouvelle signature de LawyerCard
-  const handleAssignWrapper: AssignWrapperFunction = (lawyer: Lawyer, teamMemberId: string) => {
-    handleAssign(lawyer.prenomnom, teamMemberId);
+  const handleAssignWrapper = async (lawyer: Lawyer, teamMemberId: string) => {
+    await handleAssign(lawyer.prenomnom, teamMemberId);
   };
 
   const handleUnassign = async (lawyerPrenomnom: string) => {
@@ -243,8 +243,8 @@ export default function CabinetPage() {
   };
 
   // Wrapper pour la nouvelle signature de LawyerCard (désassignation)
-  const handleUnassignWrapper = (lawyer: Lawyer) => {
-    handleUnassign(lawyer.prenomnom);
+  const handleUnassignWrapper = async (lawyer: Lawyer) => {
+    await handleUnassign(lawyer.prenomnom);
   };
 
   // Fonction pour réinitialiser tous les filtres
