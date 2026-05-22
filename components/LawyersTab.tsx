@@ -508,9 +508,6 @@ export default function LawyersTab({}: LawyersTabProps) {
                 ❓ Non trouvé
               </button>
             </div>
-            <div className="mt-2 text-xs text-gray-500">
-              💡 Données analysées depuis la colonne AH du Google Sheet
-            </div>
           </div>
         </div>
       )}
