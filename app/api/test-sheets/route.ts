@@ -31,8 +31,7 @@ export async function GET() {
         status_distribution: statusCounts,
         examples_with_status: examplesWithStatus.map(l => ({
           prenomnom: l.prenomnom,
-          nom: l.nom,
-          prenom: l.prenom,
+          nom_complet: l.nom_complet,
           classement: l.classement
         })),
         environment: process.env.VERCEL ? 'Vercel Production' : 'Local Development',
