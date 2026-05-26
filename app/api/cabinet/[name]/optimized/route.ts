@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
 import { googleSheets } from '@/lib/google-sheets';
+import { getDatabase } from '@/lib/database';
 
 /**
  * Version optimisée de l'API cabinet avec pagination intelligente
@@ -64,14 +65,34 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     const allLawyersFromSheet = await googleSheets.readLawyers();
     console.log(`⚡ Google Sheets lu en ${Date.now() - startTime}ms`);
 
-    // Filtrage optimisé
+    // Fusionner avec les statuts de la base SQLite (même logique que /api/lawyers)
+    console.log('🔄 Fusion avec les statuts SQLite...');
+    const db = getDatabase();
+    const latestStatuses = await db.getAllLatestStatuses();
+    console.log(`📋 ${latestStatuses.size} statuts trouvés en base SQLite`);
+    
+    // Mettre à jour les statuts des avocats avec ceux de la base SQLite
+    const lawyersWithUpdatedStatuses = allLawyersFromSheet.map(lawyer => {
+      const updatedStatus = latestStatuses.get(lawyer.prenomnom);
+      if (updatedStatus !== undefined) {
+        return {
+          ...lawyer,
+          classement: updatedStatus
+        };
+      }
+      return lawyer;
+    });
+    
+    console.log(`✅ Fusion terminée - ${lawyersWithUpdatedStatuses.length} avocats avec statuts à jour`);
+
+    // Filtrage optimisé (utiliser données fusionnées)
     let filteredLawyers;
     if (normalizedCabinetName === 'Individuel') {
-      filteredLawyers = allLawyersFromSheet.filter((lawyer: any) => 
+      filteredLawyers = lawyersWithUpdatedStatuses.filter((lawyer: any) => 
         !lawyer.cabinet || lawyer.cabinet.trim() === ''
       );
     } else {
-      filteredLawyers = allLawyersFromSheet.filter((lawyer: any) => 
+      filteredLawyers = lawyersWithUpdatedStatuses.filter((lawyer: any) => 
         lawyer.cabinet === normalizedCabinetName
       );
     }
