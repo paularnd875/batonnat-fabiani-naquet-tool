@@ -74,10 +74,16 @@ export async function POST(request: Request) {
       await googleSheets.updateLawyerStatus(lawyerId, newStatus);
       console.log(`✅ Google Sheets mis à jour avec succès pour ${lawyerData.prenom} ${lawyerData.nom}: ${newStatus}`);
     } catch (error) {
-      console.error(`⚠️ Erreur mise à jour Google Sheets pour ${lawyerData.prenom} ${lawyerData.nom}:`, error);
+      console.error(`❌ ERREUR CRITIQUE Google Sheets pour ${lawyerData.prenom} ${lawyerData.nom}:`, error);
       console.error('Stack trace complète:', error instanceof Error ? error.stack : error);
-      // Ne pas faire échouer la requête si la mise à jour du Sheet échoue
-      // Le changement est quand même enregistré en local
+      
+      // TEMPORAIRE: Faire échouer la requête pour voir l'erreur exacte
+      return NextResponse.json({
+        success: false,
+        error: `Échec mise à jour Google Sheets: ${error instanceof Error ? error.message : error}`,
+        localLogSaved: true,
+        logId: statusChangeLog.id
+      }, { status: 500 });
     }
 
     return NextResponse.json({
