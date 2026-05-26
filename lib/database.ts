@@ -243,6 +243,42 @@ class DatabaseService {
     stmt.run(...ids);
   }
 
+  // Récupérer le dernier statut d'un avocat spécifique
+  getLatestStatusForLawyer(lawyerId: string): string | null {
+    const stmt = this.db.prepare(`
+      SELECT new_status 
+      FROM status_change_logs 
+      WHERE lawyer_id = ? 
+      ORDER BY changed_at DESC 
+      LIMIT 1
+    `);
+    
+    const result = stmt.get(lawyerId) as { new_status: string } | undefined;
+    return result?.new_status || null;
+  }
+
+  // Récupérer tous les derniers statuts des avocats modifiés
+  getAllLatestStatuses(): Map<string, string> {
+    const stmt = this.db.prepare(`
+      SELECT DISTINCT lawyer_id, 
+             FIRST_VALUE(new_status) OVER (
+               PARTITION BY lawyer_id 
+               ORDER BY changed_at DESC
+             ) as latest_status
+      FROM status_change_logs
+      ORDER BY lawyer_id
+    `);
+    
+    const results = stmt.all() as Array<{ lawyer_id: string; latest_status: string }>;
+    const statusMap = new Map<string, string>();
+    
+    for (const result of results) {
+      statusMap.set(result.lawyer_id, result.latest_status);
+    }
+    
+    return statusMap;
+  }
+
   // === UTILITAIRES ===
 
   private uniformizePrenomNom(input: string): string {

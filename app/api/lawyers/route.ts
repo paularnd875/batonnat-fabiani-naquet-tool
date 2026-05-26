@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { googleSheets, SheetLawyer } from '@/lib/google-sheets';
 import { supabase } from '@/lib/db';
+import { getDatabase } from '@/lib/database';
 
 interface LawyersApiResponse {
   success: boolean;
@@ -57,8 +58,28 @@ export async function GET(request: NextRequest) {
     const allLawyers = await googleSheets.readLawyers();
     console.log(`📊 ${allLawyers.length} avocats récupérés`);
     
-    // Application des filtres
-    let filteredLawyers = allLawyers.filter(lawyer => {
+    // Fusionner avec les statuts de la base SQLite
+    console.log('🔄 Fusion avec les statuts SQLite...');
+    const db = getDatabase();
+    const latestStatuses = db.getAllLatestStatuses();
+    console.log(`📋 ${latestStatuses.size} statuts trouvés en base SQLite`);
+    
+    // Mettre à jour les statuts des avocats avec ceux de la base SQLite
+    const lawyersWithUpdatedStatuses = allLawyers.map(lawyer => {
+      const updatedStatus = latestStatuses.get(lawyer.prenomnom);
+      if (updatedStatus !== undefined) {
+        return {
+          ...lawyer,
+          classement: updatedStatus
+        };
+      }
+      return lawyer;
+    });
+    
+    console.log(`✅ Fusion terminée - ${lawyersWithUpdatedStatuses.length} avocats avec statuts à jour`);
+    
+    // Application des filtres (utiliser les données fusionnées)
+    let filteredLawyers = lawyersWithUpdatedStatuses.filter(lawyer => {
       // Filtre par classification (support multiple)
       if (classificationFilters.length > 0) {
         let matchesClassification = false;
@@ -158,28 +179,28 @@ export async function GET(request: NextRequest) {
     
     console.log(`🔍 ${filteredLawyers.length} avocats après filtrage`);
     
-    // Calcul des statistiques
+    // Calcul des statistiques (utiliser les données fusionnées)
     const stats = {
-      total: allLawyers.length,
+      total: lawyersWithUpdatedStatuses.length,
       by_classification: {
-        soutien_public: allLawyers.filter(l => l.soutien_public).length,
-        c1: allLawyers.filter(l => l.classement === 'C1').length,
-        c2: allLawyers.filter(l => l.classement === 'C2').length,
-        c3: allLawyers.filter(l => l.classement === 'C3').length,
-        blacklist: allLawyers.filter(l => l.classement === 'Blacklist').length,
-        unclassified: allLawyers.filter(l => !l.classement || l.classement === '').length,
+        soutien_public: lawyersWithUpdatedStatuses.filter(l => l.soutien_public).length,
+        c1: lawyersWithUpdatedStatuses.filter(l => l.classement === 'C1').length,
+        c2: lawyersWithUpdatedStatuses.filter(l => l.classement === 'C2').length,
+        c3: lawyersWithUpdatedStatuses.filter(l => l.classement === 'C3').length,
+        blacklist: lawyersWithUpdatedStatuses.filter(l => l.classement === 'Blacklist').length,
+        unclassified: lawyersWithUpdatedStatuses.filter(l => !l.classement || l.classement === '').length,
       },
       by_voting: {
-        first_round: allLawyers.filter(l => l.premier_tour_vote).length,
-        second_round: allLawyers.filter(l => l.second_tour_vote).length,
-        both_rounds: allLawyers.filter(l => l.premier_tour_vote && l.second_tour_vote).length,
-        no_vote: allLawyers.filter(l => !l.premier_tour_vote && !l.second_tour_vote).length,
+        first_round: lawyersWithUpdatedStatuses.filter(l => l.premier_tour_vote).length,
+        second_round: lawyersWithUpdatedStatuses.filter(l => l.second_tour_vote).length,
+        both_rounds: lawyersWithUpdatedStatuses.filter(l => l.premier_tour_vote && l.second_tour_vote).length,
+        no_vote: lawyersWithUpdatedStatuses.filter(l => !l.premier_tour_vote && !l.second_tour_vote).length,
       },
       top_years_by_oath: [] as Array<{year: number, count: number}>
     };
     
-    // Calcul du top 5 des années de serment
-    const yearCounts = allLawyers.reduce((acc, lawyer) => {
+    // Calcul du top 5 des années de serment (utiliser les données fusionnées)
+    const yearCounts = lawyersWithUpdatedStatuses.reduce((acc, lawyer) => {
       if (lawyer.annee_serment && lawyer.annee_serment > 0) {
         acc[lawyer.annee_serment] = (acc[lawyer.annee_serment] || 0) + 1;
       }
