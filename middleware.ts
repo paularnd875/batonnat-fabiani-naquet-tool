@@ -14,6 +14,7 @@ export function middleware(request: NextRequest) {
     '/api/auth/create-user',
     '/api/users',
     '/api/debug-sheets', // TEMPORAIRE POUR DEBUG
+    '/api/debug-sqlite', // TEMPORAIRE POUR DEBUG SQLITE
     '/api/force-refresh' // TEMPORAIRE POUR FORCE REFRESH
   ];
 
