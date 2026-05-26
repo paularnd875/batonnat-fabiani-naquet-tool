@@ -6,12 +6,12 @@ export async function GET() {
     const db = getDatabase();
     
     // Vérifier les logs de changement de statut
-    const allLogs = db.getAllStatusChangeLogs();
-    const unexportedCount = db.getUnexportedStatusChangesCount();
-    const latestStatuses = db.getAllLatestStatuses();
+    const allLogs = await db.getAllStatusChangeLogs();
+    const unexportedCount = await db.getUnexportedStatusChangesCount();
+    const latestStatuses = await db.getAllLatestStatuses();
     
     // Chercher spécifiquement Virginie Domain
-    const virginieLogs = allLogs.filter(log => 
+    const virginieLogs = allLogs.filter((log: any) => 
       log.lawyer_id.toLowerCase().includes('virginie') ||
       log.lawyer_prenom.toLowerCase().includes('virginie') ||
       log.lawyer_nom.toLowerCase().includes('domain')
