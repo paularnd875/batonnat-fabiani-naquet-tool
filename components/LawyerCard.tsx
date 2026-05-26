@@ -273,10 +273,10 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
               currentStatus={currentStatus}
               lawyerData={{
                 prenomnom: lawyer.prenomnom,
-                nom: lawyer.nom,
-                prenom: lawyer.prenom,
-                email: lawyer.email,
-                cabinet: lawyer.cabinet
+                nom: lawyer.nom || '',
+                prenom: lawyer.prenom || '',
+                email: lawyer.email || '',
+                cabinet: lawyer.cabinet || ''
               }}
               onStatusChange={handleStatusChange}
               disabled={isAssigning || isUnassigning}

@@ -24,11 +24,11 @@ export async function POST(request: Request) {
     }
 
     // Créer le nouvel utilisateur
-    const newUser = db.createUser({
-      nom: nom.trim(),
-      prenom: prenom.trim(),
-      email: email.toLowerCase().trim()
-    });
+    const newUser = db.createUser(
+      nom.trim(),
+      prenom.trim(),
+      email.toLowerCase().trim()
+    );
 
     console.log(`👤 Nouvel utilisateur créé: ${prenom} ${nom} (${email})`);
 
