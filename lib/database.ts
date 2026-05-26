@@ -84,6 +84,37 @@ class DatabaseService {
     `);
 
     console.log('✅ Tables de base de données initialisées');
+    
+    // Créer les utilisateurs par défaut sur Vercel si aucun utilisateur n'existe
+    this.createDefaultUsersIfEmpty();
+  }
+  
+  private createDefaultUsersIfEmpty() {
+    const existingUsers = this.getAllUsers();
+    
+    // Si aucun utilisateur n'existe, créer les utilisateurs par défaut
+    if (existingUsers.length === 0) {
+      console.log('📝 Création des utilisateurs par défaut...');
+      
+      const defaultUsers = [
+        { nom: 'Arnould', prenom: 'Paul', email: 'paul@batonnat.com' },
+        { nom: 'Test', prenom: 'Utilisateur', email: 'test@example.com' },
+        { nom: 'Fabiani', prenom: 'Marie-Hélène', email: 'mhfabiani@example.com' },
+        { nom: 'Naquet', prenom: 'Franck', email: 'fnaquet@example.com' }
+      ];
+      
+      for (const user of defaultUsers) {
+        try {
+          this.createUser(user.nom, user.prenom, user.email);
+          console.log(`👤 Utilisateur par défaut créé: ${user.prenom} ${user.nom}`);
+        } catch (error) {
+          // Ignorer les erreurs (par exemple si l'utilisateur existe déjà)
+          console.warn(`⚠️ Erreur création utilisateur par défaut ${user.prenom} ${user.nom}:`, error);
+        }
+      }
+    } else {
+      console.log(`👥 ${existingUsers.length} utilisateurs existants trouvés`);
+    }
   }
 
   // === GESTION DES UTILISATEURS ===
