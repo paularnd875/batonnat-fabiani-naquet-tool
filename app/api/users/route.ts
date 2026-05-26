@@ -4,7 +4,7 @@ import { getDatabase } from '@/lib/database';
 export async function GET() {
   try {
     const db = getDatabase();
-    const users = db.getAllUsers();
+    const users = await db.getAllUsers();
 
     console.log(`📋 ${users.length} utilisateurs récupérés`);
 
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const db = getDatabase();
     
     // Vérifier si l'email existe déjà
-    const existingUser = db.getUserByEmail(email);
+    const existingUser = await db.getUserByEmail(email);
     if (existingUser) {
       return NextResponse.json({
         success: false,
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     }
 
     // Créer l'utilisateur
-    const user = db.createUser(nom.trim(), prenom.trim(), email.trim());
+    const user = await db.createUser(nom.trim(), prenom.trim(), email.trim());
 
     console.log(`✅ Utilisateur créé: ${user.prenom} ${user.nom} (${user.email})`);
 

@@ -90,7 +90,7 @@ class DatabaseService {
   }
   
   private createDefaultUsersIfEmpty() {
-    const existingUsers = this.getAllUsers();
+    const existingUsers = this.getAllUsersSync();
     
     // Si aucun utilisateur n'existe, créer les utilisateurs par défaut
     if (existingUsers.length === 0) {
@@ -105,7 +105,7 @@ class DatabaseService {
       
       for (const user of defaultUsers) {
         try {
-          this.createUser(user.nom, user.prenom, user.email);
+          this.createUserSync(user.nom, user.prenom, user.email);
           console.log(`👤 Utilisateur par défaut créé: ${user.prenom} ${user.nom}`);
         } catch (error) {
           // Ignorer les erreurs (par exemple si l'utilisateur existe déjà)
@@ -119,22 +119,22 @@ class DatabaseService {
 
   // === GESTION DES UTILISATEURS ===
 
-  createUser(nom: string, prenom: string, email: string): User {
+  async createUser(nom: string, prenom: string, email: string): Promise<User> {
     const stmt = this.db.prepare(`
       INSERT INTO users (nom, prenom, email)
       VALUES (?, ?, ?)
     `);
     
     const result = stmt.run(nom, prenom, email);
-    return this.getUserById(result.lastInsertRowid as number)!;
+    return (await this.getUserById(result.lastInsertRowid as number))!;
   }
 
-  getUserById(id: number): User | null {
+  async getUserById(id: number): Promise<User | null> {
     const stmt = this.db.prepare('SELECT * FROM users WHERE id = ?');
     return stmt.get(id) as User | null;
   }
 
-  getUserByEmail(email: string): User | null {
+  async getUserByEmail(email: string): Promise<User | null> {
     const stmt = this.db.prepare('SELECT * FROM users WHERE email = ?');
     return stmt.get(email) as User | null;
   }
@@ -144,9 +144,32 @@ class DatabaseService {
     return stmt.all() as User[];
   }
 
+  // Version synchrone pour l'initialisation
+  private getAllUsersSync(): User[] {
+    const stmt = this.db.prepare('SELECT * FROM users ORDER BY prenom, nom');
+    return stmt.all() as User[];
+  }
+
+  // Version synchrone pour l'initialisation
+  private createUserSync(nom: string, prenom: string, email: string): User {
+    const stmt = this.db.prepare(`
+      INSERT INTO users (nom, prenom, email)
+      VALUES (?, ?, ?)
+    `);
+    
+    const result = stmt.run(nom, prenom, email);
+    return this.getUserByIdSync(result.lastInsertRowid as number)!;
+  }
+
+  // Version synchrone pour l'initialisation
+  private getUserByIdSync(id: number): User | null {
+    const stmt = this.db.prepare('SELECT * FROM users WHERE id = ?');
+    return stmt.get(id) as User | null;
+  }
+
   // === GESTION DES LOGS DE CHANGEMENT ===
 
-  logStatusChange(data: {
+  async logStatusChange(data: {
     lawyer_id: string;
     lawyer_nom: string;
     lawyer_prenom: string;
@@ -156,7 +179,7 @@ class DatabaseService {
     new_status: string;
     changed_by_user_id: number;
     changed_by_name: string;
-  }): StatusChangeLog {
+  }): Promise<StatusChangeLog> {
     // Générer prenomnom uniforme
     const prenomnom_uniforme = this.uniformizePrenomNom(data.lawyer_prenom + data.lawyer_nom);
     
@@ -181,10 +204,10 @@ class DatabaseService {
       data.changed_by_name
     );
 
-    return this.getStatusChangeLogById(result.lastInsertRowid as number)!;
+    return (await this.getStatusChangeLogById(result.lastInsertRowid as number))!;
   }
 
-  getStatusChangeLogById(id: number): StatusChangeLog | null {
+  async getStatusChangeLogById(id: number): Promise<StatusChangeLog | null> {
     const stmt = this.db.prepare('SELECT * FROM status_change_logs WHERE id = ?');
     return stmt.get(id) as StatusChangeLog | null;
   }
@@ -230,7 +253,7 @@ class DatabaseService {
     return result.count;
   }
 
-  markStatusChangesAsExported(ids: number[]): void {
+  async markStatusChangesAsExported(ids: number[]): Promise<void> {
     if (ids.length === 0) return;
     
     const placeholders = ids.map(() => '?').join(',');
@@ -244,7 +267,7 @@ class DatabaseService {
   }
 
   // Récupérer le dernier statut d'un avocat spécifique
-  getLatestStatusForLawyer(lawyerId: string): string | null {
+  async getLatestStatusForLawyer(lawyerId: string): Promise<string | null> {
     const stmt = this.db.prepare(`
       SELECT new_status 
       FROM status_change_logs 

@@ -16,7 +16,7 @@ export async function GET() {
     }
 
     const db = getDatabase();
-    const logs = db.getStatusChangeLogs();
+    const logs = await db.getStatusChangeLogs();
     
     return NextResponse.json({
       success: true,

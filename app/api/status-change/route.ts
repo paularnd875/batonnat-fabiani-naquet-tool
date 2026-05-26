@@ -53,7 +53,7 @@ export async function POST(request: Request) {
 
     // Enregistrer le changement de statut dans la base de données
     const db = getDatabase();
-    const statusChangeLog = db.logStatusChange({
+    const statusChangeLog = await db.logStatusChange({
       lawyer_id: lawyerId,
       lawyer_nom: lawyerData.nom,
       lawyer_prenom: lawyerData.prenom,

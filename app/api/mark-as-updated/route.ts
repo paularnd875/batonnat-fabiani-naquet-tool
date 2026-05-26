@@ -44,7 +44,7 @@ export async function POST() {
     const db = getDatabase();
     
     // Récupérer tous les logs non exportés
-    const unexportedLogs = db.getAllStatusChangeLogs({ exported: false });
+    const unexportedLogs = await db.getAllStatusChangeLogs({ exported: false });
     
     if (unexportedLogs.length === 0) {
       return NextResponse.json({
@@ -54,8 +54,8 @@ export async function POST() {
     }
 
     // Marquer tous les logs non exportés comme exportés (MAJ dans la BDD)
-    const logIds = unexportedLogs.map(log => log.id);
-    db.markStatusChangesAsExported(logIds);
+    const logIds = unexportedLogs.map((log: any) => log.id);
+    await db.markStatusChangesAsExported(logIds);
 
     console.log(`📊 Marquage MAJ BDD: ${unexportedLogs.length} changements marqués comme mis à jour dans la BDD par ${currentUser.prenom} ${currentUser.nom}`);
 

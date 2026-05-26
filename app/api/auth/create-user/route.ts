@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const db = getDatabase();
     
     // Vérifier si l'utilisateur existe déjà
-    const existingUser = db.getUserByEmail(email);
+    const existingUser = await db.getUserByEmail(email);
     if (existingUser) {
       return NextResponse.json({
         success: false,
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     // Créer le nouvel utilisateur
-    const newUser = db.createUser(
+    const newUser = await db.createUser(
       nom.trim(),
       prenom.trim(),
       email.toLowerCase().trim()
