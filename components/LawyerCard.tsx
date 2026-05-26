@@ -57,36 +57,51 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
     }
   };
 
-  // Fonction de changement de statut
+  // Fonction de changement de statut avec localStorage (plus fiable que l'API)
   const handleStatusChange = async (oldStatus: string, newStatus: string) => {
     try {
-      const response = await fetch('/api/status-change', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          lawyerId: lawyer.prenomnom,
-          lawyerData: {
-            nom: lawyer.nom,
-            prenom: lawyer.prenom,
-            email: lawyer.email,
-            cabinet: lawyer.cabinet
-          },
-          oldStatus,
-          newStatus
-        }),
+      // Import dynamique pour éviter les problèmes SSR
+      const { statusChangesStorage } = await import('@/lib/status-changes-storage');
+      
+      // Récupérer les informations utilisateur depuis les cookies
+      let currentUser = { prenom: 'Utilisateur', nom: 'Test' };
+      try {
+        const userInfoCookie = document.cookie
+          .split(';')
+          .find(cookie => cookie.trim().startsWith('user-info='));
+        
+        if (userInfoCookie) {
+          const userInfoValue = userInfoCookie.split('=')[1];
+          currentUser = JSON.parse(decodeURIComponent(userInfoValue));
+        }
+      } catch (error) {
+        console.warn('Impossible de récupérer les infos utilisateur:', error);
+      }
+      
+      // Sauvegarder le changement dans localStorage
+      statusChangesStorage.saveStatusChange({
+        lawyer_id: lawyer.prenomnom,
+        lawyer_nom: lawyer.nom || '',
+        lawyer_prenom: lawyer.prenom || '',
+        lawyer_email: lawyer.email || '',
+        lawyer_cabinet: lawyer.cabinet || 'Individuel',
+        old_status: oldStatus || 'Non classifié',
+        new_status: newStatus || 'Non classifié',
+        changed_by: `${currentUser.prenom} ${currentUser.nom}`
       });
 
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.error || 'Erreur lors du changement de statut');
-      }
-
-      console.log(`✅ Statut changé: ${lawyer.prenomnom} (${oldStatus} → ${newStatus})`);
+      console.log(`✅ Statut sauvegardé: ${lawyer.prenomnom} (${oldStatus || 'Non classifié'} → ${newStatus || 'Non classifié'})`);
       
       // Mettre à jour l'état local pour refléter immédiatement le changement
       setCurrentStatus(newStatus);
+      
+      // Déclencher un refresh des données pour synchroniser
+      if (window.location.pathname.includes('/cabinet/') || window.location.pathname === '/avocats') {
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      }
+      
     } catch (error) {
       console.error('Erreur changement de statut:', error);
       throw error;

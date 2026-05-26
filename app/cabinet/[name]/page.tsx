@@ -57,28 +57,30 @@ export default function CabinetPage() {
 
   const loadCabinetData = async () => {
     try {
-      // Si on utilise un filtre, charger TOUTES les données pour pouvoir filtrer côté client
-      let url;
-      if (statutFilter !== 'tous' || classificationFilter !== 'tous') {
-        url = `/api/cabinet/${encodeURIComponent(cabinetName)}?page=1&limit=10000`; // Limite très élevée pour avoir toutes les données
-      } else {
-        url = `/api/cabinet/${encodeURIComponent(cabinetName)}?page=${currentPage}&limit=${lawyersPerPage}`;
-      }
+      // 🔄 NOUVEAU: Utiliser l'API qui fusionne localStorage
+      // D'abord récupérer les statuts localStorage
+      const { statusChangesStorage } = await import('@/lib/status-changes-storage');
+      const localStorageStatuses = statusChangesStorage.getCurrentStatuses();
       
-      const response = await fetch(url);
+      // Appeler la nouvelle API de fusion pour cabinet
+      const response = await fetch(`/api/cabinet-with-localstorage/${encodeURIComponent(cabinetName)}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          localStorageStatuses
+        })
+      });
+      
       const data = await response.json();
       
       if (data.success) {
         const allLawyersData = data.cabinet.lawyers;
         
-        // Sauvegarder tous les avocats pour les stats (seulement si on n'a pas encore les données)
+        // Sauvegarder tous les avocats pour les stats
         if (allLawyers.length === 0 && allLawyersData.length > 0) {
-          // Pour avoir VRAIMENT toutes les données, faire une requête spéciale
-          const allDataResponse = await fetch(`/api/cabinet/${encodeURIComponent(cabinetName)}?page=1&limit=10000`);
-          const allDataResult = await allDataResponse.json();
-          if (allDataResult.success) {
-            setAllLawyers(allDataResult.cabinet.lawyers);
-          }
+          setAllLawyers(allLawyersData);
         }
         
         // Appliquer les filtres côté client

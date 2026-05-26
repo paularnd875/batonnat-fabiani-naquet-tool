@@ -76,16 +76,58 @@ export default function LawyersTab({}: LawyersTabProps) {
 
       console.log('🔍 Chargement des avocats avec filtres:', Object.fromEntries(params));
       
-      const response = await fetch(`/api/lawyers?${params}`);
+      // 🔄 NOUVEAU: Utiliser l'API qui fusionne localStorage
+      // D'abord récupérer les statuts localStorage
+      const { statusChangesStorage } = await import('@/lib/status-changes-storage');
+      const localStorageStatuses = statusChangesStorage.getCurrentStatuses();
+      
+      // Appeler la nouvelle API de fusion
+      const response = await fetch('/api/lawyers-with-localstorage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          localStorageStatuses,
+          params: Object.fromEntries(params) // Passer les filtres
+        })
+      });
+      
       const data = await response.json();
       
       if (data.success) {
-        setLawyers(data.lawyers || []);
+        // Appliquer les filtres côté client (temporairement)
+        let filteredLawyers = data.lawyers || [];
+        
+        // Filtrer par recherche
+        if (searchTerm) {
+          const searchLower = searchTerm.toLowerCase();
+          filteredLawyers = filteredLawyers.filter((lawyer: any) => 
+            lawyer.prenomnom?.toLowerCase().includes(searchLower) ||
+            lawyer.nom?.toLowerCase().includes(searchLower) ||
+            lawyer.prenom?.toLowerCase().includes(searchLower) ||
+            lawyer.email?.toLowerCase().includes(searchLower)
+          );
+        }
+        
+        // Filtrer par classification
+        if (selectedClassifications.length > 0 && !selectedClassifications.includes('all')) {
+          filteredLawyers = filteredLawyers.filter((lawyer: any) => 
+            selectedClassifications.includes(lawyer.classement || 'Non classifié')
+          );
+        }
+        
+        setLawyers(filteredLawyers);
         setStats(data.stats || null);
-        setPagination(data.pagination || null);
-        console.log(`✅ ${data.lawyers?.length || 0} avocats chargés`);
+        setPagination({
+          page: currentPage,
+          limit: 50,
+          total: filteredLawyers.length,
+          totalPages: Math.ceil(filteredLawyers.length / 50)
+        });
+        console.log(`✅ ${filteredLawyers.length} avocats chargés avec localStorage`);
       } else {
-        console.error('❌ Erreur API avocats:', data.error);
+        console.error('❌ Erreur API avocats avec localStorage:', data.error);
       }
     } catch (error) {
       console.error('❌ Erreur chargement avocats:', error);

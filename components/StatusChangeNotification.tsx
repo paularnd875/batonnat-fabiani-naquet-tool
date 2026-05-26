@@ -16,6 +16,23 @@ const StatusChangeNotification: React.FC<NotificationProps> = ({ userInfo }) => 
 
   // Vérifier si l'utilisateur est Paul (basé sur le prénom)
   const isPaul = userInfo?.prenom?.toLowerCase() === 'paul';
+  
+
+  // Fonction de téléchargement CSV
+  const handleDownloadCSV = async () => {
+    try {
+      const { statusChangesStorage } = await import('@/lib/status-changes-storage');
+      statusChangesStorage.downloadCSV();
+      
+      // Actualiser le compteur après téléchargement (les changements sont marqués comme exportés)
+      setTimeout(() => {
+        fetchUnexportedCount();
+      }, 1000);
+    } catch (error) {
+      console.error('Erreur lors du téléchargement CSV:', error);
+      alert('Erreur lors du téléchargement du CSV');
+    }
+  };
 
   useEffect(() => {
     if (!isPaul) {
@@ -35,18 +52,20 @@ const StatusChangeNotification: React.FC<NotificationProps> = ({ userInfo }) => 
     if (!isPaul) return;
 
     try {
-      const response = await fetch('/api/admin-stats');
-      if (response.ok) {
-        const data = await response.json();
-        const count = data.stats?.unexportedLogs || 0;
-        setUnexportedCount(count);
-      }
+      // Import dynamique pour éviter les problèmes SSR
+      const { statusChangesStorage } = await import('@/lib/status-changes-storage');
+      
+      const unexportedChanges = statusChangesStorage.getUnexportedChanges();
+      const count = unexportedChanges.length;
+      
+      setUnexportedCount(count);
     } catch (error) {
-      console.error('Erreur lors du chargement du nombre de changements non exportés:', error);
+      console.error('❌ Erreur lors du chargement du localStorage:', error);
     } finally {
       setLoading(false);
     }
   };
+
 
   // Ne rien afficher si ce n'est pas Paul ou si aucun changement n'est en attente
   if (!isPaul || unexportedCount === 0 || !isVisible) {
@@ -73,14 +92,23 @@ const StatusChangeNotification: React.FC<NotificationProps> = ({ userInfo }) => 
               <p className="text-xs text-fn-black mb-2">
                 {unexportedCount} changement{unexportedCount > 1 ? 's' : ''} de statut à exporter
               </p>
-              <Link 
-                href="/dashboard"
-                className="inline-flex items-center gap-1 text-xs font-bold text-fn-blue hover:underline uppercase tracking-wider"
-                style={{ fontFamily: "var(--font-resolve)" }}
-              >
-                <Bell className="w-3 h-3" />
-                Voir le dashboard
-              </Link>
+              <div className="flex gap-2">
+                <Link 
+                  href="/dashboard"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-fn-blue hover:underline uppercase tracking-wider"
+                  style={{ fontFamily: "var(--font-resolve)" }}
+                >
+                  <Bell className="w-3 h-3" />
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleDownloadCSV}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-fn-red hover:underline uppercase tracking-wider"
+                  style={{ fontFamily: "var(--font-resolve)" }}
+                >
+                  📥 Télécharger CSV
+                </button>
+              </div>
             </div>
           </div>
           

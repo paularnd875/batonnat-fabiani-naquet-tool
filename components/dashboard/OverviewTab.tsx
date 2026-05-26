@@ -20,6 +20,14 @@ interface AssignmentStats {
   team_coverage: {
     [key: string]: number;
   };
+  unexportedLogs?: number;
+  localStorageChanges?: {
+    c1_added: number;
+    c2_added: number;
+    c3_added: number;
+    blacklist_added: number;
+    total_changes: number;
+  };
 }
 
 interface TeamMember {
@@ -45,13 +53,32 @@ export default function OverviewTab() {
   const loadData = async (forceRefresh = false) => {
     try {
       if (forceRefresh) setRefreshing(true);
-      const url = forceRefresh ? '/api/admin-stats?refresh=true' : '/api/admin-stats';
-      const statsResponse = await fetch(url);
+      
+      // 🔄 NOUVEAU: Utiliser l'API qui fusionne localStorage
+      // D'abord récupérer les données localStorage
+      const { statusChangesStorage } = await import('@/lib/status-changes-storage');
+      const localStorageStatuses = statusChangesStorage.getCurrentStatuses();
+      const localStorageChanges = statusChangesStorage.getUnexportedChanges();
+      
+      // Appeler la nouvelle API de fusion
+      const statsResponse = await fetch('/api/admin-stats-with-localstorage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          localStorageStatuses,
+          localStorageChanges,
+          forceRefresh
+        })
+      });
+      
       const statsData = await statsResponse.json();
       
       if (statsData.success) {
         setStats(statsData.stats);
         setTeamMembers(statsData.team_members || []);
+        console.log(`📊 Dashboard chargé avec ${Object.keys(localStorageStatuses).length} statuts localStorage`);
       }
     } catch (error) {
       console.error('Erreur chargement données admin:', error);
@@ -201,6 +228,79 @@ export default function OverviewTab() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Nouvelles classifications ajoutées manuellement */}
+      {stats?.localStorageChanges && stats.localStorageChanges.total_changes > 0 && (
+        <Card className="fn-card border-yellow-200 bg-yellow-50">
+          <CardHeader>
+            <CardTitle className="text-fn-black flex items-center gap-2">
+              <RefreshCw className="h-5 w-5 text-yellow-600" />
+              Nouvelles Classifications Ajoutées
+            </CardTitle>
+            <CardDescription>Classifications manuelles en attente d'export CSV</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div className="flex items-center gap-3 p-4 bg-green-100 rounded-lg">
+                <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">C1 Ajoutés</p>
+                  <p className="text-2xl font-bold text-green-600 stats-numbers">
+                    +{stats.localStorageChanges.c1_added}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-4 bg-blue-100 rounded-lg">
+                <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">C2 Ajoutés</p>
+                  <p className="text-2xl font-bold text-blue-600 stats-numbers">
+                    +{stats.localStorageChanges.c2_added}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-4 bg-yellow-100 rounded-lg">
+                <div className="w-3 h-3 bg-yellow-600 rounded-full"></div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">C3 Ajoutés</p>
+                  <p className="text-2xl font-bold text-yellow-600 stats-numbers">
+                    +{stats.localStorageChanges.c3_added}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-4 bg-red-100 rounded-lg">
+                <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Blacklist Ajoutés</p>
+                  <p className="text-2xl font-bold text-red-600 stats-numbers">
+                    +{stats.localStorageChanges.blacklist_added}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-yellow-300">
+              <div>
+                <p className="font-medium text-gray-800">
+                  {stats.unexportedLogs || 0} changement{(stats.unexportedLogs || 0) > 1 ? 's' : ''} en attente d'export
+                </p>
+                <p className="text-sm text-gray-600">
+                  Ces classifications doivent être exportées en CSV puis ajoutées manuellement dans Google Sheets
+                </p>
+              </div>
+              <Link 
+                href="/avocats" 
+                className="btn-fn-secondary"
+              >
+                Voir les changements
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Actions rapides */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
