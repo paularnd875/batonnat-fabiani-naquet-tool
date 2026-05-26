@@ -77,8 +77,8 @@ export async function POST() {
     ].join('\n');
 
     // Marquer tous ces logs comme exportés
-    const logIds = unexportedLogs.map(log => log.id);
-    db.markStatusChangesAsExported(logIds);
+    const logIds = unexportedLogs.map((log: any) => log.id);
+    await db.markStatusChangesAsExported(logIds);
 
     console.log(`📊 Export CSV: ${unexportedLogs.length} changements de statut exportés`);
 
