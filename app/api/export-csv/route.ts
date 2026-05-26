@@ -18,7 +18,7 @@ export async function POST() {
     const db = getDatabase();
     
     // Récupérer tous les logs non exportés
-    const unexportedLogs = db.getAllStatusChangeLogs({ exported: false });
+    const unexportedLogs = await db.getAllStatusChangeLogs({ exported: false });
     
     if (unexportedLogs.length === 0) {
       return NextResponse.json({
@@ -54,7 +54,7 @@ export async function POST() {
       'Date_Heure'
     ];
 
-    const csvRows = unexportedLogs.map(log => {
+    const csvRows = unexportedLogs.map((log: any) => {
       // Générer le prenomnom uniformisé
       const prenomnom_uniforme = uniformizePrenomNom(log.lawyer_prenom + log.lawyer_nom);
       
