@@ -31,14 +31,20 @@ class DatabaseService {
   private db: Database.Database;
 
   constructor() {
-    // Créer la base de données dans le répertoire du projet
-    const dbPath = path.join(process.cwd(), 'data', 'logs.db');
+    // Chemin vers la base de données SQLite
+    // Utiliser /tmp sur Vercel (seul répertoire writable), data/ en local
+    const isVercel = process.env.VERCEL === '1';
+    const dbPath = isVercel 
+      ? '/tmp/logs.db' 
+      : path.join(process.cwd(), 'data', 'logs.db');
     
-    // Créer le répertoire data s'il n'existe pas
-    const fs = require('fs');
-    const dataDir = path.dirname(dbPath);
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
+    // Créer le répertoire data seulement en local
+    if (!isVercel) {
+      const fs = require('fs');
+      const dataDir = path.dirname(dbPath);
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
     }
 
     this.db = new Database(dbPath);
