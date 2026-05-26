@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     // Fusionner avec les statuts de la base SQLite
     console.log('🔄 Fusion avec les statuts SQLite...');
     const db = getDatabase();
-    const latestStatuses = db.getAllLatestStatuses();
+    const latestStatuses = await db.getAllLatestStatuses();
     console.log(`📋 ${latestStatuses.size} statuts trouvés en base SQLite`);
     
     // Mettre à jour les statuts des avocats avec ceux de la base SQLite

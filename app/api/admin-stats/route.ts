@@ -94,11 +94,11 @@ export async function GET(request: Request) {
 
     // 5. Récupérer les statistiques de logs de changements de statut
     const db = getDatabase();
-    const allLogs = db.getAllStatusChangeLogs();
+    const allLogs = await db.getAllStatusChangeLogs();
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const todayLogs = allLogs.filter(log => log.changed_at.startsWith(today));
-    const unexportedLogs = allLogs.filter(log => !log.exported_at);
-    const totalUsers = db.getAllUsers().length;
+    const todayLogs = allLogs.filter((log: any) => log.changed_at.startsWith(today));
+    const unexportedLogs = allLogs.filter((log: any) => !log.exported_at);
+    const totalUsers = (await db.getAllUsers()).length;
 
     const statusLogsStats = {
       totalLogs: allLogs.length,

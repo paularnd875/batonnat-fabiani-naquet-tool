@@ -139,7 +139,7 @@ class DatabaseService {
     return stmt.get(email) as User | null;
   }
 
-  getAllUsers(): User[] {
+  async getAllUsers(): Promise<User[]> {
     const stmt = this.db.prepare('SELECT * FROM users ORDER BY prenom, nom');
     return stmt.all() as User[];
   }
@@ -189,11 +189,11 @@ class DatabaseService {
     return stmt.get(id) as StatusChangeLog | null;
   }
 
-  getAllStatusChangeLogs(filters?: {
+  async getAllStatusChangeLogs(filters?: {
     exported?: boolean;
     user_id?: number;
     since?: string; // ISO date
-  }): StatusChangeLog[] {
+  }): Promise<StatusChangeLog[]> {
     let query = 'SELECT * FROM status_change_logs WHERE 1=1';
     const params: any[] = [];
 
@@ -220,11 +220,11 @@ class DatabaseService {
   }
 
   // Alias pour l'API
-  getStatusChangeLogs(): StatusChangeLog[] {
+  async getStatusChangeLogs(): Promise<StatusChangeLog[]> {
     return this.getAllStatusChangeLogs();
   }
 
-  getUnexportedStatusChangesCount(): number {
+  async getUnexportedStatusChangesCount(): Promise<number> {
     const stmt = this.db.prepare('SELECT COUNT(*) as count FROM status_change_logs WHERE exported_at IS NULL');
     const result = stmt.get() as { count: number };
     return result.count;
@@ -258,7 +258,7 @@ class DatabaseService {
   }
 
   // Récupérer tous les derniers statuts des avocats modifiés
-  getAllLatestStatuses(): Map<string, string> {
+  async getAllLatestStatuses(): Promise<Map<string, string>> {
     const stmt = this.db.prepare(`
       SELECT DISTINCT lawyer_id, 
              FIRST_VALUE(new_status) OVER (
