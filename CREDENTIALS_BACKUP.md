@@ -1,6 +1,6 @@
 # 🔐 BACKUP CREDENTIALS - Batonnat Fabiani-Naquet Tool
 
-## ⚠️ FICHIER SENSIBLE - NE PAS PARTAGER
+## ⚠️ FICHIER SENSIBLE - NE PAS PARTAGER - LOCAL SEULEMENT
 
 Ce fichier contient toutes les credentials nécessaires pour reprendre le développement rapidement.
 
