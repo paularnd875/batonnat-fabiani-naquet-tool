@@ -297,6 +297,15 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
               disabled={isAssigning || isUnassigning}
             />
 
+            {/* DEBUG: Bouton de test pour vérifier le rendu */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-orange-100 text-orange-800 border-orange-300"
+            >
+              🔍 TEST CLASSIFICATION
+            </Button>
+
             {/* Étiquette d'assignation */}
             {isAssigned && (
               <div 
