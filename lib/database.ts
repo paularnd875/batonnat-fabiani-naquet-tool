@@ -301,11 +301,23 @@ class DatabaseService {
   }
 }
 
+// Import du service Supabase pour Vercel
+import { getSupabaseDatabase } from './database-supabase';
+
 // Singleton pour la base de données
 let databaseInstance: DatabaseService | null = null;
 
-export function getDatabase(): DatabaseService {
+export function getDatabase(): DatabaseService | any {
+  // Utiliser Supabase sur Vercel, SQLite en local
+  const isVercel = process.env.VERCEL === '1';
+  
+  if (isVercel) {
+    console.log('🔄 Utilisation de Supabase pour la persistance sur Vercel');
+    return getSupabaseDatabase();
+  }
+  
   if (!databaseInstance) {
+    console.log('🔄 Utilisation de SQLite en local');
     databaseInstance = new DatabaseService();
   }
   return databaseInstance;
