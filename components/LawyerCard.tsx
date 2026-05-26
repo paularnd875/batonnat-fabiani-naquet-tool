@@ -12,10 +12,12 @@ import {
 import { Mail, Phone, AlertTriangle, User, Loader2 } from 'lucide-react';
 import { Lawyer, LawyerCardProps } from '@/types';
 import BallotBoxIcon from '@/components/ui/BallotBoxIcon';
+import StatusButton from '@/components/StatusButton';
 
 const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, onUnassign, teamMembers }) => {
   const [isAssigning, setIsAssigning] = React.useState(false);
   const [isUnassigning, setIsUnassigning] = React.useState(false);
+  const [currentStatus, setCurrentStatus] = React.useState(lawyer.classement || '');
   const getClassementColor = (classement: string) => {
     switch (classement) {
       case 'C1': return 'bg-green-100 text-green-800';
@@ -52,6 +54,42 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
       await onAssign(lawyer, teamMemberId);
     } finally {
       setIsAssigning(false);
+    }
+  };
+
+  // Fonction de changement de statut
+  const handleStatusChange = async (oldStatus: string, newStatus: string) => {
+    try {
+      const response = await fetch('/api/status-change', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          lawyerId: lawyer.prenomnom,
+          lawyerData: {
+            nom: lawyer.nom,
+            prenom: lawyer.prenom,
+            email: lawyer.email,
+            cabinet: lawyer.cabinet
+          },
+          oldStatus,
+          newStatus
+        }),
+      });
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Erreur lors du changement de statut');
+      }
+
+      console.log(`✅ Statut changé: ${lawyer.prenomnom} (${oldStatus} → ${newStatus})`);
+      
+      // Mettre à jour l'état local pour refléter immédiatement le changement
+      setCurrentStatus(newStatus);
+    } catch (error) {
+      console.error('Erreur changement de statut:', error);
+      throw error;
     }
   };
 
@@ -133,9 +171,9 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
             </div>
 
             <div className="mt-3 flex flex-wrap gap-2">
-              {lawyer.classement && (
-                <Badge className={getClassementColor(lawyer.classement)}>
-                  {lawyer.classement}
+              {currentStatus && (
+                <Badge className={getClassementColor(currentStatus)}>
+                  {currentStatus}
                 </Badge>
               )}
               
@@ -230,6 +268,20 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Bouton de statut */}
+            <StatusButton
+              currentStatus={currentStatus}
+              lawyerData={{
+                prenomnom: lawyer.prenomnom,
+                nom: lawyer.nom,
+                prenom: lawyer.prenom,
+                email: lawyer.email,
+                cabinet: lawyer.cabinet
+              }}
+              onStatusChange={handleStatusChange}
+              disabled={isAssigning || isUnassigning}
+            />
+
             {/* Étiquette d'assignation */}
             {isAssigned && (
               <div 
@@ -252,7 +304,7 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
               </div>
             )}
 
-            {lawyer.classement === 'Blacklist' && (
+            {currentStatus === 'Blacklist' && (
               <div className="flex items-center gap-1 text-red-600 text-xs">
                 <AlertTriangle className="w-3 h-3 icon-hover" />
                 <span>Blacklisted</span>

@@ -6,6 +6,7 @@ import OverviewTab from '@/components/dashboard/OverviewTab';
 import TeamTab from '@/components/dashboard/TeamTab';
 import StatisticsTab from '@/components/dashboard/StatisticsTab';
 import HistoriqueTab from '@/components/dashboard/HistoriqueTab';
+import StatusLogsTab from '@/components/dashboard/StatusLogsTab';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -34,6 +35,12 @@ export default function DashboardPage() {
       label: 'Historique',
       icon: '📜',
       component: HistoriqueTab
+    },
+    {
+      id: 'status-logs',
+      label: 'Changements Statut',
+      icon: '🔄',
+      component: StatusLogsTab
     }
   ];
 

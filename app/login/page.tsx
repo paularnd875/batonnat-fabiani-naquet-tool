@@ -34,8 +34,8 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (data.success) {
-        // Rediriger vers la page d'accueil après connexion réussie
-        router.push('/');
+        // Rediriger vers la sélection utilisateur après connexion réussie
+        router.push('/user-selection');
         router.refresh();
       } else {
         setError(data.error || 'Mot de passe incorrect');

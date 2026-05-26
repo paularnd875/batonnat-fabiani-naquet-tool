@@ -23,6 +23,8 @@ export interface Lawyer {
   prenomnom: string;
   civilite: string;
   nom_complet: string;
+  nom?: string; // Nom séparé (extrait de nom_complet)
+  prenom?: string; // Prénom séparé (extrait de nom_complet)
   telephone: string;
   email: string;
   annee_serment: number;

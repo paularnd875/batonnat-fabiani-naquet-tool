@@ -118,10 +118,18 @@ class GoogleSheetsService {
         }
       });
 
+      // Extraire nom et prénom du nom_complet
+      const nomComplet = row[8] || '';
+      const parts = nomComplet.split(' ');
+      const nom = parts.length > 0 ? parts[0] : '';
+      const prenom = parts.length > 1 ? parts.slice(1).join(' ') : '';
+
       const lawyer = {
         prenomnom: row[0] || '', // nomcomplet
         civilite: row[1] || '', // Nature  
-        nom_complet: row[8] || '', // Nom complet
+        nom_complet: nomComplet, // Nom complet
+        nom: nom, // Nom extrait
+        prenom: prenom, // Prénom extrait
         telephone: row[9] || '', // Numéro de téléphone
         email: row[14] || '', // Adresse e-mail
         annee_serment: parseInt(row[27]) || 0, // Année de serment
@@ -484,6 +492,97 @@ class GoogleSheetsService {
         };
       }
     });
+  }
+
+  /**
+   * Met à jour le statut d'un avocat dans le Google Sheets
+   * @param prenomnom Identifiant de l'avocat (prenomnom)
+   * @param newStatus Nouveau statut (C1, C2, C3, Blacklist)
+   */
+  async updateLawyerStatus(prenomnom: string, newStatus: string): Promise<void> {
+    try {
+      // Lire toutes les données pour trouver l'avocat
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId: this.sheetId,
+        range: 'Base principale!A:BU', // Toutes les colonnes
+      });
+
+      const rows = response.data.values || [];
+      
+      // Trouver la ligne de l'avocat (en cherchant dans la colonne prenomnom - index 1)
+      let targetRowIndex = -1;
+      for (let i = 1; i < rows.length; i++) { // Commencer à 1 pour ignorer l'en-tête
+        const row = rows[i];
+        if (row[1] === prenomnom) { // Colonne B = index 1 = prenomnom
+          targetRowIndex = i + 1; // +1 car Google Sheets commence à 1, pas 0
+          break;
+        }
+      }
+
+      if (targetRowIndex === -1) {
+        throw new Error(`Avocat avec prenomnom "${prenomnom}" non trouvé dans le Google Sheets`);
+      }
+
+      // Préparer les mises à jour
+      const updates = [];
+      
+      // D'abord, effacer tous les anciens statuts (C1, C2, C3, Blacklist)
+      const statusColumns = [
+        { range: `Base principale!AS${targetRowIndex}`, value: '' }, // C1 - colonne 44 = AS
+        { range: `Base principale!AT${targetRowIndex}`, value: '' }, // C2 - colonne 45 = AT  
+        { range: `Base principale!AU${targetRowIndex}`, value: '' }, // C3 - colonne 46 = AU
+        { range: `Base principale!AX${targetRowIndex}`, value: '' }, // Blacklist - colonne 49 = AX
+      ];
+
+      // Puis définir le nouveau statut
+      switch (newStatus) {
+        case 'C1':
+          statusColumns[0].value = '1'; // Mettre 1 dans la colonne C1
+          break;
+        case 'C2':
+          statusColumns[1].value = '1'; // Mettre 1 dans la colonne C2
+          break;
+        case 'C3':
+          statusColumns[2].value = '1'; // Mettre 1 dans la colonne C3
+          break;
+        case 'Blacklist':
+          statusColumns[3].value = '1'; // Mettre 1 dans la colonne Blacklist
+          break;
+        default:
+          // Pour "Non classifié", on laisse tout vide (déjà fait ci-dessus)
+          break;
+      }
+
+      // Mettre à jour aussi la colonne "classement agrégé" (colonne 47 = AV)
+      statusColumns.push({
+        range: `Base principale!AV${targetRowIndex}`,
+        value: newStatus === 'Non classifié' ? '' : newStatus
+      });
+
+      // Exécuter toutes les mises à jour en batch
+      const batchUpdateData = statusColumns.map(update => ({
+        range: update.range,
+        values: [[update.value]]
+      }));
+
+      await this.sheets.spreadsheets.values.batchUpdate({
+        spreadsheetId: this.sheetId,
+        requestBody: {
+          valueInputOption: 'RAW',
+          data: batchUpdateData
+        }
+      });
+
+      console.log(`✅ Google Sheets mis à jour: ${prenomnom} → ${newStatus} (ligne ${targetRowIndex})`);
+
+      // Invalider le cache pour forcer le rechargement des données sur toutes les pages
+      memoryCache.delete(CACHE_KEYS.LAWYERS_ALL);
+      console.log(`🔄 Cache invalidé: les données seront rechargées depuis Google Sheets`);
+
+    } catch (error) {
+      console.error('❌ Erreur lors de la mise à jour du statut dans Google Sheets:', error);
+      throw error;
+    }
   }
 
   /**

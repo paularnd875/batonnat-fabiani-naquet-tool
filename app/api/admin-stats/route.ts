@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { googleSheets } from '@/lib/google-sheets';
 import { supabase } from '@/lib/db';
 import { memoryCache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
+import { getDatabase } from '@/lib/database';
 
 export async function GET(request: Request) {
   try {
@@ -91,6 +92,21 @@ export async function GET(request: Request) {
     // Ajouter le nombre total d'avocats
     const totalLawyers = allLawyers.length;
 
+    // 5. Récupérer les statistiques de logs de changements de statut
+    const db = getDatabase();
+    const allLogs = db.getAllStatusChangeLogs();
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const todayLogs = allLogs.filter(log => log.changed_at.startsWith(today));
+    const unexportedLogs = allLogs.filter(log => !log.exported_at);
+    const totalUsers = db.getAllUsers().length;
+
+    const statusLogsStats = {
+      totalLogs: allLogs.length,
+      todayLogs: todayLogs.length,
+      unexportedLogs: unexportedLogs.length,
+      usersCount: totalUsers
+    };
+
     console.log('📊 ADMIN STATS (données Google Sheets réelles):');
     console.log(`   Total avocats: ${totalLawyers}`);
     console.log(`   C1: ${globalStats.c1_count}`);
@@ -113,12 +129,14 @@ export async function GET(request: Request) {
 
     // 🚀 OPTIMISATION: Mettre en cache le résultat pour 10 minutes
     const result = {
-      source: 'Google Sheets + Supabase assignments',
+      source: 'Google Sheets + Supabase assignments + Status logs',
       timestamp: new Date().toISOString(),
       stats: {
         ...globalStats,
         total_lawyers: totalLawyers,
-        team_coverage: teamCoverage
+        team_coverage: teamCoverage,
+        // Ajouter les stats de status logs
+        ...statusLogsStats
       },
       team_members: enrichedTeamMembers
     };

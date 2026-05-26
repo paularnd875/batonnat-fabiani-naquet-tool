@@ -7,8 +7,12 @@ export function middleware(request: NextRequest) {
   // Routes publiques (pas besoin d'authentification)
   const publicRoutes = [
     '/login',
+    '/user-selection',
     '/api/auth/login',
-    '/api/auth/logout'
+    '/api/auth/logout',
+    '/api/auth/select-user',
+    '/api/auth/create-user',
+    '/api/users'
   ];
 
   // Routes d'assets statiques à ignorer pour l'authentification
@@ -45,7 +49,17 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Session présente - autoriser l'accès avec headers de sécurité
+  // Session présente - vérifier si l'utilisateur a sélectionné son profil
+  const userInfoCookie = request.cookies.get('user-info');
+  
+  // Si pas de profil utilisateur sélectionné et pas déjà sur la page de sélection
+  if (!userInfoCookie?.value && pathname !== '/user-selection') {
+    console.log(`👤 Utilisateur authentifié mais sans profil - redirection vers sélection utilisateur`);
+    const userSelectionUrl = new URL('/user-selection', request.url);
+    return NextResponse.redirect(userSelectionUrl);
+  }
+
+  // Session et profil présents - autoriser l'accès avec headers de sécurité
   const response = NextResponse.next();
   addSecurityHeaders(response);
   return response;

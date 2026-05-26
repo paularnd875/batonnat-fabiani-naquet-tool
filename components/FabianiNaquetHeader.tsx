@@ -1,13 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import StatusChangeNotification from './StatusChangeNotification';
 
 const FabianiNaquetHeader: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState<any>(null);
   const router = useRouter();
+
+  // Récupérer les informations utilisateur depuis les cookies
+  useEffect(() => {
+    const getUserInfo = () => {
+      try {
+        const cookies = document.cookie.split(';');
+        const userInfoCookie = cookies.find(cookie => 
+          cookie.trim().startsWith('user-info=')
+        );
+        
+        if (userInfoCookie) {
+          const userInfoValue = userInfoCookie.split('=')[1];
+          const userInfo = JSON.parse(decodeURIComponent(userInfoValue));
+          setUserInfo(userInfo);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la lecture des infos utilisateur:', error);
+      }
+    };
+
+    getUserInfo();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -130,6 +154,11 @@ const FabianiNaquetHeader: React.FC = () => {
 
       {/* Spacer pour compenser le header fixe */}
       <div className="h-[82px]"></div>
+
+      {/* Notification de changements de statut pour Paul */}
+      {userInfo && (
+        <StatusChangeNotification userInfo={userInfo} />
+      )}
     </>
   );
 };
