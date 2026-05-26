@@ -12,7 +12,8 @@ export function middleware(request: NextRequest) {
     '/api/auth/logout',
     '/api/auth/select-user',
     '/api/auth/create-user',
-    '/api/users'
+    '/api/users',
+    '/api/debug-sheets' // TEMPORAIRE POUR DEBUG
   ];
 
   // Routes d'assets statiques à ignorer pour l'authentification
