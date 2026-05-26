@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/database';
 import { cookies } from 'next/headers';
-import { googleSheets } from '@/lib/google-sheets';
 
 export async function POST(request: Request) {
   try {
@@ -67,24 +66,6 @@ export async function POST(request: Request) {
     });
 
     console.log(`✅ Changement de statut enregistré: ${lawyerData.prenom} ${lawyerData.nom} (${oldStatus || 'Non classifié'} → ${newStatus || 'Non classifié'}) par ${currentUser.prenom} ${currentUser.nom}`);
-
-    // Mettre à jour le Google Sheets avec le nouveau statut
-    try {
-      console.log(`🔄 Tentative mise à jour Google Sheets pour ${lawyerData.prenom} ${lawyerData.nom}: ${newStatus} (prenomnom: ${lawyerId})`);
-      await googleSheets.updateLawyerStatus(lawyerId, newStatus);
-      console.log(`✅ Google Sheets mis à jour avec succès pour ${lawyerData.prenom} ${lawyerData.nom}: ${newStatus}`);
-    } catch (error) {
-      console.error(`❌ ERREUR CRITIQUE Google Sheets pour ${lawyerData.prenom} ${lawyerData.nom}:`, error);
-      console.error('Stack trace complète:', error instanceof Error ? error.stack : error);
-      
-      // TEMPORAIRE: Faire échouer la requête pour voir l'erreur exacte
-      return NextResponse.json({
-        success: false,
-        error: `Échec mise à jour Google Sheets: ${error instanceof Error ? error.message : error}`,
-        localLogSaved: true,
-        logId: statusChangeLog.id
-      }, { status: 500 });
-    }
 
     return NextResponse.json({
       success: true,
