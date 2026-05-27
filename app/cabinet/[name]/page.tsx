@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,22 +9,8 @@ import { ArrowLeft } from 'lucide-react';
 import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
 import { Lawyer, TeamMember, AssignFunction, AssignWrapperFunction } from '@/types';
 
-// Dynamic imports pour le code splitting
-const LawyerCard = dynamic(() => import('@/components/LawyerCard'), {
-  loading: () => (
-    <div className="p-4 border rounded-lg animate-pulse">
-      <div className="flex gap-4">
-        <div className="w-24 h-24 bg-gray-200 rounded-full" />
-        <div className="flex-1 space-y-2">
-          <div className="h-4 bg-gray-200 rounded w-3/4" />
-          <div className="h-3 bg-gray-200 rounded w-1/2" />
-          <div className="h-3 bg-gray-200 rounded w-2/3" />
-        </div>
-      </div>
-    </div>
-  ),
-  ssr: false
-});
+// Import statique de LawyerCard (plus fiable)
+import LawyerCard from '@/components/LawyerCard';
 
 
 export default function CabinetPage() {
