@@ -18,6 +18,11 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
   const [isAssigning, setIsAssigning] = React.useState(false);
   const [isUnassigning, setIsUnassigning] = React.useState(false);
   const [currentStatus, setCurrentStatus] = React.useState(lawyer.classement || '');
+  const [assignmentState, setAssignmentState] = React.useState({
+    isAssigned: lawyer.assignments && lawyer.assignments.length > 0,
+    assignedMember: lawyer.assignments && lawyer.assignments.length > 0 ? lawyer.assignments[0].team_members : null
+  });
+
   const getClassementColor = (classement: string) => {
     switch (classement) {
       case 'C1': return 'bg-green-100 text-green-800';
@@ -28,9 +33,9 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
     }
   };
 
-  // Vérifier si l'avocat est assigné
-  const isAssigned = lawyer.assignments && lawyer.assignments.length > 0;
-  const assignedMember = isAssigned && lawyer.assignments ? lawyer.assignments[0].team_members : null;
+  // Utiliser l'état local pour l'assignation
+  const isAssigned = assignmentState.isAssigned;
+  const assignedMember = assignmentState.assignedMember;
 
   // Fonction de désassignation avec confirmation
   const handleUnassign = async () => {
@@ -40,6 +45,11 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
     setIsUnassigning(true);
     try {
       await onUnassign(lawyer);
+      // Mettre à jour l'état local immédiatement
+      setAssignmentState({
+        isAssigned: false,
+        assignedMember: null
+      });
     } finally {
       setIsUnassigning(false);
     }
@@ -52,6 +62,15 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
     setIsAssigning(true);
     try {
       await onAssign(lawyer, teamMemberId);
+      
+      // Trouver le membre assigné pour l'affichage
+      const assignedTeamMember = teamMembers.find(member => member.id === teamMemberId);
+      
+      // Mettre à jour l'état local immédiatement
+      setAssignmentState({
+        isAssigned: true,
+        assignedMember: assignedTeamMember || null
+      });
     } finally {
       setIsAssigning(false);
     }
@@ -296,15 +315,6 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
               onStatusChange={handleStatusChange}
               disabled={isAssigning || isUnassigning}
             />
-
-            {/* DEBUG: Bouton de test pour vérifier le rendu */}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="bg-orange-100 text-orange-800 border-orange-300"
-            >
-              🔍 TEST CLASSIFICATION
-            </Button>
 
             {/* Étiquette d'assignation */}
             {isAssigned && (
