@@ -114,12 +114,17 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
       // Mettre à jour l'état local pour refléter immédiatement le changement
       setCurrentStatus(newStatus);
       
-      // Déclencher un refresh des données pour synchroniser
-      if (window.location.pathname.includes('/cabinet/') || window.location.pathname === '/avocats') {
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-      }
+      // Déclencher un événement personnalisé pour informer les autres pages
+      window.dispatchEvent(new CustomEvent('lawyerStatusChanged', {
+        detail: {
+          lawyerId: lawyer.prenomnom,
+          oldStatus,
+          newStatus,
+          timestamp: Date.now()
+        }
+      }));
+      
+      console.log('📡 Événement lawyerStatusChanged dispatché pour synchronisation cross-pages');
       
     } catch (error) {
       console.error('Erreur changement de statut:', error);

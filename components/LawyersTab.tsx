@@ -59,6 +59,48 @@ export default function LawyersTab({}: LawyersTabProps) {
     loadTeamMembers();
   }, []);
 
+  // Effet pour recharger les données quand on revient sur la page
+  useEffect(() => {
+    if (!mounted) return;
+
+    // Fonction pour détecter les changements localStorage
+    const handleStorageChange = () => {
+      console.log('🔄 Changement localStorage détecté, rechargement des avocats...');
+      loadLawyers();
+    };
+
+    // Écouter les changements localStorage
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Écouter l'événement personnalisé de changement de statut
+    const handleLawyerStatusChanged = (event: any) => {
+      console.log('📡 Événement lawyerStatusChanged reçu:', event.detail);
+      loadLawyers();
+    };
+
+    window.addEventListener('lawyerStatusChanged', handleLawyerStatusChanged);
+    
+    // Écouter la visibilité de la page (quand l'utilisateur revient)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('👁️ Page redevient visible, vérification des données...');
+        loadLawyers();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Charger les données initiales
+    loadLawyers();
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('lawyerStatusChanged', handleLawyerStatusChanged);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [mounted]);
+
   const loadLawyers = async () => {
     try {
       setLoading(true);
