@@ -16,7 +16,8 @@ export function middleware(request: NextRequest) {
     '/api/debug-sheets', // TEMPORAIRE POUR DEBUG
     '/api/debug-sqlite', // TEMPORAIRE POUR DEBUG SQLITE
     '/api/create-status-table', // TEMPORAIRE POUR CREATION TABLE SUPABASE
-    '/api/force-refresh' // TEMPORAIRE POUR FORCE REFRESH
+    '/api/force-refresh', // TEMPORAIRE POUR FORCE REFRESH
+    '/api/clear-assignments' // TEMPORAIRE POUR RESET ASSIGNATIONS
   ];
 
   // Routes d'assets statiques à ignorer pour l'authentification
