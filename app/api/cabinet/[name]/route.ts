@@ -40,46 +40,22 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       }
     }
     
-    // Récupérer TOUS les avocats du Google Sheet avec photos (seulement si pas un gros cabinet)
-    console.log('🔍 Récupération avocats Google Sheet avec photos...');
+    // 🚀 UTILISER LE SERVICE UNIFIÉ pour garantir la cohérence avec dashboard
+    console.log('🔍 Récupération avocats avec service unifié...');
     const startTime = Date.now();
-    const allLawyersFromSheet = await googleSheets.readLawyers();
-    console.log(`⚡ Google Sheets lu en ${Date.now() - startTime}ms`);
+    const { unifiedData } = await import('@/lib/unified-data');
     
-    // Fusionner avec les statuts de la base SQLite (même logique que /api/lawyers)
-    console.log('🔄 Fusion avec les statuts SQLite...');
-    const db = getDatabase();
-    const latestStatuses = await db.getAllLatestStatuses();
-    console.log(`📋 ${latestStatuses.size} statuts trouvés en base SQLite`);
+    // Invalider le cache pour forcer une actualisation
+    unifiedData.invalidateCache();
     
-    // Mettre à jour les statuts des avocats avec ceux de la base SQLite
-    const lawyersWithUpdatedStatuses = allLawyersFromSheet.map(lawyer => {
-      const updatedStatus = latestStatuses.get(lawyer.prenomnom);
-      if (updatedStatus !== undefined) {
-        return {
-          ...lawyer,
-          classement: updatedStatus
-        };
-      }
-      return lawyer;
-    });
+    // Récupérer les avocats filtrés par cabinet avec toutes les fusions appliquées
+    const filteredLawyers = await unifiedData.getLawyersByCabinet(cabinetName, true); // Force refresh
+    console.log(`⚡ Données unifiées récupérées en ${Date.now() - startTime}ms`);
     
-    console.log(`✅ Fusion terminée - ${lawyersWithUpdatedStatuses.length} avocats avec statuts à jour`);
+    console.log(`🔍 Cabinet "${cabinetName}": ${filteredLawyers.length} avocats trouvés`);
     
-    console.log(`🔍 Recherche cabinet: "${cabinetName}" → "${normalizedCabinetName}"`);
-    
-    // Filtrer par cabinet avec optimisation pour gros cabinets (utiliser données fusionnées)
-    let filteredLawyers;
-    if (normalizedCabinetName === 'Individuel') {
-      // Pour "Individuel", chercher les cabinets vides ou null
-      filteredLawyers = lawyersWithUpdatedStatuses.filter((lawyer: any) => 
-        !lawyer.cabinet || lawyer.cabinet.trim() === ''
-      );
-    } else {
-      filteredLawyers = lawyersWithUpdatedStatuses.filter((lawyer: any) => 
-        lawyer.cabinet === normalizedCabinetName
-      );
-    }
+    // Debug des statuts pour voir ce qui se passe
+    await unifiedData.debugStatuses(normalizedCabinetName);
 
     // 🛡️ PROTECTION GÉNÉRALE: Détecter automatiquement les gros cabinets (>1000 avocats)
     const totalLawyers = filteredLawyers.length;
@@ -181,32 +157,54 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
 
     console.log(`📊 Cabinet ${cabinetName}: ${lawyersWithAssignments.length} avocats avec photos`);
 
-    // Calculer les stats VRAIES du cabinet directement depuis les données Google Sheets
-    const realStats = {
-      name: cabinetName,
-      lawyer_count: filteredLawyers.length,
-      c1_count: 0,
-      c2_count: 0,
-      c3_count: 0,
-      bl_count: 0,
-      soutien_public_count: 0,
-      unclassified_count: 0,
-      assigned_count: 0,
-      participation_rate: 0
-    };
-
-    // Calculer les vraies statistiques
-    filteredLawyers.forEach((lawyer: any) => {
-      if (lawyer.soutien_public) realStats.soutien_public_count++;
+    // 🚀 UTILISER LE SERVICE UNIFIÉ pour les statistiques aussi
+    const allCabinetStats = await unifiedData.getCabinetStatistics(false);
+    
+    // Trouver les stats pour ce cabinet spécifique
+    let realStats: any;
+    const normalizedForStats = cabinetName === 'Avocats en individuel' ? 'Individuel' : cabinetName;
+    
+    if (allCabinetStats.has(normalizedForStats)) {
+      realStats = { ...allCabinetStats.get(normalizedForStats) };
+      realStats.name = cabinetName; // Garder le nom d'affichage
+      realStats.lawyer_count = filteredLawyers.length;
       
-      switch (lawyer.classement) {
-        case 'C1': realStats.c1_count++; break;
-        case 'C2': realStats.c2_count++; break;
-        case 'C3': realStats.c3_count++; break;
-        case 'Blacklist': realStats.bl_count++; break;
-        default: realStats.unclassified_count++; break;
-      }
-    });
+      console.log(`📊 STATS TROUVÉES pour ${normalizedForStats}:`, {
+        c1: realStats.c1_count,
+        c2: realStats.c2_count,
+        c3: realStats.c3_count,
+        sp: realStats.soutien_public_count,
+        bl: realStats.bl_count,
+        total: realStats.lawyer_count
+      });
+    } else {
+      // Fallback au calcul manuel si pas trouvé
+      realStats = {
+        name: cabinetName,
+        lawyer_count: filteredLawyers.length,
+        c1_count: 0,
+        c2_count: 0,
+        c3_count: 0,
+        bl_count: 0,
+        soutien_public_count: 0,
+        unclassified_count: 0,
+        assigned_count: 0,
+        participation_rate: 0
+      };
+
+      // Calculer depuis les données filtrées
+      filteredLawyers.forEach((lawyer: any) => {
+        if (lawyer.soutien_public) realStats.soutien_public_count++;
+        
+        switch (lawyer.classement) {
+          case 'C1': realStats.c1_count++; break;
+          case 'C2': realStats.c2_count++; break;
+          case 'C3': realStats.c3_count++; break;
+          case 'Blacklist': realStats.bl_count++; break;
+          default: realStats.unclassified_count++; break;
+        }
+      });
+    }
 
     // Calculer les assignations pour ce cabinet (pour l'interface admin)
     const { data: assignments } = await supabase

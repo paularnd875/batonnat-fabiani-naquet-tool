@@ -348,7 +348,7 @@ const StatusLogsTab: React.FC = () => {
         const { statusChangesStorage } = await import('@/lib/status-changes-storage');
         localStorageIds.forEach(id => {
           const cleanId = id.replace('localStorage_', '');
-          statusChangesStorage.markAsExported(cleanId);
+          statusChangesStorage.markAsExported([cleanId]);
         });
         console.log(`✅ ${localStorageIds.length} logs localStorage marqués comme lus`);
       }

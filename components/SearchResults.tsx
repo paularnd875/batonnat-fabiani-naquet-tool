@@ -1,8 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Building2, Shield, Award, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { User, Building2, Shield, Award, AlertCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import StatusButton from '@/components/StatusButton';
 
 interface Lawyer {
   prenomnom: string;
@@ -15,6 +23,15 @@ interface Lawyer {
   classement: string;
   soutien_public: boolean;
   statut_cabinet?: string;
+  nom?: string;
+  prenom?: string;
+  assignments?: Array<{ team_members: { id: string; prenom: string; nom: string } }>;
+}
+
+interface TeamMember {
+  id: string;
+  prenom: string;
+  nom: string;
 }
 
 interface Cabinet {
@@ -49,11 +66,26 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
   const [currentPageLawyers, setCurrentPageLawyers] = useState(1);
   const [currentPageCabinets, setCurrentPageCabinets] = useState(1);
   const itemsPerPage = 20; // 20 résultats par page pour optimiser le chargement
+  
+  // États pour l'équipe et les actions
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [lawyerStatuses, setLawyerStatuses] = useState<Record<string, string>>({});
+  const [assignmentStates, setAssignmentStates] = useState<Record<string, {isAssigning: boolean, isUnassigning: boolean}>>({});
 
   // Reset pagination when results change
   useEffect(() => {
     setCurrentPageLawyers(1);
     setCurrentPageCabinets(1);
+    
+    // Charger les membres d'équipe quand les résultats changent
+    loadTeamMembers();
+    
+    // Initialiser les statuts des avocats
+    const initialStatuses: Record<string, string> = {};
+    results.lawyers.forEach(lawyer => {
+      initialStatuses[lawyer.prenomnom] = lawyer.classement || '';
+    });
+    setLawyerStatuses(initialStatuses);
   }, [results.query, results.totalFound]);
 
   const getClassementBadge = (classement: string) => {
@@ -64,6 +96,149 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
       'Blacklist': 'fn-badge fn-badge-bl'
     };
     return badges[classement as keyof typeof badges] || '';
+  };
+
+  // Charger les membres de l'équipe
+  const loadTeamMembers = async () => {
+    try {
+      const response = await fetch('/api/team');
+      const data = await response.json();
+      if (data.success) {
+        setTeamMembers(data.team_members || []);
+      } else {
+        console.error('Erreur chargement équipe:', data.error);
+      }
+    } catch (error) {
+      console.error('Erreur chargement équipe:', error);
+    }
+  };
+
+  // Fonction d'assignation
+  const handleAssign = async (lawyer: Lawyer, teamMemberId: string) => {
+    try {
+      setAssignmentStates(prev => ({ 
+        ...prev, 
+        [lawyer.prenomnom]: { ...prev[lawyer.prenomnom], isAssigning: true }
+      }));
+      
+      const response = await fetch('/api/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lawyer_prenomnom: lawyer.prenomnom,
+          team_member_id: teamMemberId,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ Avocat assigné avec succès');
+      } else {
+        alert('Erreur assignation: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Erreur assignation:', error);
+      alert('Erreur assignation');
+    } finally {
+      setAssignmentStates(prev => ({ 
+        ...prev, 
+        [lawyer.prenomnom]: { ...prev[lawyer.prenomnom], isAssigning: false }
+      }));
+    }
+  };
+
+  // Fonction de désassignation
+  const handleUnassign = async (lawyer: Lawyer) => {
+    if (!confirm('Êtes-vous sûr de vouloir désassigner cet avocat ?')) return;
+    
+    try {
+      setAssignmentStates(prev => ({ 
+        ...prev, 
+        [lawyer.prenomnom]: { ...prev[lawyer.prenomnom], isUnassigning: true }
+      }));
+      
+      const response = await fetch('/api/assignments', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lawyer_prenomnom: lawyer.prenomnom }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ Avocat désassigné avec succès');
+      } else {
+        alert('Erreur désassignation: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Erreur désassignation:', error);
+      alert('Erreur désassignation');
+    } finally {
+      setAssignmentStates(prev => ({ 
+        ...prev, 
+        [lawyer.prenomnom]: { ...prev[lawyer.prenomnom], isUnassigning: false }
+      }));
+    }
+  };
+
+  // Fonction de changement de statut (identique à LawyerCard)
+  const handleStatusChange = async (lawyer: Lawyer, oldStatus: string, newStatus: string) => {
+    try {
+      // Import dynamique pour éviter les problèmes SSR
+      const { statusChangesStorage } = await import('@/lib/status-changes-storage');
+      
+      // Récupérer les informations utilisateur depuis les cookies
+      let currentUser = { prenom: 'Utilisateur', nom: 'Test' };
+      try {
+        const userInfoCookie = document.cookie
+          .split(';')
+          .find(cookie => cookie.trim().startsWith('user-info='));
+        
+        if (userInfoCookie) {
+          const userInfoValue = userInfoCookie.split('=')[1];
+          currentUser = JSON.parse(decodeURIComponent(userInfoValue));
+        }
+      } catch (error) {
+        console.warn('Impossible de récupérer les infos utilisateur:', error);
+      }
+      
+      // Sauvegarder le changement dans localStorage
+      statusChangesStorage.saveStatusChange({
+        lawyer_id: lawyer.prenomnom,
+        lawyer_nom: lawyer.nom || '',
+        lawyer_prenom: lawyer.prenom || '',
+        lawyer_email: lawyer.email || '',
+        lawyer_cabinet: lawyer.cabinet || 'Individuel',
+        old_status: oldStatus || 'Non classifié',
+        new_status: newStatus || 'Non classifié',
+        changed_by: `${currentUser.prenom} ${currentUser.nom}`
+      });
+
+      console.log(`✅ Statut sauvegardé: ${lawyer.prenomnom} (${oldStatus || 'Non classifié'} → ${newStatus || 'Non classifié'})`);
+      
+      // Mettre à jour l'état local pour refléter immédiatement le changement
+      setLawyerStatuses(prev => ({
+        ...prev,
+        [lawyer.prenomnom]: newStatus
+      }));
+      
+      // Déclencher un événement personnalisé pour informer les autres pages
+      window.dispatchEvent(new CustomEvent('lawyerStatusChanged', {
+        detail: {
+          lawyerId: lawyer.prenomnom,
+          oldStatus,
+          newStatus,
+          timestamp: Date.now()
+        }
+      }));
+      
+      console.log('📡 Événement lawyerStatusChanged dispatché pour synchronisation cross-pages');
+      
+    } catch (error) {
+      console.error('Erreur changement de statut:', error);
+      throw error;
+    }
   };
 
   // Calculs de pagination pour les avocats
@@ -235,84 +410,167 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
             )}
           </h3>
           <div className="grid gap-4">
-            {currentLawyers.map((lawyer, index) => (
-              <div key={index} className="fn-card">
-                <div className="p-6">
-                  <div className="flex items-start gap-4">
-                    {/* Photo */}
-                    <div className="flex-shrink-0">
-                      {lawyer.photo_url ? (
-                        <img
-                          src={lawyer.photo_url}
-                          alt={lawyer.nom_complet}
-                          className="w-16 h-16 rounded-full object-cover bg-gray-200"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-                          <User className="h-8 w-8 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Informations */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-semibold text-fn-black text-lg truncate">
-                          {lawyer.nom_complet || lawyer.prenomnom}
-                        </h4>
-                        {lawyer.soutien_public && (
-                          <span className="fn-badge fn-badge-sp">
-                            <Shield className="h-3 w-3 mr-1" />
-                            SP
-                          </span>
-                        )}
-                        {lawyer.classement && (
-                          <span className={getClassementBadge(lawyer.classement)}>
-                            {lawyer.classement === 'Blacklist' ? (
-                              <AlertCircle className="h-3 w-3 mr-1" />
-                            ) : (
-                              <Award className="h-3 w-3 mr-1" />
-                            )}
-                            {lawyer.classement}
-                          </span>
+            {currentLawyers.map((lawyer, index) => {
+              const currentStatus = lawyerStatuses[lawyer.prenomnom] || lawyer.classement || '';
+              const isAssigned = lawyer.assignments && lawyer.assignments.length > 0;
+              const assignedMember = isAssigned ? lawyer.assignments?.[0]?.team_members : null;
+              const states = assignmentStates[lawyer.prenomnom] || { isAssigning: false, isUnassigning: false };
+              
+              return (
+                <div key={index} className="fn-card">
+                  <div className="p-6">
+                    <div className="flex items-start gap-4">
+                      {/* Photo */}
+                      <div className="flex-shrink-0">
+                        {lawyer.photo_url ? (
+                          <img
+                            src={lawyer.photo_url}
+                            alt={lawyer.nom_complet}
+                            className="w-16 h-16 rounded-full object-cover bg-gray-200"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                            <User className="h-8 w-8 text-gray-400" />
+                          </div>
                         )}
                       </div>
                       
-                      <p className="text-gray-600 mb-2">
-                        {lawyer.cabinet === 'Individuel' ? 'Avocat en individuel' : lawyer.cabinet}
-                      </p>
-                      
-                      {lawyer.statut_cabinet && (
-                        <p className="text-sm text-blue-600 mb-2">
-                          {lawyer.statut_cabinet}
-                        </p>
-                      )}
-                      
-                      {lawyer.email && (
-                        <p className="text-sm text-gray-500 mb-2">
-                          {lawyer.email}
-                        </p>
-                      )}
-                      
-                      {lawyer.specialisations && lawyer.specialisations.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-3">
-                          {lawyer.specialisations.slice(0, 4).map((spec, i) => (
-                            <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                              {spec}
+                      {/* Informations */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-semibold text-fn-black text-lg truncate">
+                            {lawyer.nom_complet || lawyer.prenomnom}
+                          </h4>
+                          {lawyer.soutien_public && (
+                            <span className="fn-badge fn-badge-sp">
+                              <Shield className="h-3 w-3 mr-1" />
+                              SP
                             </span>
-                          ))}
-                          {lawyer.specialisations.length > 4 && (
-                            <span className="text-xs text-gray-500">
-                              +{lawyer.specialisations.length - 4} autres
+                          )}
+                          {currentStatus && (
+                            <span className={getClassementBadge(currentStatus)}>
+                              {currentStatus === 'Blacklist' ? (
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                              ) : (
+                                <Award className="h-3 w-3 mr-1" />
+                              )}
+                              {currentStatus}
                             </span>
                           )}
                         </div>
-                      )}
+                        
+                        <p className="text-gray-600 mb-2">
+                          {lawyer.cabinet === 'Individuel' ? 'Avocat en individuel' : lawyer.cabinet}
+                        </p>
+                        
+                        {lawyer.statut_cabinet && (
+                          <p className="text-sm text-blue-600 mb-2">
+                            {lawyer.statut_cabinet}
+                          </p>
+                        )}
+                        
+                        {lawyer.email && (
+                          <p className="text-sm text-gray-500 mb-2">
+                            {lawyer.email}
+                          </p>
+                        )}
+                        
+                        {lawyer.specialisations && lawyer.specialisations.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-3">
+                            {lawyer.specialisations.slice(0, 4).map((spec, i) => (
+                              <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                                {spec}
+                              </span>
+                            ))}
+                            {lawyer.specialisations.length > 4 && (
+                              <span className="text-xs text-gray-500">
+                                +{lawyer.specialisations.length - 4} autres
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Boutons d'action */}
+                      <div className="flex flex-col gap-2 ml-4">
+                        {/* Bouton d'assignation */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="whitespace-nowrap icon-hover focus-ring"
+                              disabled={states.isAssigning || states.isUnassigning}
+                            >
+                              {states.isAssigning ? (
+                                <>
+                                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                  Assignation...
+                                </>
+                              ) : (
+                                isAssigned ? 'Réassigner' : 'Assigner'
+                              )}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {teamMembers.map((member) => (
+                              <DropdownMenuItem 
+                                key={member.id}
+                                onClick={() => handleAssign(lawyer, member.id)}
+                                className="cursor-pointer"
+                                disabled={states.isAssigning || states.isUnassigning}
+                              >
+                                {member.prenom} {member.nom}
+                              </DropdownMenuItem>
+                            ))}
+                            {isAssigned && (
+                              <>
+                                <div className="border-t my-1" />
+                                <DropdownMenuItem 
+                                  onClick={() => handleUnassign(lawyer)}
+                                  className="cursor-pointer text-red-600 hover:bg-red-50"
+                                  disabled={states.isAssigning || states.isUnassigning}
+                                >
+                                  {states.isUnassigning ? (
+                                    <>
+                                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                      Désassignation...
+                                    </>
+                                  ) : (
+                                    '❌ Désassigner'
+                                  )}
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        {/* Bouton de statut/classification */}
+                        <StatusButton
+                          currentStatus={currentStatus}
+                          lawyerData={{
+                            prenomnom: lawyer.prenomnom,
+                            nom: lawyer.nom || '',
+                            prenom: lawyer.prenom || '',
+                            email: lawyer.email || '',
+                            cabinet: lawyer.cabinet || ''
+                          }}
+                          onStatusChange={(oldStatus, newStatus) => handleStatusChange(lawyer, oldStatus, newStatus)}
+                          disabled={states.isAssigning || states.isUnassigning}
+                        />
+
+                        {/* Étiquette d'assignation */}
+                        {isAssigned && (
+                          <div className="flex items-center justify-center gap-1 bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                            <span>✅ Assigné</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
           {/* Pagination des avocats */}
