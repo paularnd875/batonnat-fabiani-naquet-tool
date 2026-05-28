@@ -75,7 +75,7 @@ const FabianiNaquetHeader: React.FC = () => {
               <Link
                 key={index}
                 href={link.href}
-                className="flex items-center px-[1.2rem] text-[0.8rem] font-medium text-black no-underline tracking-[0.05em] uppercase transition-all duration-200 hover:bg-[#FFD700] hover:shadow-[inset_3px_0_0_black,inset_-3px_0_0_black]"
+                className="flex items-center px-6 text-[0.85rem] font-medium text-black no-underline tracking-[0.05em] uppercase transition-all duration-200 hover:bg-[#FFD700] hover:shadow-[inset_3px_0_0_black,inset_-3px_0_0_black] border-r border-gray-200"
                 style={{ fontFamily: "var(--font-resolve)" }}
               >
                 {link.text}
@@ -85,7 +85,7 @@ const FabianiNaquetHeader: React.FC = () => {
             {/* Bouton de déconnexion */}
             <button
               onClick={handleLogout}
-              className="flex items-center justify-center px-[1.2rem] text-[0.8rem] font-medium text-red-600 no-underline tracking-[0.05em] uppercase transition-all duration-200 hover:bg-red-50 hover:shadow-[inset_3px_0_0_red,inset_-3px_0_0_red]"
+              className="flex items-center justify-center px-6 text-[0.85rem] font-medium text-red-600 no-underline tracking-[0.05em] uppercase transition-all duration-200 hover:bg-red-50 hover:shadow-[inset_3px_0_0_red,inset_-3px_0_0_red]"
               style={{ fontFamily: "var(--font-resolve)" }}
               title="Se déconnecter"
             >

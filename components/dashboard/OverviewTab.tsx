@@ -292,10 +292,10 @@ export default function OverviewTab() {
                 </p>
               </div>
               <Link 
-                href="/avocats" 
+                href="/dashboard?tab=classifications" 
                 className="btn-fn-secondary"
               >
-                Voir les changements
+                Voir les classifications
               </Link>
             </div>
           </CardContent>

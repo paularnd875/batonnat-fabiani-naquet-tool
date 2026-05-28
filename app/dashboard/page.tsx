@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
 import OverviewTab from '@/components/dashboard/OverviewTab';
 import TeamTab from '@/components/dashboard/TeamTab';
@@ -10,8 +10,47 @@ import StatusLogsTab from '@/components/dashboard/StatusLogsTab';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [currentUser, setCurrentUser] = useState<{prenom: string, nom: string, email: string} | null>(null);
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+    
+    // Récupérer l'utilisateur actuel depuis les cookies
+    try {
+      const userInfoCookie = document.cookie
+        .split(';')
+        .find(cookie => cookie.trim().startsWith('user-info='));
+      
+      if (userInfoCookie) {
+        const userInfoValue = userInfoCookie.split('=')[1];
+        const user = JSON.parse(decodeURIComponent(userInfoValue));
+        setCurrentUser(user);
+      }
+    } catch (error) {
+      console.warn('Impossible de récupérer les infos utilisateur:', error);
+    }
+  }, []);
 
-  const tabs = [
+  // Gérer l'URL avec paramètre de redirection vers l'onglet classifications
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetTab = urlParams.get('tab');
+    
+    if (targetTab === 'classifications') {
+      // Vérifier que Paul a accès
+      if (currentUser?.prenom === 'Paul' && currentUser?.nom === 'Arnould') {
+        setActiveTab('status-logs');
+      }
+      // Nettoyer l'URL
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, [mounted, currentUser]);
+
+  // Filtrer les onglets en fonction de l'utilisateur
+  const allTabs = [
     {
       id: 'overview',
       label: 'Vue d\'ensemble',
@@ -38,11 +77,21 @@ export default function DashboardPage() {
     },
     {
       id: 'status-logs',
-      label: 'Changements Statut',
+      label: 'Classifications',
       icon: '🔄',
-      component: StatusLogsTab
+      component: StatusLogsTab,
+      adminOnly: true // Visible seulement pour Paul
     }
   ];
+  
+  // Filtrer les onglets selon l'utilisateur
+  const tabs = allTabs.filter(tab => {
+    // Si l'onglet est admin-only, vérifier que c'est Paul
+    if (tab.adminOnly && mounted) {
+      return currentUser?.prenom === 'Paul' && currentUser?.nom === 'Arnould';
+    }
+    return true;
+  });
 
   const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || OverviewTab;
 

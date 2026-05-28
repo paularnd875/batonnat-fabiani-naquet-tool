@@ -141,22 +141,54 @@ export default function LawyersTab({}: LawyersTabProps) {
         // Appliquer les filtres côté client (temporairement)
         let filteredLawyers = data.lawyers || [];
         
-        // Filtrer par recherche
+        // Filtrer par recherche - amélioration pour gérer les espaces et noms composés
         if (searchTerm) {
-          const searchLower = searchTerm.toLowerCase();
-          filteredLawyers = filteredLawyers.filter((lawyer: any) => 
-            lawyer.prenomnom?.toLowerCase().includes(searchLower) ||
-            lawyer.nom?.toLowerCase().includes(searchLower) ||
-            lawyer.prenom?.toLowerCase().includes(searchLower) ||
-            lawyer.email?.toLowerCase().includes(searchLower)
-          );
+          const searchLower = searchTerm.toLowerCase().trim();
+          const searchTerms = searchLower.split(' ').filter(term => term.length > 0);
+          
+          filteredLawyers = filteredLawyers.filter((lawyer: any) => {
+            const searchableText = [
+              lawyer.prenomnom?.toLowerCase() || '',
+              lawyer.nom?.toLowerCase() || '',
+              lawyer.prenom?.toLowerCase() || '',
+              lawyer.nom_complet?.toLowerCase() || '',
+              lawyer.email?.toLowerCase() || '',
+              lawyer.cabinet?.toLowerCase() || ''
+            ].join(' ');
+            
+            // Si recherche avec espaces, tous les termes doivent matcher
+            if (searchTerms.length > 1) {
+              return searchTerms.every(term => searchableText.includes(term));
+            }
+            
+            // Recherche simple ou sans espace
+            return searchableText.includes(searchLower);
+          });
         }
         
-        // Filtrer par classification
+        // Filtrer par classification - amélioration de la logique
         if (selectedClassifications.length > 0 && !selectedClassifications.includes('all')) {
-          filteredLawyers = filteredLawyers.filter((lawyer: any) => 
-            selectedClassifications.includes(lawyer.classement || 'Non classifié')
-          );
+          filteredLawyers = filteredLawyers.filter((lawyer: any) => {
+            const classification = lawyer.classement?.trim() || '';
+            
+            // Gestion des classifications spéciales
+            if (selectedClassifications.includes('soutien_public') && lawyer.soutien_public) {
+              return true;
+            }
+            
+            if (selectedClassifications.includes('unclassified')) {
+              return !classification || !['C1', 'C2', 'C3', 'Blacklist'].includes(classification);
+            }
+            
+            // Classifications standard
+            return selectedClassifications.some(selected => {
+              if (selected === 'c1') return classification === 'C1';
+              if (selected === 'c2') return classification === 'C2';
+              if (selected === 'c3') return classification === 'C3';
+              if (selected === 'blacklist') return classification === 'Blacklist';
+              return selected === classification;
+            });
+          });
         }
         
         setLawyers(filteredLawyers);
@@ -178,12 +210,16 @@ export default function LawyersTab({}: LawyersTabProps) {
     }
   };
 
-  // Rechargement lors du changement de filtres
+  // Rechargement lors du changement de filtres (avec délai pour la recherche)
   useEffect(() => {
-    if (mounted) {
+    if (!mounted) return;
+    
+    const delayedSearch = setTimeout(() => {
       setCurrentPage(1);
       loadLawyers();
-    }
+    }, searchTerm ? 500 : 0); // Délai de 500ms pour la recherche textuelle
+    
+    return () => clearTimeout(delayedSearch);
   }, [mounted, selectedClassifications, selectedVoteFilters, selectedStatusFilters, cabinetFilter, searchTerm]);
 
   // Rechargement lors du changement de page
@@ -354,8 +390,8 @@ export default function LawyersTab({}: LawyersTabProps) {
         </div>
       )}
 
-      {/* Bouton de chargement */}
-      {lawyers.length === 0 && !loading && (
+      {/* Bouton de chargement - seulement si aucune donnée initiale */}
+      {lawyers.length === 0 && !loading && !pagination && (
         <div className="text-center">
           <button
             onClick={loadLawyers}
@@ -377,8 +413,8 @@ export default function LawyersTab({}: LawyersTabProps) {
         </div>
       )}
 
-      {/* Filtres */}
-      {lawyers.length > 0 && (
+      {/* Filtres - toujours affichés après premier chargement */}
+      {(lawyers.length > 0 || pagination) && (
         <div className="bg-white p-6 rounded-lg border-2 border-gray-200">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold">🔍 Filtres</h3>
@@ -680,14 +716,24 @@ export default function LawyersTab({}: LawyersTabProps) {
         </>
       )}
 
-      {/* Message si aucun résultat */}
+      {/* Message si aucun résultat - amélioré */}
       {!loading && lawyers.length === 0 && pagination && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🔍</div>
           <h3 className="text-xl font-semibold text-fn-black mb-2">Aucun avocat trouvé</h3>
-          <p className="text-gray-500">
-            Essayez de modifier vos filtres de recherche
+          <p className="text-gray-500 mb-4">
+            {searchTerm ? 
+              `Aucun avocat ne correspond à "${searchTerm}"` : 
+              'Aucun avocat ne correspond aux filtres sélectionnés'
+            }
           </p>
+          <Button
+            onClick={resetAllFilters}
+            variant="outline"
+            className="text-sm"
+          >
+            🔄 Réinitialiser tous les filtres
+          </Button>
         </div>
       )}
     </div>
