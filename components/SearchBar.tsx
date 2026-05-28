@@ -57,6 +57,23 @@ export default function SearchBar({ onSearchResults, showDropdown = true, search
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // 🔄 NOUVEAU: Écouter les changements localStorage pour actualiser la recherche
+  useEffect(() => {
+    const handleStatusChange = () => {
+      // Si on a des résultats affichés, refaire la recherche pour les actualiser
+      if (results) {
+        console.log('📡 SearchBar: Changement de statut détecté, actualisation des résultats...');
+        // Déclencher une nouvelle recherche en modifiant temporairement le query
+        const currentQuery = query;
+        setQuery('__refresh__');
+        setTimeout(() => setQuery(currentQuery), 50);
+      }
+    };
+
+    window.addEventListener('lawyerStatusChanged', handleStatusChange);
+    return () => window.removeEventListener('lawyerStatusChanged', handleStatusChange);
+  }, [results, query]);
+
   // Recherche avec debounce
   useEffect(() => {
     // Si pas de texte ET pas de filtre, on n'affiche rien
@@ -66,12 +83,38 @@ export default function SearchBar({ onSearchResults, showDropdown = true, search
       return;
     }
 
+    // Ignorer le query de refresh temporaire
+    if (query === '__refresh__') {
+      return;
+    }
+
     const timeoutId = setTimeout(async () => {
       setIsLoading(true);
       try {
+        // 🔄 NOUVEAU: Récupérer localStorage pour la recherche synchronisée
+        const { statusChangesStorage } = await import('@/lib/status-changes-storage');
+        const localStorageStatuses = statusChangesStorage.getCurrentStatuses();
+        
         // Utiliser une limite plus élevée quand on filtre sans texte
         const limit = (!query && (classificationFilter !== 'all' || exerciceFilter !== 'all' || tailleFilter !== 'all')) ? 5000 : 50;
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=${searchType}&classification=${classificationFilter}&exercice=${exerciceFilter}&taille=${tailleFilter}&limit=${limit}`);
+        
+        // 🚀 UTILISER LA NOUVELLE API AVEC LOCALSTORAGE
+        const response = await fetch('/api/search-with-localstorage', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query,
+            type: searchType,
+            classification: classificationFilter,
+            exercice: exerciceFilter,
+            taille: tailleFilter,
+            limit,
+            localStorageStatuses
+          })
+        });
+        
         const data = await response.json();
         
         if (data.success) {
@@ -79,6 +122,7 @@ export default function SearchBar({ onSearchResults, showDropdown = true, search
           setShowResults(showDropdown);
           // Transmettre les résultats au parent
           onSearchResults?.(data.results);
+          console.log(`🔍 Recherche: ${Object.keys(localStorageStatuses).length} statuts localStorage appliqués`);
         }
       } catch (error) {
         console.error('Erreur de recherche:', error);

@@ -69,6 +69,24 @@ class StatusChangesStorage {
     console.log(`📤 ${ids.length} changements marqués comme exportés`);
   }
 
+  // Supprimer un changement par ID
+  deleteChange(id: string): void {
+    const changes = this.getAllChanges();
+    const updatedChanges = changes.filter(change => change.id !== id);
+    this.saveChangesToStorage(updatedChanges);
+    
+    console.log(`🗑️ Changement ${id} supprimé`);
+  }
+
+  // Supprimer plusieurs changements par leurs IDs
+  deleteChanges(ids: string[]): void {
+    const changes = this.getAllChanges();
+    const updatedChanges = changes.filter(change => !ids.includes(change.id));
+    this.saveChangesToStorage(updatedChanges);
+    
+    console.log(`🗑️ ${ids.length} changements supprimés`);
+  }
+
   // Mettre à jour le statut actuel d'un avocat
   private updateCurrentStatus(lawyerId: string, newStatus: string): void {
     try {

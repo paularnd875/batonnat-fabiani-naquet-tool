@@ -1,21 +1,13 @@
 import { NextResponse } from 'next/server';
-import { googleSheets } from '@/lib/google-sheets';
-import { memoryCache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 import { unifiedData } from '@/lib/unified-data';
 
 /**
- * API de recherche universelle - Recherche dans cabinets ET avocats
- * Support recherche par nom, cabinet, spécialisation, etc.
+ * API de recherche avec support localStorage
+ * Recherche dans cabinets ET avocats avec fusion des changements localStorage
  */
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const query = searchParams.get('q')?.trim();
-    const limit = parseInt(searchParams.get('limit') || '100');
-    const type = searchParams.get('type') || 'all'; // 'lawyers', 'cabinets', 'all'
-    const classification = searchParams.get('classification') || 'all'; // 'all', 'C1', 'C2', 'C3', 'BL', 'SP'
-    const exercice = searchParams.get('exercice') || 'all'; // 'all', 'Individuel', 'Collaborateur', 'Associé', 'SCP'
-    const taille = searchParams.get('taille') || 'all'; // 'all', '0', '1', '2-5', '5-25', '25-50', '50&+', 'Non trouvé'
+    const { query, type = 'all', classification = 'all', exercice = 'all', taille = 'all', limit = 100, localStorageStatuses } = await request.json();
     
     // Si aucune recherche textuelle mais un filtre, on autorise la recherche
     if ((!query || query.length < 2) && classification === 'all' && exercice === 'all' && taille === 'all') {
@@ -25,29 +17,37 @@ export async function GET(request: Request) {
       }, { status: 400 });
     }
 
-    console.log(`🔍 Recherche: "${query}" (type: ${type}, classification: ${classification}, exercice: ${exercice}, taille: ${taille}, limit: ${limit})`);
+    console.log(`🔍 Recherche avec localStorage: "${query}" (type: ${type}, classification: ${classification}, exercice: ${exercice}, taille: ${taille}, limit: ${limit})`);
+    console.log(`🔄 LocalStorage: ${Object.keys(localStorageStatuses || {}).length} statuts appliqués`);
+    
     const startTime = Date.now();
 
-    // 🚀 OPTIMISATION: Récupérer les données depuis le cache ou Google Sheets
+    // 🚀 UTILISER LE SERVICE UNIFIÉ avec support SQLite + Google Sheets
     const loadStartTime = Date.now();
-    const cachedLawyers = memoryCache.get(CACHE_KEYS.LAWYERS_ALL);
-    const allLawyers = await googleSheets.readLawyers();
+    const allLawyers = await unifiedData.getAllLawyersWithStatuses(true); // Force refresh
     const loadTime = Date.now() - loadStartTime;
-    const isCached = loadTime < 100; // Si très rapide, c'est du cache
     
-    console.log(`📋 ${allLawyers.length} avocats chargés pour recherche (${isCached ? 'CACHE ⚡' : 'GOOGLE_SHEETS 🐌'} - ${loadTime}ms)`);
-    
-    // 🚨 ALERTE PERFORMANCE: Si le chargement est très lent, suggérer le réchauffage
-    if (!isCached && loadTime > 5000) {
-      console.warn(`🚨 PERFORMANCE CRITIQUE: ${loadTime}ms pour charger les données!`);
-      console.warn(`💡 SOLUTION: Le système de pré-chargement intelligent devrait éviter cela`);
-    }
+    console.log(`📋 ${allLawyers.length} avocats chargés depuis service unifié (${loadTime}ms)`);
+
+    // 🔄 APPLIQUER LES CHANGEMENTS LOCALSTORAGE
+    const lawyersWithLocalStorage = allLawyers.map((lawyer: any) => {
+      const localStatus = localStorageStatuses?.[lawyer.prenomnom];
+      if (localStatus !== undefined && localStatus !== null) {
+        return {
+          ...lawyer,
+          classement: localStatus
+        };
+      }
+      return lawyer;
+    });
+
+    console.log(`🔄 Recherche: Fusion localStorage appliquée à ${allLawyers.length} avocats`);
 
     const queryLower = query ? query.toLowerCase() : '';
     const results: {
       lawyers: any[];
       cabinets: any[];
-      query: string | null | undefined;
+      query: string;
       totalFound: number;
       searchTime: number;
       totalLawyersFound?: number;
@@ -55,14 +55,14 @@ export async function GET(request: Request) {
     } = {
       lawyers: [],
       cabinets: [],
-      query,
+      query: query || '',
       totalFound: 0,
       searchTime: 0
     };
 
     // 1. RECHERCHE DANS LES AVOCATS
     if (type === 'all' || type === 'lawyers') {
-      const foundLawyers = allLawyers.filter((lawyer: any) => {
+      const foundLawyers = lawyersWithLocalStorage.filter((lawyer: any) => {
         // Filtre textuel
         const searchFields = [
           lawyer.nom_complet || '',
@@ -94,11 +94,9 @@ export async function GET(request: Request) {
           matchesExercice = lawyer.statut_cabinet === exercice;
         }
 
-        // Filtre de taille de cabinet (temporaire : basé sur le nom du cabinet pour tester)
+        // Filtre de taille de cabinet
         let matchesTaille = true;
         if (taille !== 'all') {
-          // TODO: Remplacer par les vraies données de taille quand disponibles
-          // Pour l'instant, simuler avec quelques règles simples
           if (taille === '0') {
             matchesTaille = false; // Pas de cabinet avec 0 avocats logiquement
           } else if (taille === '1') {
@@ -141,16 +139,15 @@ export async function GET(request: Request) {
         statut_cabinet: lawyer.statut_cabinet
       }));
       
-      // Ajouter l'info du total trouvé pour les avocats
       results.totalLawyersFound = totalLawyersFound;
     }
 
     // 2. RECHERCHE DANS LES CABINETS
     if (type === 'all' || type === 'cabinets') {
-      // Créer une map des cabinets avec leurs statistiques
+      // Créer une map des cabinets avec leurs statistiques (avec localStorage)
       const cabinetsMap = new Map();
       
-      allLawyers.forEach((lawyer: any) => {
+      lawyersWithLocalStorage.forEach((lawyer: any) => {
         const cabinetName = lawyer.cabinet || 'Individuel';
         const displayName = cabinetName === 'Individuel' ? 'Avocats en individuel' : cabinetName;
         
@@ -230,11 +227,9 @@ export async function GET(request: Request) {
             }
           }
 
-          // Filtre de taille de cabinet (temporaire : basé sur le nombre d'avocats)
+          // Filtre de taille de cabinet
           let matchesTaille = true;
           if (taille !== 'all') {
-            // TODO: Remplacer par les vraies données de taille quand disponibles
-            // Pour l'instant, simuler avec des règles basées sur le nombre d'avocats
             if (taille === '0') {
               matchesTaille = cabinet.lawyer_count === 0;
             } else if (taille === '1') {
@@ -276,7 +271,7 @@ export async function GET(request: Request) {
     results.totalFound = results.lawyers.length + results.cabinets.length;
     results.searchTime = Date.now() - startTime;
 
-    console.log(`🔍 Recherche "${query}" (${classification}) terminée: ${results.totalFound} résultats en ${results.searchTime}ms`);
+    console.log(`🔍 Recherche avec localStorage "${query}" (${classification}) terminée: ${results.totalFound} résultats en ${results.searchTime}ms`);
 
     return NextResponse.json({
       success: true,
@@ -284,7 +279,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('❌ Erreur recherche:', error);
+    console.error('❌ Erreur recherche avec localStorage:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur de recherche'

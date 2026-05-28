@@ -266,6 +266,21 @@ class DatabaseService {
     stmt.run(...ids);
   }
 
+  async markStatusChangeAsExported(id: number): Promise<void> {
+    const stmt = this.db.prepare(`
+      UPDATE status_change_logs 
+      SET exported_at = datetime('now') 
+      WHERE id = ?
+    `);
+    
+    stmt.run(id);
+  }
+
+  async deleteStatusChangeLog(id: number): Promise<void> {
+    const stmt = this.db.prepare('DELETE FROM status_change_logs WHERE id = ?');
+    stmt.run(id);
+  }
+
   // Récupérer le dernier statut d'un avocat spécifique
   async getLatestStatusForLawyer(lawyerId: string): Promise<string | null> {
     const stmt = this.db.prepare(`

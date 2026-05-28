@@ -90,12 +90,12 @@ export default function Home() {
               <h2 className="text-xl font-semibold text-gray-800" style={{ fontFamily: "var(--font-resolve)" }}>
                 🔍 RECHERCHE INTELLIGENTE
               </h2>
-              <p className="text-sm text-gray-500">Recherchez parmi tous les cabinets d'avocats</p>
+              <p className="text-sm text-gray-500">Recherchez parmi tous les avocats et cabinets</p>
             </div>
             <SearchBar 
               onSearchResults={setSearchResults}
               showDropdown={false}
-              searchType="cabinets"
+              searchType="all"
             />
           </div>
         </div>

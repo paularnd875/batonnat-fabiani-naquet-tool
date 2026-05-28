@@ -29,7 +29,7 @@ export default function CabinetPage() {
   const [lawyersPerPage] = useState(50);
   const [statutFilter, setStatutFilter] = useState<string>('tous');
   const [classificationFilter, setClassificationFilter] = useState<string>('tous');
-  const [allLawyers, setAllLawyers] = useState<Lawyer[]>([]); // Tous les avocats pour stats
+  // Supprimé: allLawyers n'est plus nécessaire car les stats viennent de l'API
 
   // Plus besoin d'URLs de test - les photos viennent maintenant du Google Sheet via l'API
 
@@ -40,21 +40,43 @@ export default function CabinetPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage, statutFilter, classificationFilter]);
 
+  // 🔄 NOUVEAU: Écouter les changements localStorage pour la synchronisation
+  useEffect(() => {
+    const handleStatusChange = (event: any) => {
+      console.log('📡 Cabinet: Changement de statut détecté, rechargement des données...');
+      loadCabinetData();
+    };
+
+    // Écouter les événements de changement de statut
+    window.addEventListener('lawyerStatusChanged', handleStatusChange);
+
+    return () => {
+      window.removeEventListener('lawyerStatusChanged', handleStatusChange);
+    };
+  }, [currentPage, statutFilter, classificationFilter]);
+
   const loadCabinetData = async () => {
     try {
       // 🔄 NOUVEAU: Utiliser l'API qui fusionne localStorage
-      // D'abord récupérer les statuts localStorage
+      // D'abord récupérer les données localStorage (changements de statuts en attente)
       const { statusChangesStorage } = await import('@/lib/status-changes-storage');
       const localStorageStatuses = statusChangesStorage.getCurrentStatuses();
       
-      // Appeler la nouvelle API de fusion pour cabinet
+      console.log(`🔄 Cabinet: Récupération ${Object.keys(localStorageStatuses).length} statuts localStorage`);
+      
+      // 🚀 UTILISER L'API CABINET AVEC LOCALSTORAGE pour la synchronisation
+      // Cette API applique les changements localStorage en temps réel
       const response = await fetch(`/api/cabinet-with-localstorage/${encodeURIComponent(cabinetName)}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          localStorageStatuses
+          localStorageStatuses,
+          params: {
+            page: currentPage,
+            limit: lawyersPerPage
+          }
         })
       });
       
@@ -63,10 +85,9 @@ export default function CabinetPage() {
       if (data.success) {
         const allLawyersData = data.cabinet.lawyers;
         
-        // Sauvegarder tous les avocats pour les stats
-        if (allLawyers.length === 0 && allLawyersData.length > 0) {
-          setAllLawyers(allLawyersData);
-        }
+        // 🚀 UTILISER LES STATS DE L'API (calculées avec service unifié)
+        console.log('📊 Stats reçues de l\'API:', data.cabinet.stats);
+        setFirmStats(data.cabinet.stats);
         
         // Appliquer les filtres côté client
         let filteredLawyers = allLawyersData;
@@ -141,7 +162,7 @@ export default function CabinetPage() {
           setPagination(data.cabinet.pagination);
         }
         
-        setFirmStats(data.cabinet.stats);
+        // Stats déjà définies ci-dessus
       }
     } catch (error) {
       console.error('Erreur chargement cabinet:', error);
@@ -462,7 +483,7 @@ export default function CabinetPage() {
               }}
               className="icon-hover focus-ring fn-badge"
             >
-              ⚖️ Associés ({allLawyers.filter(l => l.statut_cabinet === 'Associé').length})
+              ⚖️ Associés
             </Button>
             <Button
               variant={statutFilter === 'Collaborateur' ? 'default' : 'outline'}
@@ -474,7 +495,7 @@ export default function CabinetPage() {
               }}
               className="icon-hover focus-ring fn-badge"
             >
-              👨‍💼 Collaborateurs ({allLawyers.filter(l => l.statut_cabinet === 'Collaborateur').length})
+              👨‍💼 Collaborateurs
             </Button>
             <Button
               variant={statutFilter === 'Individuel' ? 'default' : 'outline'}
@@ -486,7 +507,7 @@ export default function CabinetPage() {
               }}
               className="icon-hover focus-ring fn-badge"
             >
-              🏛️ Individuels ({allLawyers.filter(l => l.statut_cabinet === 'Individuel').length})
+              🏛️ Individuels
             </Button>
           </div>
         </div>

@@ -16,54 +16,15 @@ export async function GET() {
       });
     }
 
-    console.log('🏢 Calcul statistiques cabinets LIVE depuis Google Sheets...');
+    console.log('🏢 Calcul statistiques cabinets LIVE avec service unifié...');
     const startTime = Date.now();
 
-    // 1. Lire tous les avocats directement depuis Google Sheets (optimisé avec cache)
-    const allLawyers = await googleSheets.readLawyers();
-    console.log(`📋 ${allLawyers.length} avocats lus depuis Google Sheets`);
-
-    // 2. Calculer les stats par cabinet avec participation basée sur votes
-    const cabinetStats = new Map();
+    // 🚀 UTILISER LE SERVICE UNIFIÉ pour garantir la cohérence
+    const { unifiedData } = await import('@/lib/unified-data');
+    const cabinetStats = await unifiedData.getCabinetStatistics(false);
     
-    allLawyers.forEach((lawyer: any) => {
-      const cabinet = lawyer.cabinet || 'Individuel';
-      const displayName = cabinet === 'Individuel' ? 'Avocats en individuel' : cabinet;
-      
-      if (!cabinetStats.has(cabinet)) {
-        cabinetStats.set(cabinet, {
-          name: displayName,
-          lawyer_count: 0,
-          c1_count: 0,
-          c2_count: 0,
-          c3_count: 0,
-          bl_count: 0,
-          soutien_public_count: 0,
-          unclassified_count: 0,
-          assigned_count: 0,
-          vote_count: 0,
-          participation_rate: 0
-        });
-      }
-
-      const stats = cabinetStats.get(cabinet);
-      stats.lawyer_count++;
-      
-      // CORRECTION: Compter les votes au lieu des assignations pour la participation
-      if (lawyer.premier_tour_vote || lawyer.second_tour_vote) {
-        stats.vote_count++;
-      }
-      
-      if (lawyer.soutien_public) stats.soutien_public_count++;
-      
-      switch (lawyer.classement) {
-        case 'C1': stats.c1_count++; break;
-        case 'C2': stats.c2_count++; break;
-        case 'C3': stats.c3_count++; break;
-        case 'Blacklist': stats.bl_count++; break;
-        default: stats.unclassified_count++; break;
-      }
-    });
+    // Récupérer les données unifiées pour les assignations
+    const allLawyers = await unifiedData.getAllLawyersWithStatuses(false);
 
     // 3. Récupérer les assignations depuis Supabase (pour assigned_count seulement)
     const { data: assignments } = await supabase
