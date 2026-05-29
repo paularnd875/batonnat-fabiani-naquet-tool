@@ -203,27 +203,111 @@ class DatabaseSupabaseService {
   // === GESTION DES UTILISATEURS ===
 
   async createUser(nom: string, prenom: string, email: string): Promise<User> {
-    // Pour la compatibilité, on peut créer des utilisateurs basiques
-    // ou utiliser une table Supabase existante si vous en avez une
-    throw new Error('Création utilisateur non implémentée pour Supabase dans cette version');
+    console.log('📝 Création utilisateur Supabase:', { nom, prenom, email });
+    
+    // Utiliser la table team_members existante pour créer un nouvel utilisateur
+    const { data, error } = await supabase
+      .from('team_members')
+      .insert({
+        nom: nom,
+        prenom: prenom,
+        email: email,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Erreur création utilisateur Supabase:', error);
+      throw error;
+    }
+
+    console.log('✅ Utilisateur créé avec succès dans Supabase:', data);
+    
+    // Convertir le format Supabase vers notre interface User
+    return {
+      id: data.id, // Garder l'UUID tel quel, mais caster comme any pour compatibilité
+      nom: data.nom,
+      prenom: data.prenom,
+      email: data.email,
+      created_at: data.created_at
+    } as any;
   }
 
-  async getUserById(id: number): Promise<User | null> {
-    // Implementation basique - à adapter selon votre schéma Supabase
-    return null;
+  async getUserById(id: any): Promise<User | null> {
+    // Récupérer un utilisateur par ID depuis la table team_members
+    const { data, error } = await supabase
+      .from('team_members')
+      .select('*')
+      .eq('id', id) // Accept both UUID string and number
+      .single();
+
+    if (error) {
+      console.error('❌ Erreur récupération utilisateur par ID:', error);
+      return null;
+    }
+
+    if (!data) return null;
+
+    return {
+      id: data.id, // Garder l'UUID tel quel
+      nom: data.nom,
+      prenom: data.prenom,
+      email: data.email,
+      created_at: data.created_at
+    } as any;
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    // Implementation basique - à adapter selon votre schéma Supabase  
-    return null;
+    // Récupérer un utilisateur par email depuis la table team_members
+    const { data, error } = await supabase
+      .from('team_members')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error) {
+      // Pas d'erreur si l'utilisateur n'existe pas
+      if (error.code === 'PGRST116') return null;
+      console.error('❌ Erreur récupération utilisateur par email:', error);
+      return null;
+    }
+
+    if (!data) return null;
+
+    return {
+      id: data.id, // Garder l'UUID tel quel
+      nom: data.nom,
+      prenom: data.prenom,
+      email: data.email,
+      created_at: data.created_at
+    } as any;
   }
 
   async getAllUsers(): Promise<User[]> {
-    // Implementation basique - retourner utilisateurs par défaut
-    return [
-      { id: 1, nom: 'Arnould', prenom: 'Paul', email: 'paul@batonnat.com', created_at: new Date().toISOString() },
-      { id: 2, nom: 'Test', prenom: 'Utilisateur', email: 'test@example.com', created_at: new Date().toISOString() },
-    ];
+    // Récupérer tous les utilisateurs depuis la table team_members
+    const { data, error } = await supabase
+      .from('team_members')
+      .select('*')
+      .order('prenom', { ascending: true });
+
+    if (error) {
+      console.error('❌ Erreur récupération tous utilisateurs:', error);
+      // Retourner utilisateurs par défaut en cas d'erreur
+      return [
+        { id: 1, nom: 'Arnould', prenom: 'Paul', email: 'paul@batonnat.com', created_at: new Date().toISOString() },
+        { id: 2, nom: 'Test', prenom: 'Utilisateur', email: 'test@example.com', created_at: new Date().toISOString() },
+      ];
+    }
+
+    // Convertir le format Supabase vers notre interface User
+    return (data || []).map(user => ({
+      id: user.id, // Garder l'UUID tel quel
+      nom: user.nom,
+      prenom: user.prenom,
+      email: user.email,
+      created_at: user.created_at
+    }));
   }
 
   // === UTILITAIRES ===
