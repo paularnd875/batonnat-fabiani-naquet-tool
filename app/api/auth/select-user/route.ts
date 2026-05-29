@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     }
 
     const db = getDatabase();
-    const user = await db.getUserById(parseInt(userId));
+    const user = await db.getUserById(userId);
     
     if (!user) {
       return NextResponse.json({
