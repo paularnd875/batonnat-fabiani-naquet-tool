@@ -301,7 +301,7 @@ class DatabaseSupabaseService {
     }
 
     // Convertir le format Supabase vers notre interface User
-    return (data || []).map(user => ({
+    return (data || []).map((user: any) => ({
       id: user.id, // Garder l'UUID tel quel
       nom: user.nom,
       prenom: user.prenom,
