@@ -8,9 +8,9 @@ import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
 export default function AddTeamMemberPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    role: ''
+    prenom: '',
+    nom: '',
+    email: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -18,8 +18,8 @@ export default function AddTeamMemberPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.email || !formData.role) {
-      setError('Tous les champs sont obligatoires');
+    if (!formData.prenom || !formData.nom || !formData.email) {
+      setError('Prénom, nom et email sont obligatoires');
       return;
     }
 
@@ -90,20 +90,38 @@ export default function AddTeamMemberPage() {
                   </div>
                 )}
 
-                <div>
-                  <label htmlFor="name" className="block text-sm font-semibold text-fn-black mb-2 uppercase tracking-wide">
-                    Nom complet *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Prénom et nom du collaborateur"
-                    className="fn-input"
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="prenom" className="block text-sm font-semibold text-fn-black mb-2 uppercase tracking-wide">
+                      Prénom *
+                    </label>
+                    <input
+                      type="text"
+                      id="prenom"
+                      name="prenom"
+                      value={formData.prenom}
+                      onChange={handleChange}
+                      placeholder="Prénom"
+                      className="fn-input"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="nom" className="block text-sm font-semibold text-fn-black mb-2 uppercase tracking-wide">
+                      Nom *
+                    </label>
+                    <input
+                      type="text"
+                      id="nom"
+                      name="nom"
+                      value={formData.nom}
+                      onChange={handleChange}
+                      placeholder="Nom"
+                      className="fn-input"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -122,32 +140,6 @@ export default function AddTeamMemberPage() {
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="role" className="block text-sm font-semibold text-fn-black mb-2 uppercase tracking-wide">
-                    Rôle *
-                  </label>
-                  <select
-                    id="role"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    className="fn-input"
-                    required
-                  >
-                    <option value="">Sélectionner un rôle</option>
-                    <option value="Avocat">Avocat</option>
-                    <option value="Collaborateur">Collaborateur</option>
-                    <option value="Secrétaire">Secrétaire</option>
-                    <option value="Assistant">Assistant</option>
-                    <option value="Stagiaire">Stagiaire</option>
-                    <option value="Paralégal">Paralégal</option>
-                    <option value="Responsable">Responsable</option>
-                    <option value="Directeur">Directeur</option>
-                    <option value="Associé">Associé</option>
-                    <option value="Of Counsel">Of Counsel</option>
-                    <option value="Autre">Autre</option>
-                  </select>
-                </div>
 
                 <div className="flex gap-4 pt-4">
                   <button
