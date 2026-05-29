@@ -23,6 +23,21 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
     assignedMember: lawyer.assignments && lawyer.assignments.length > 0 ? lawyer.assignments[0].team_members : null
   });
 
+  // Synchroniser l'état local avec les props quand elles changent
+  // Mais seulement si on n'est pas en train de faire une opération
+  React.useEffect(() => {
+    // Ne pas écraser l'état local pendant une opération en cours
+    if (isAssigning || isUnassigning) return;
+    
+    const isAssigned = lawyer.assignments && lawyer.assignments.length > 0;
+    const assignedMember = isAssigned && lawyer.assignments ? lawyer.assignments[0].team_members : null;
+    
+    setAssignmentState({
+      isAssigned,
+      assignedMember
+    });
+  }, [lawyer.assignments, isAssigning, isUnassigning]);
+
   const getClassementColor = (classement: string) => {
     switch (classement) {
       case 'C1': return 'bg-green-100 text-green-800';
@@ -45,11 +60,14 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
     setIsUnassigning(true);
     try {
       await onUnassign(lawyer);
-      // Mettre à jour l'état local immédiatement
+      // Mise à jour immédiate pour feedback utilisateur
       setAssignmentState({
         isAssigned: false,
         assignedMember: null
       });
+    } catch (error) {
+      console.error('Erreur désassignation:', error);
+      // En cas d'erreur, rester sur l'état actuel
     } finally {
       setIsUnassigning(false);
     }
@@ -63,14 +81,17 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
     try {
       await onAssign(lawyer, teamMemberId);
       
-      // Trouver le membre assigné pour l'affichage
+      // Trouver le membre assigné pour l'affichage immédiat
       const assignedTeamMember = teamMembers.find(member => member.id === teamMemberId);
       
-      // Mettre à jour l'état local immédiatement
+      // Mise à jour immédiate pour feedback utilisateur
       setAssignmentState({
         isAssigned: true,
         assignedMember: assignedTeamMember || null
       });
+    } catch (error) {
+      console.error('Erreur assignation:', error);
+      // En cas d'erreur, rester sur l'état actuel
     } finally {
       setIsAssigning(false);
     }

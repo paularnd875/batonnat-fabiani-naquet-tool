@@ -16,6 +16,7 @@ export function middleware(request: NextRequest) {
     '/api/debug-sheets', // TEMPORAIRE POUR DEBUG
     '/api/debug-sqlite', // TEMPORAIRE POUR DEBUG SQLITE
     '/api/debug-team', // TEMPORAIRE POUR DEBUG TEAM
+    '/api/team', // TEMPORAIRE POUR DEBUG PROBLÈME AUTHENTIFICATION
     '/api/create-status-table', // TEMPORAIRE POUR CREATION TABLE SUPABASE
     '/api/force-refresh', // TEMPORAIRE POUR FORCE REFRESH
     '/api/clear-assignments' // TEMPORAIRE POUR RESET ASSIGNATIONS

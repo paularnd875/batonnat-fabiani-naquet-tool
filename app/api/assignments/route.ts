@@ -180,20 +180,45 @@ export async function DELETE(request: Request) {
       }, { status: 400 });
     }
 
-    const { error } = await supabase
+    console.log('🗑️ DELETE: Tentative suppression assignation pour:', lawyer_prenomnom);
+
+    // Vérifier d'abord si l'assignation existe
+    const { data: existing, error: checkError } = await supabase
       .from('assignments')
-      .delete()
+      .select('*')
       .eq('lawyer_prenomnom', lawyer_prenomnom);
 
-    if (error) throw error;
+    if (checkError) {
+      console.error('❌ DELETE: Erreur vérification existence:', checkError);
+      throw checkError;
+    }
+
+    console.log('📋 DELETE: Assignations trouvées:', existing?.length, existing);
+
+    const { error, count } = await supabase
+      .from('assignments')
+      .delete({ count: 'exact' })
+      .eq('lawyer_prenomnom', lawyer_prenomnom);
+
+    if (error) {
+      console.error('❌ DELETE: Erreur suppression:', error);
+      throw error;
+    }
+
+    console.log('✅ DELETE: Assignation supprimée, lignes affectées:', count);
 
     return NextResponse.json({
       success: true,
-      message: 'Assignation supprimée',
+      message: `Assignation supprimée (${count} ligne(s) affectée(s))`,
+      debug: {
+        lawyer_prenomnom,
+        deleted_count: count,
+        existing_before: existing?.length || 0
+      }
     });
 
   } catch (error) {
-    console.error('Erreur suppression assignation:', error);
+    console.error('❌ DELETE: Erreur suppression assignation:', error);
     
     return NextResponse.json({
       success: false,

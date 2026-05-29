@@ -24,32 +24,31 @@ export async function GET() {
     // Connexion directe sans proxy
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    const { data, error } = await supabase
+    // Vérifier team_members
+    const { data: teamMembers, error: teamError } = await supabase
       .from('team_members')
       .select('*')
       .order('prenom', { ascending: true });
 
-    if (error) {
-      console.error('🔧 Debug team - Erreur Supabase:', error);
-      return NextResponse.json({
-        success: false,
-        error: error.message,
-        debug: {
-          code: error.code,
-          details: error.details,
-          hint: error.hint
-        }
-      });
-    }
+    // Vérifier s'il y a une table users
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('*')
+      .order('id', { ascending: true });
 
-    console.log('🔧 Debug team - Succès:', data?.length, 'membres trouvés');
+    console.log('🔧 Debug - Team members:', teamMembers?.length, 'trouvés');
+    console.log('🔧 Debug - Users:', users?.length, 'trouvés, erreur:', usersError?.message);
 
     return NextResponse.json({
       success: true,
-      team_members: data || [],
+      team_members: teamMembers || [],
+      users: users || [],
       debug: {
-        count: data?.length || 0,
-        source: 'Direct Supabase connection'
+        team_count: teamMembers?.length || 0,
+        users_count: users?.length || 0,
+        team_error: teamError?.message || null,
+        users_error: usersError?.message || null,
+        source: 'Direct Supabase connection - Both tables'
       }
     });
 
