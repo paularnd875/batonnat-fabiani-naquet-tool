@@ -24,11 +24,7 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
   });
 
   // Synchroniser l'état local avec les props quand elles changent
-  // Mais seulement si on n'est pas en train de faire une opération
   React.useEffect(() => {
-    // Ne pas écraser l'état local pendant une opération en cours
-    if (isAssigning || isUnassigning) return;
-    
     const isAssigned = lawyer.assignments && lawyer.assignments.length > 0;
     const assignedMember = isAssigned && lawyer.assignments ? lawyer.assignments[0].team_members : null;
     
@@ -36,7 +32,7 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
       isAssigned,
       assignedMember
     });
-  }, [lawyer.assignments, isAssigning, isUnassigning]);
+  }, [lawyer.assignments]);
 
   const getClassementColor = (classement: string) => {
     switch (classement) {
