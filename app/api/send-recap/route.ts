@@ -209,7 +209,7 @@ export async function POST(request: Request) {
     }, { status: 400 });
 
   } catch (error) {
-    console.error('❌ Erreur envoi email:', error);
+    console.error(' Erreur envoi email:', error);
     
     return NextResponse.json({
       success: false,

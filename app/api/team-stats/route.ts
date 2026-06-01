@@ -3,7 +3,7 @@ import { supabase } from '@/lib/db';
 
 export async function GET() {
   try {
-    console.log('📊 Récupération statistiques équipe...');
+    console.log(' Récupération statistiques équipe...');
 
     // 1. Récupérer tous les membres d'équipe
     const { data: teamMembers, error: teamError } = await supabase
@@ -75,8 +75,8 @@ export async function GET() {
     // 3. Trier par nombre d'assignations (décroissant)
     teamStats.sort((a, b) => b.total_assignments - a.total_assignments);
 
-    console.log(`✅ Statistiques calculées pour ${teamStats.length} membres`);
-    console.log('📈 Répartition:', teamStats.map((m: any) => `${m.prenom} ${m.nom}: ${m.total_assignments}`));
+    console.log(` Statistiques calculées pour ${teamStats.length} membres`);
+    console.log(' Répartition:', teamStats.map((m: any) => `${m.prenom} ${m.nom}: ${m.total_assignments}`));
 
     return NextResponse.json({
       success: true,
@@ -89,7 +89,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur API team-stats:', error);
+    console.error(' Erreur API team-stats:', error);
     
     return NextResponse.json({
       success: false,

@@ -80,7 +80,7 @@ export default function RecapitulatifPage() {
         await loadTeamStats();
         // Message de succès plus discret
         const lawyerName = assignment?.lawyer_nom_complet || lawyerPrenomnom;
-        console.log(`✅ Assignation de ${lawyerName} supprimée avec succès`);
+        console.log(` Assignation de ${lawyerName} supprimée avec succès`);
       } else {
         console.error('Erreur suppression:', data.error);
         alert('Erreur lors de la suppression: ' + data.error);

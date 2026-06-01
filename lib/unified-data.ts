@@ -43,21 +43,21 @@ export class UnifiedDataService {
     
     // Utiliser le cache si disponible et récent
     if (!forceRefresh && this.cachedLawyers && (now - this.lastCacheTime) < this.CACHE_DURATION) {
-      console.log('🚀 Données unifiées chargées depuis le cache interne');
+      console.log(' Données unifiées chargées depuis le cache interne');
       return this.cachedLawyers;
     }
 
-    console.log('📊 Fusion unifiée des données : Google Sheets + SQLite + localStorage');
+    console.log(' Fusion unifiée des données : Google Sheets + SQLite + localStorage');
     const startTime = Date.now();
 
     // 1. Charger Google Sheets
     const allLawyersFromSheet = await googleSheets.readLawyers();
-    console.log(`📋 ${allLawyersFromSheet.length} avocats lus depuis Google Sheets`);
+    console.log(` ${allLawyersFromSheet.length} avocats lus depuis Google Sheets`);
 
     // 2. Charger SQLite
     const db = getDatabase();
     const latestStatuses = await db.getAllLatestStatuses();
-    console.log(`💾 ${latestStatuses.size} statuts trouvés en SQLite`);
+    console.log(` ${latestStatuses.size} statuts trouvés en SQLite`);
     
     // 3. Fusionner avec SQLite
     let unifiedLawyers = allLawyersFromSheet.map(lawyer => {
@@ -76,7 +76,7 @@ export class UnifiedDataService {
     // Cette fusion se fait côté client via l'API /api/lawyers-with-localstorage
     
     const duration = Date.now() - startTime;
-    console.log(`✅ Fusion unifiée terminée en ${duration}ms - ${unifiedLawyers.length} avocats`);
+    console.log(` Fusion unifiée terminée en ${duration}ms - ${unifiedLawyers.length} avocats`);
 
     // Mettre en cache
     this.cachedLawyers = unifiedLawyers as any;
@@ -91,7 +91,7 @@ export class UnifiedDataService {
   async getCabinetStatistics(forceRefresh = false): Promise<Map<string, any>> {
     const allLawyers = await this.getAllLawyersWithStatuses(forceRefresh);
     
-    console.log('📊 Calcul des statistiques cabinets unifiées...');
+    console.log(' Calcul des statistiques cabinets unifiées...');
     const cabinetStats = new Map();
     
     allLawyers.forEach((lawyer: any) => {
@@ -138,7 +138,7 @@ export class UnifiedDataService {
       stats.participation_rate = stats.lawyer_count > 0 ? stats.vote_count / stats.lawyer_count : 0;
     });
 
-    console.log(`📊 ${cabinetStats.size} cabinets calculés avec statistiques unifiées`);
+    console.log(` ${cabinetStats.size} cabinets calculés avec statistiques unifiées`);
     return cabinetStats;
   }
 
@@ -173,14 +173,14 @@ export class UnifiedDataService {
   invalidateCache(): void {
     this.cachedLawyers = null;
     this.lastCacheTime = 0;
-    console.log('🗑️ Cache unifié invalidé');
+    console.log(' Cache unifié invalidé');
   }
 
   /**
    * Debug: Affiche quelques avocats avec leurs statuts pour vérifier la fusion
    */
   async debugStatuses(cabinetName: string = 'Individuel'): Promise<void> {
-    console.log(`🔍 DEBUG: Vérification des statuts pour cabinet "${cabinetName}"`);
+    console.log(` DEBUG: Vérification des statuts pour cabinet "${cabinetName}"`);
     
     const allLawyers = await this.getAllLawyersWithStatuses(false);
     const filteredLawyers = allLawyers
@@ -192,7 +192,7 @@ export class UnifiedDataService {
       })
       .slice(0, 10); // Premiers 10 pour debug
     
-    console.log(`🔍 Échantillon ${cabinetName}:`);
+    console.log(` Échantillon ${cabinetName}:`);
     filteredLawyers.forEach((lawyer: any, index: number) => {
       console.log(`  ${index + 1}. ${lawyer.nom_complet || lawyer.prenomnom}: Statut="${lawyer.classement}", SP=${lawyer.soutien_public ? 'Oui' : 'Non'}`);
     });
@@ -206,7 +206,7 @@ export class UnifiedDataService {
       bl: filteredLawyers.filter(l => l.classement === 'Blacklist').length,
     };
     
-    console.log(`📊 Stats échantillon: C1=${stats.c1}, C2=${stats.c2}, C3=${stats.c3}, SP=${stats.sp}, BL=${stats.bl}`);
+    console.log(` Stats échantillon: C1=${stats.c1}, C2=${stats.c2}, C3=${stats.c3}, SP=${stats.sp}, BL=${stats.bl}`);
   }
 }
 

@@ -73,7 +73,7 @@ export default function StatisticsTab() {
 
       if (data.success) {
         await loadTeamStats();
-        console.log(`✅ Assignation de ${lawyerName} supprimée avec succès`);
+        console.log(` Assignation de ${lawyerName} supprimée avec succès`);
       } else {
         console.error('Erreur suppression:', data.error);
         alert('Erreur lors de la suppression: ' + data.error);

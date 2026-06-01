@@ -3,7 +3,7 @@ import { supabase } from '@/lib/db';
 
 export async function POST() {
   try {
-    console.log('🔧 Création de la table status_change_logs_sqlite...');
+    console.log(' Création de la table status_change_logs_sqlite...');
     
     // SQL pour créer la table de logs de changement de statut
     const createTableSQL = `
@@ -39,10 +39,10 @@ export async function POST() {
     });
 
     if (error) {
-      console.error('❌ Erreur création table:', error);
+      console.error(' Erreur création table:', error);
       
       // Essayer une approche alternative si la fonction RPC n'existe pas
-      console.log('🔄 Tentative création table alternative...');
+      console.log(' Tentative création table alternative...');
       
       // Créer d'abord un enregistrement fictif pour forcer la création de la table
       const { error: insertError } = await supabase
@@ -92,7 +92,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur création table:', error);
+    console.error(' Erreur création table:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'

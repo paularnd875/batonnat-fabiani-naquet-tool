@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       unexportedLogs: localStorageChanges.length
     };
     
-    console.log(`🔄 Stats admin avec localStorage: ${Object.keys(localStorageStatuses).length} statuts, ${localStorageChanges.length} changements non exportés`);
+    console.log(` Stats admin avec localStorage: ${Object.keys(localStorageStatuses).length} statuts, ${localStorageChanges.length} changements non exportés`);
     
     return NextResponse.json({
       ...adminStatsData,
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     });
     
   } catch (error) {
-    console.error('❌ Erreur API admin-stats-with-localstorage:', error);
+    console.error(' Erreur API admin-stats-with-localstorage:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'

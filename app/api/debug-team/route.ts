@@ -7,8 +7,8 @@ export async function GET() {
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
-    console.log('🔧 Debug team - URL exists:', !!supabaseUrl);
-    console.log('🔧 Debug team - Key exists:', !!supabaseKey);
+    console.log(' Debug team - URL exists:', !!supabaseUrl);
+    console.log(' Debug team - Key exists:', !!supabaseKey);
     
     if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json({
@@ -36,8 +36,8 @@ export async function GET() {
       .select('*')
       .order('id', { ascending: true });
 
-    console.log('🔧 Debug - Team members:', teamMembers?.length, 'trouvés');
-    console.log('🔧 Debug - Users:', users?.length, 'trouvés, erreur:', usersError?.message);
+    console.log(' Debug - Team members:', teamMembers?.length, 'trouvés');
+    console.log(' Debug - Users:', users?.length, 'trouvés, erreur:', usersError?.message);
 
     return NextResponse.json({
       success: true,
@@ -53,7 +53,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('🔧 Debug team - Erreur générale:', error);
+    console.error(' Debug team - Erreur générale:', error);
     
     return NextResponse.json({
       success: false,

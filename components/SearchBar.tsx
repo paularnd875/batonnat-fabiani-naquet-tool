@@ -62,7 +62,7 @@ export default function SearchBar({ onSearchResults, showDropdown = true, search
     const handleStatusChange = () => {
       // Si on a des résultats affichés, refaire la recherche pour les actualiser
       if (results) {
-        console.log('📡 SearchBar: Changement de statut détecté, actualisation des résultats...');
+        console.log(' SearchBar: Changement de statut détecté, actualisation des résultats...');
         // Déclencher une nouvelle recherche en modifiant temporairement le query
         const currentQuery = query;
         setQuery('__refresh__');
@@ -122,7 +122,7 @@ export default function SearchBar({ onSearchResults, showDropdown = true, search
           setShowResults(showDropdown);
           // Transmettre les résultats au parent
           onSearchResults?.(data.results);
-          console.log(`🔍 Recherche: ${Object.keys(localStorageStatuses).length} statuts localStorage appliqués`);
+          console.log(` Recherche: ${Object.keys(localStorageStatuses).length} statuts localStorage appliqués`);
         }
       } catch (error) {
         console.error('Erreur de recherche:', error);

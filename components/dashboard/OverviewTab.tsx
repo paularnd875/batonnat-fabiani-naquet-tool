@@ -78,7 +78,7 @@ export default function OverviewTab() {
       if (statsData.success) {
         setStats(statsData.stats);
         setTeamMembers(statsData.team_members || []);
-        console.log(`📊 Dashboard chargé avec ${Object.keys(localStorageStatuses).length} statuts localStorage`);
+        console.log(` Dashboard chargé avec ${Object.keys(localStorageStatuses).length} statuts localStorage`);
       }
     } catch (error) {
       console.error('Erreur chargement données admin:', error);

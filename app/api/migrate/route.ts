@@ -14,12 +14,12 @@ function getSupabaseClient() {
 
 export async function POST() {
   try {
-    console.log('🔧 Application migration pour colonnes manquantes...');
+    console.log(' Application migration pour colonnes manquantes...');
     
     const supabase = getSupabaseClient();
     
     // Vérifier si les colonnes existent déjà
-    console.log('🔍 Vérification des colonnes existantes...');
+    console.log(' Vérification des colonnes existantes...');
     
     // Test si on peut lire les nouvelles colonnes
     const { data: testLawyer, error: testError } = await supabase
@@ -46,7 +46,7 @@ export async function POST() {
     
     const results = ['✅ Les colonnes origine et soutien_public existent déjà'];
     
-    console.log('🎉 Migration terminée');
+    console.log(' Migration terminée');
     
     return NextResponse.json({
       success: true,
@@ -55,7 +55,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur migration:', error);
+    console.error(' Erreur migration:', error);
     
     return NextResponse.json({
       success: false,

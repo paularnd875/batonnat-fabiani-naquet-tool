@@ -6,14 +6,14 @@ export async function GET() {
     const db = getDatabase();
     const users = await db.getAllUsers();
 
-    console.log(`📋 ${users.length} utilisateurs récupérés`);
+    console.log(` ${users.length} utilisateurs récupérés`);
 
     return NextResponse.json({
       success: true,
       users
     });
   } catch (error) {
-    console.error('❌ Erreur récupération utilisateurs:', error);
+    console.error(' Erreur récupération utilisateurs:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -46,14 +46,14 @@ export async function POST(request: Request) {
     // Créer l'utilisateur
     const user = await db.createUser(nom.trim(), prenom.trim(), email.trim());
 
-    console.log(`✅ Utilisateur créé: ${user.prenom} ${user.nom} (${user.email})`);
+    console.log(` Utilisateur créé: ${user.prenom} ${user.nom} (${user.email})`);
 
     return NextResponse.json({
       success: true,
       user
     });
   } catch (error) {
-    console.error('❌ Erreur création utilisateur:', error);
+    console.error(' Erreur création utilisateur:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'

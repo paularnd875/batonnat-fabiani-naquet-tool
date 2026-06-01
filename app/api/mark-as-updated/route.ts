@@ -57,7 +57,7 @@ export async function POST() {
     const logIds = unexportedLogs.map((log: any) => log.id);
     await db.markStatusChangesAsExported(logIds);
 
-    console.log(`📊 Marquage MAJ BDD: ${unexportedLogs.length} changements marqués comme mis à jour dans la BDD par ${currentUser.prenom} ${currentUser.nom}`);
+    console.log(` Marquage MAJ BDD: ${unexportedLogs.length} changements marqués comme mis à jour dans la BDD par ${currentUser.prenom} ${currentUser.nom}`);
 
     return NextResponse.json({
       success: true,
@@ -67,7 +67,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur marquage MAJ BDD:', error);
+    console.error(' Erreur marquage MAJ BDD:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'

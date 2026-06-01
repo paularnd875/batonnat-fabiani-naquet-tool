@@ -4,18 +4,18 @@ import { googleSheets } from '@/lib/google-sheets';
 
 export async function POST() {
   try {
-    console.log('🔄 FORCE REFRESH: Invalidation du cache...');
+    console.log(' FORCE REFRESH: Invalidation du cache...');
     
     // Vider complètement le cache
     memoryCache.delete(CACHE_KEYS.LAWYERS_ALL);
     memoryCache.delete('lawyers_cache');
     memoryCache.delete('vote_data');
     
-    console.log('🧹 Cache vidé');
+    console.log(' Cache vidé');
     
     // Recharger les données
     const lawyers = await googleSheets.readLawyers();
-    console.log(`📊 ${lawyers.length} avocats rechargés`);
+    console.log(` ${lawyers.length} avocats rechargés`);
     
     // Statistiques mise à jour
     const statusCounts = {
@@ -37,7 +37,7 @@ export async function POST() {
     });
     
   } catch (error) {
-    console.error('❌ Erreur force refresh:', error);
+    console.error(' Erreur force refresh:', error);
     
     return NextResponse.json({
       success: false,

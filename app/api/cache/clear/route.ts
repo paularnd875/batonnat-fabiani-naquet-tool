@@ -19,7 +19,7 @@ export async function DELETE() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur vidage cache:', error);
+    console.error(' Erreur vidage cache:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'

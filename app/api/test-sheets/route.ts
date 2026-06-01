@@ -3,11 +3,11 @@ import { googleSheets } from '@/lib/google-sheets';
 
 export async function GET() {
   try {
-    console.log('🧪 Test diagnostic Google Sheets sur Vercel...');
+    console.log(' Test diagnostic Google Sheets sur Vercel...');
     
     // Test 1: Lecture des avocats
     const lawyers = await googleSheets.readLawyers();
-    console.log(`📊 ${lawyers.length} avocats lus avec succès`);
+    console.log(` ${lawyers.length} avocats lus avec succès`);
     
     // Test 2: Compter les statuts assignés
     const statusCounts = {
@@ -21,7 +21,7 @@ export async function GET() {
     // Test 3: Trouver quelques exemples avec statuts
     const examplesWithStatus = lawyers.filter(l => l.classement && l.classement !== 'Non classifié').slice(0, 3);
     
-    console.log('📈 Répartition des statuts:', statusCounts);
+    console.log(' Répartition des statuts:', statusCounts);
     
     return NextResponse.json({
       success: true,
@@ -40,7 +40,7 @@ export async function GET() {
     });
     
   } catch (error) {
-    console.error('❌ Erreur diagnostic Google Sheets:', error);
+    console.error(' Erreur diagnostic Google Sheets:', error);
     
     return NextResponse.json({
       success: false,

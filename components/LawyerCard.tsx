@@ -130,7 +130,7 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
         changed_by: `${currentUser.prenom} ${currentUser.nom}`
       });
 
-      console.log(`✅ Statut sauvegardé: ${lawyer.prenomnom} (${oldStatus || 'Non classifié'} → ${newStatus || 'Non classifié'})`);
+      console.log(` Statut sauvegardé: ${lawyer.prenomnom} (${oldStatus || 'Non classifié'}  ${newStatus || 'Non classifié'})`);
       
       // Mettre à jour l'état local pour refléter immédiatement le changement
       setCurrentStatus(newStatus);
@@ -145,7 +145,7 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
         }
       }));
       
-      console.log('📡 Événement lawyerStatusChanged dispatché pour synchronisation cross-pages');
+      console.log(' Événement lawyerStatusChanged dispatché pour synchronisation cross-pages');
       
     } catch (error) {
       console.error('Erreur changement de statut:', error);

@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     // 🚀 OPTIMISATION: Vérifier le cache en premier (sauf si refresh forcé)
     const cachedAdminStats = memoryCache.get(CACHE_KEYS.ADMIN_STATS);
     if (cachedAdminStats && !forceRefresh) {
-      console.log('🚀 Statistiques admin chargées depuis le cache (ULTRA RAPIDE!)');
+      console.log(' Statistiques admin chargées depuis le cache (ULTRA RAPIDE!)');
       return NextResponse.json({
         success: true,
         source: 'Cache (Google Sheets + Supabase)',
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
       });
     }
 
-    console.log('📊 Calcul statistiques admin depuis Google Sheets...');
+    console.log(' Calcul statistiques admin depuis Google Sheets...');
     const startTime = Date.now();
 
     // 1. Lire tous les avocats directement depuis Google Sheets (optimisé avec cache)
@@ -107,7 +107,7 @@ export async function GET(request: Request) {
       usersCount: totalUsers
     };
 
-    console.log('📊 ADMIN STATS (données Google Sheets réelles):');
+    console.log(' ADMIN STATS (données Google Sheets réelles):');
     console.log(`   Total avocats: ${totalLawyers}`);
     console.log(`   C1: ${globalStats.c1_count}`);
     console.log(`   C2: ${globalStats.c2_count}`);
@@ -119,7 +119,7 @@ export async function GET(request: Request) {
     console.log(`   Non assignés: ${globalStats.total_unassigned}`);
 
     const processingDuration = Date.now() - startTime;
-    console.log(`⚡ Calcul admin terminé en ${processingDuration}ms`);
+    console.log(` Calcul admin terminé en ${processingDuration}ms`);
 
     // Enrichir les membres d'équipe avec leur nombre d'assignations
     const enrichedTeamMembers = (teamMembers || []).map((member: any) => ({
@@ -142,7 +142,7 @@ export async function GET(request: Request) {
     };
     
     memoryCache.set(CACHE_KEYS.ADMIN_STATS, result, CACHE_TTL.STATS);
-    console.log(`💾 Statistiques admin de ${totalLawyers} avocats mises en cache pour 10 minutes`);
+    console.log(` Statistiques admin de ${totalLawyers} avocats mises en cache pour 10 minutes`);
 
     return NextResponse.json({
       success: true,
@@ -150,7 +150,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('❌ Erreur admin stats:', error);
+    console.error(' Erreur admin stats:', error);
     
     return NextResponse.json({
       success: false,

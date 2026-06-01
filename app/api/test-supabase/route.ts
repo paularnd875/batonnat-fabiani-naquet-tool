@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function GET() {
   try {
-    console.log('🔍 Test direct des credentials Supabase...');
+    console.log(' Test direct des credentials Supabase...');
     
     // Vérifier si les variables existent
     const url = process.env.SUPABASE_URL;
@@ -46,7 +46,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur test Supabase:', error);
+    console.error(' Erreur test Supabase:', error);
     
     return NextResponse.json({
       success: false,

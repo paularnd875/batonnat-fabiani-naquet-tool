@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       changed_by_name: `${currentUser.prenom} ${currentUser.nom}`
     });
 
-    console.log(`✅ Changement de statut enregistré: ${lawyerData.prenom} ${lawyerData.nom} (${oldStatus || 'Non classifié'} → ${newStatus || 'Non classifié'}) par ${currentUser.prenom} ${currentUser.nom}`);
+    console.log(` Changement de statut enregistré: ${lawyerData.prenom} ${lawyerData.nom} (${oldStatus || 'Non classifié'}  ${newStatus || 'Non classifié'}) par ${currentUser.prenom} ${currentUser.nom}`);
 
     return NextResponse.json({
       success: true,
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('❌ Erreur changement de statut:', error);
+    console.error(' Erreur changement de statut:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'

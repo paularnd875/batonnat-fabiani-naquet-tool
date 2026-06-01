@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       email.toLowerCase().trim()
     );
 
-    console.log(`👤 Nouvel utilisateur créé: ${prenom} ${nom} (${email})`);
+    console.log(` Nouvel utilisateur créé: ${prenom} ${nom} (${email})`);
 
     return NextResponse.json({
       success: true,
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       }
     });
   } catch (error) {
-    console.error('❌ Erreur création utilisateur:', error);
+    console.error(' Erreur création utilisateur:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'

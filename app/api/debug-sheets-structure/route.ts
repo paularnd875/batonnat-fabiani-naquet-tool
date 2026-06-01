@@ -3,7 +3,7 @@ import { google } from 'googleapis';
 
 export async function GET() {
   try {
-    console.log('🔍 Exploration structure Google Sheets...');
+    console.log(' Exploration structure Google Sheets...');
     
     if (!process.env.GOOGLE_SERVICE_ACCOUNT_KEY || !process.env.GOOGLE_SHEET_ID) {
       throw new Error('Google Sheets credentials not configured');
@@ -28,14 +28,14 @@ export async function GET() {
     
     for (const range of ranges) {
       try {
-        console.log(`🔍 Test range: ${range}`);
+        console.log(` Test range: ${range}`);
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: sheetId,
           range: range,
         });
         
         const rows = response.data.values || [];
-        console.log(`📊 ${rows.length} lignes trouvées`);
+        console.log(` ${rows.length} lignes trouvées`);
         
         results.push({
           range,
@@ -49,7 +49,7 @@ export async function GET() {
         });
         
       } catch (error) {
-        console.warn(`⚠️ Impossible de lire ${range}:`, error);
+        console.warn(` Impossible de lire ${range}:`, error);
         results.push({
           range,
           error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -79,7 +79,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur exploration structure:', error);
+    console.error(' Erreur exploration structure:', error);
     
     return NextResponse.json({
       success: false,

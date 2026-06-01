@@ -80,7 +80,7 @@ export async function POST() {
     const logIds = unexportedLogs.map((log: any) => log.id);
     await db.markStatusChangesAsExported(logIds);
 
-    console.log(`📊 Export CSV: ${unexportedLogs.length} changements de statut exportés`);
+    console.log(` Export CSV: ${unexportedLogs.length} changements de statut exportés`);
 
     // Retourner le CSV
     return new NextResponse(csvContent, {
@@ -93,7 +93,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur export CSV:', error);
+    console.error(' Erreur export CSV:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'

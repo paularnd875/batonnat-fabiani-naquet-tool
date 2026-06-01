@@ -24,7 +24,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur récupération logs:', error);
+    console.error(' Erreur récupération logs:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -61,7 +61,7 @@ export async function DELETE(request: Request) {
       await db.deleteStatusChangeLog(parseInt(id));
     }
     
-    console.log(`✅ ${ids.length} logs SQLite supprimés`);
+    console.log(` ${ids.length} logs SQLite supprimés`);
     
     return NextResponse.json({
       success: true,
@@ -69,7 +69,7 @@ export async function DELETE(request: Request) {
     });
 
   } catch (error) {
-    console.error('❌ Erreur suppression logs:', error);
+    console.error(' Erreur suppression logs:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -107,7 +107,7 @@ export async function PATCH(request: Request) {
         await db.markStatusChangeAsExported(parseInt(id));
       }
       
-      console.log(`✅ ${ids.length} logs SQLite marqués comme exportés`);
+      console.log(` ${ids.length} logs SQLite marqués comme exportés`);
       
       return NextResponse.json({
         success: true,
@@ -121,7 +121,7 @@ export async function PATCH(request: Request) {
     }, { status: 400 });
 
   } catch (error) {
-    console.error('❌ Erreur mise à jour logs:', error);
+    console.error(' Erreur mise à jour logs:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'

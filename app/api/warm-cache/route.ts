@@ -8,13 +8,13 @@ import { memoryCache, CACHE_KEYS } from '@/lib/cache';
  */
 export async function POST() {
   try {
-    console.log('🔥 WARM-UP: Démarrage du préchauffage du cache...');
+    console.log(' WARM-UP: Démarrage du préchauffage du cache...');
     const startTime = Date.now();
 
     // Vérifier si les données sont déjà en cache
     const cached = memoryCache.get(CACHE_KEYS.LAWYERS_ALL);
     if (cached) {
-      console.log('🚀 WARM-UP: Données déjà en cache, pas de rechargement nécessaire');
+      console.log(' WARM-UP: Données déjà en cache, pas de rechargement nécessaire');
       return NextResponse.json({
         success: true,
         message: 'Cache déjà chaud',
@@ -25,7 +25,7 @@ export async function POST() {
 
     // Précharger les données Google Sheets
     const lawyers = await googleSheets.readLawyers();
-    console.log(`🔥 WARM-UP: ${lawyers.length} avocats préchargés en ${Date.now() - startTime}ms`);
+    console.log(` WARM-UP: ${lawyers.length} avocats préchargés en ${Date.now() - startTime}ms`);
 
     return NextResponse.json({
       success: true,
@@ -36,7 +36,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('❌ WARM-UP ERROR:', error);
+    console.error(' WARM-UP ERROR:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur de préchauffage'

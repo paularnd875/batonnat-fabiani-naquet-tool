@@ -14,7 +14,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     const batchSize = parseInt(searchParams.get('batchSize') || '50');
     const batchIndex = parseInt(searchParams.get('batchIndex') || '0');
     
-    console.log(`📡 Stream API - Cabinet: ${cabinetName}, Batch ${batchIndex} (size: ${batchSize})`);
+    console.log(` Stream API - Cabinet: ${cabinetName}, Batch ${batchIndex} (size: ${batchSize})`);
     
     // Normalisation du nom
     let normalizedCabinetName = cabinetName;
@@ -24,7 +24,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
 
     const startTime = Date.now();
     const allLawyersFromSheet = await googleSheets.readLawyers();
-    console.log(`⚡ Google Sheets lu en ${Date.now() - startTime}ms pour streaming`);
+    console.log(` Google Sheets lu en ${Date.now() - startTime}ms pour streaming`);
 
     // Filtrage
     let filteredLawyers;
@@ -73,12 +73,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       }
     };
 
-    console.log(`📡 Batch ${batchIndex}/${totalBatches} envoyé (${sortedBatch.length} avocats) en ${Date.now() - startTime}ms`);
+    console.log(` Batch ${batchIndex}/${totalBatches} envoyé (${sortedBatch.length} avocats) en ${Date.now() - startTime}ms`);
 
     return NextResponse.json(response);
 
   } catch (error) {
-    console.error('❌ Erreur API streaming:', error);
+    console.error(' Erreur API streaming:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur streaming',

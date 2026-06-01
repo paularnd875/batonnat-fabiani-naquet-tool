@@ -83,7 +83,7 @@ class DatabaseService {
       )
     `);
 
-    console.log('✅ Tables de base de données initialisées');
+    console.log(' Tables de base de données initialisées');
     
     // Créer les utilisateurs par défaut sur Vercel si aucun utilisateur n'existe
     this.createDefaultUsersIfEmpty();
@@ -94,7 +94,7 @@ class DatabaseService {
     
     // Si aucun utilisateur n'existe, créer les utilisateurs par défaut
     if (existingUsers.length === 0) {
-      console.log('📝 Création des utilisateurs par défaut...');
+      console.log(' Création des utilisateurs par défaut...');
       
       const defaultUsers = [
         { nom: 'Arnould', prenom: 'Paul', email: 'paul@batonnat.com' },
@@ -106,14 +106,14 @@ class DatabaseService {
       for (const user of defaultUsers) {
         try {
           this.createUserSync(user.nom, user.prenom, user.email);
-          console.log(`👤 Utilisateur par défaut créé: ${user.prenom} ${user.nom}`);
+          console.log(` Utilisateur par défaut créé: ${user.prenom} ${user.nom}`);
         } catch (error) {
           // Ignorer les erreurs (par exemple si l'utilisateur existe déjà)
-          console.warn(`⚠️ Erreur création utilisateur par défaut ${user.prenom} ${user.nom}:`, error);
+          console.warn(` Erreur création utilisateur par défaut ${user.prenom} ${user.nom}:`, error);
         }
       }
     } else {
-      console.log(`👥 ${existingUsers.length} utilisateurs existants trouvés`);
+      console.log(` ${existingUsers.length} utilisateurs existants trouvés`);
     }
   }
 
@@ -350,12 +350,12 @@ export function getDatabase(): DatabaseService | any {
   const isVercel = process.env.VERCEL === '1';
   
   if (isVercel) {
-    console.log('🔄 Utilisation de Supabase pour la persistance sur Vercel');
+    console.log(' Utilisation de Supabase pour la persistance sur Vercel');
     return getSupabaseDatabase();
   }
   
   if (!databaseInstance) {
-    console.log('🔄 Utilisation de SQLite en local');
+    console.log(' Utilisation de SQLite en local');
     databaseInstance = new DatabaseService();
   }
   return databaseInstance;

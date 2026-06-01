@@ -86,12 +86,12 @@ class GoogleSheetsService {
     // 🚀 OPTIMISATION: Vérifier le cache en premier
     const cachedLawyers = memoryCache.get<SheetLawyer[]>(CACHE_KEYS.LAWYERS_ALL);
     if (cachedLawyers) {
-      console.log('🚀 Données avocats chargées depuis le cache (ULTRA RAPIDE!)');
+      console.log(' Données avocats chargées depuis le cache (ULTRA RAPIDE!)');
       return cachedLawyers;
     }
 
     // Si pas en cache, lire depuis Google Sheets (LENT)
-    console.log('📊 Lecture Google Sheets... (Première fois ou cache expiré)');
+    console.log(' Lecture Google Sheets... (Première fois ou cache expiré)');
     const startTime = Date.now();
     
     const response = await this.sheets.spreadsheets.values.get({
@@ -100,7 +100,7 @@ class GoogleSheetsService {
     });
 
     const duration = Date.now() - startTime;
-    console.log(`📊 Google Sheets lu en ${duration}ms`);
+    console.log(` Google Sheets lu en ${duration}ms`);
 
     const rows = response.data.values || [];
     if (rows.length === 0) return [];
@@ -170,7 +170,7 @@ class GoogleSheetsService {
     
     // 🚀 OPTIMISATION: Mettre en cache pour 60 minutes (Google Sheets très lent)
     memoryCache.set(CACHE_KEYS.LAWYERS_ALL, lawyersWithVotes, CACHE_TTL.LAWYERS);
-    console.log(`💾 ${lawyersWithVotes.length} avocats mis en cache pour 60 minutes (avec données de vote)`);
+    console.log(` ${lawyersWithVotes.length} avocats mis en cache pour 60 minutes (avec données de vote)`);
     
     return lawyersWithVotes;
   }
@@ -180,7 +180,7 @@ class GoogleSheetsService {
    */
   async readVoteData(): Promise<SheetVoteData[]> {
     try {
-      console.log('📊 Lecture données de vote BARREAU-DE-PARIS-2024...');
+      console.log(' Lecture données de vote BARREAU-DE-PARIS-2024...');
       
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.sheetId,
@@ -199,10 +199,10 @@ class GoogleSheetsService {
         };
       }).filter((vote: any) => vote.prenomnom); // Filtrer les lignes sans prenomnom
 
-      console.log(`📊 ${voteData.length} entrées de vote récupérées`);
+      console.log(` ${voteData.length} entrées de vote récupérées`);
       return voteData;
     } catch (error) {
-      console.error('❌ Erreur lecture données de vote:', error);
+      console.error(' Erreur lecture données de vote:', error);
       return []; // Retourner un tableau vide en cas d'erreur
     }
   }
@@ -215,11 +215,11 @@ class GoogleSheetsService {
     // 🚀 OPTIMISATION: Vérifier le cache en premier
     const cachedFirmsData = memoryCache.get<SheetFirmData[]>('firms_data');
     if (cachedFirmsData) {
-      console.log('🚀 Données cabinets chargées depuis le cache');
+      console.log(' Données cabinets chargées depuis le cache');
       return cachedFirmsData;
     }
 
-    console.log('📊 Lecture données cabinets depuis Google Sheets...');
+    console.log(' Lecture données cabinets depuis Google Sheets...');
     // Essayer différents noms d'onglets possibles
     const possibleSheetNames = [
       'Synthèse vote toutes structures!A:I', // Onglet correct avec vraies données + colonne I (taille)
@@ -229,7 +229,7 @@ class GoogleSheetsService {
     
     for (const rangeName of possibleSheetNames) {
       try {
-        console.log(`🔍 Tentative lecture onglet: ${rangeName}`);
+        console.log(` Tentative lecture onglet: ${rangeName}`);
         const response = await this.sheets.spreadsheets.values.get({
           spreadsheetId: this.sheetId,
           range: rangeName,
@@ -238,24 +238,24 @@ class GoogleSheetsService {
         const rows = response.data.values || [];
         if (rows.length === 0) continue;
         
-        console.log(`📋 Trouvé ${rows.length} lignes dans ${rangeName}`);
-        console.log(`📋 Première ligne:`, rows[0]);
-        console.log(`📋 Deuxième ligne:`, rows[1]);
+        console.log(` Trouvé ${rows.length} lignes dans ${rangeName}`);
+        console.log(` Première ligne:`, rows[0]);
+        console.log(` Deuxième ligne:`, rows[1]);
         
         const processedData = this.processFirmsData(rows);
         if (processedData.length > 0) {
-          console.log(`✅ ${processedData.length} cabinets valides trouvés`);
+          console.log(` ${processedData.length} cabinets valides trouvés`);
           // 🚀 OPTIMISATION: Mettre en cache pour 10 minutes
           memoryCache.set('firms_data', processedData, CACHE_TTL.STATS);
           return processedData;
         }
       } catch (error) {
-        console.warn(`⚠️ Impossible de lire ${rangeName}:`, error);
+        console.warn(` Impossible de lire ${rangeName}:`, error);
         continue;
       }
     }
     
-    console.warn('⚠️ Aucun onglet de participation trouvé');
+    console.warn(' Aucun onglet de participation trouvé');
     return [];
   }
 
@@ -573,14 +573,14 @@ class GoogleSheetsService {
         }
       });
 
-      console.log(`✅ Google Sheets mis à jour: ${prenomnom} → ${newStatus} (ligne ${targetRowIndex})`);
+      console.log(` Google Sheets mis à jour: ${prenomnom}  ${newStatus} (ligne ${targetRowIndex})`);
 
       // Invalider le cache pour forcer le rechargement des données sur toutes les pages
       memoryCache.delete(CACHE_KEYS.LAWYERS_ALL);
-      console.log(`🔄 Cache invalidé: les données seront rechargées depuis Google Sheets`);
+      console.log(` Cache invalidé: les données seront rechargées depuis Google Sheets`);
 
     } catch (error) {
-      console.error('❌ Erreur lors de la mise à jour du statut dans Google Sheets:', error);
+      console.error(' Erreur lors de la mise à jour du statut dans Google Sheets:', error);
       throw error;
     }
   }

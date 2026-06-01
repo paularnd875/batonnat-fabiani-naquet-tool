@@ -3,7 +3,7 @@ import { supabase } from '@/lib/db';
 
 export async function GET() {
   try {
-    console.log('🔍 Comptage précis des cabinets...');
+    console.log(' Comptage précis des cabinets...');
     
     // Compter le nombre total de cabinets
     const { count, error } = await supabase
@@ -15,7 +15,7 @@ export async function GET() {
       throw error;
     }
 
-    console.log(`📊 Nombre total de cabinets en base: ${count}`);
+    console.log(` Nombre total de cabinets en base: ${count}`);
 
     return NextResponse.json({
       success: true,
@@ -24,7 +24,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur debug count:', error);
+    console.error(' Erreur debug count:', error);
     
     return NextResponse.json({
       success: false,

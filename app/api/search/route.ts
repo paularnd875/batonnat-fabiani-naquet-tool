@@ -25,7 +25,7 @@ export async function GET(request: Request) {
       }, { status: 400 });
     }
 
-    console.log(`🔍 Recherche: "${query}" (type: ${type}, classification: ${classification}, exercice: ${exercice}, taille: ${taille}, limit: ${limit})`);
+    console.log(` Recherche: "${query}" (type: ${type}, classification: ${classification}, exercice: ${exercice}, taille: ${taille}, limit: ${limit})`);
     const startTime = Date.now();
 
     // 🚀 OPTIMISATION: Récupérer les données depuis le cache ou Google Sheets
@@ -35,12 +35,12 @@ export async function GET(request: Request) {
     const loadTime = Date.now() - loadStartTime;
     const isCached = loadTime < 100; // Si très rapide, c'est du cache
     
-    console.log(`📋 ${allLawyers.length} avocats chargés pour recherche (${isCached ? 'CACHE ⚡' : 'GOOGLE_SHEETS 🐌'} - ${loadTime}ms)`);
+    console.log(` ${allLawyers.length} avocats chargés pour recherche (${isCached ? 'CACHE ' : 'GOOGLE_SHEETS '} - ${loadTime}ms)`);
     
     // 🚨 ALERTE PERFORMANCE: Si le chargement est très lent, suggérer le réchauffage
     if (!isCached && loadTime > 5000) {
-      console.warn(`🚨 PERFORMANCE CRITIQUE: ${loadTime}ms pour charger les données!`);
-      console.warn(`💡 SOLUTION: Le système de pré-chargement intelligent devrait éviter cela`);
+      console.warn(` PERFORMANCE CRITIQUE: ${loadTime}ms pour charger les données!`);
+      console.warn(` SOLUTION: Le système de pré-chargement intelligent devrait éviter cela`);
     }
 
     const queryLower = query ? query.toLowerCase() : '';
@@ -276,7 +276,7 @@ export async function GET(request: Request) {
     results.totalFound = results.lawyers.length + results.cabinets.length;
     results.searchTime = Date.now() - startTime;
 
-    console.log(`🔍 Recherche "${query}" (${classification}) terminée: ${results.totalFound} résultats en ${results.searchTime}ms`);
+    console.log(` Recherche "${query}" (${classification}) terminée: ${results.totalFound} résultats en ${results.searchTime}ms`);
 
     return NextResponse.json({
       success: true,
@@ -284,7 +284,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('❌ Erreur recherche:', error);
+    console.error(' Erreur recherche:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur de recherche'

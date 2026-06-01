@@ -38,7 +38,7 @@ export async function GET() {
     });
     
   } catch (error) {
-    console.error('❌ Erreur debug SQLite:', error);
+    console.error(' Erreur debug SQLite:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue',

@@ -37,7 +37,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur debug colonnes:', error);
+    console.error(' Erreur debug colonnes:', error);
     
     return NextResponse.json({
       success: false,

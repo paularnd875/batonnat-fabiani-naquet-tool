@@ -42,7 +42,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur debug lawyers:', error);
+    console.error(' Erreur debug lawyers:', error);
     
     return NextResponse.json({
       success: false,

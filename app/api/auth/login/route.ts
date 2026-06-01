@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     const correctPassword = process.env.SITE_PASSWORD;
     
     if (!correctPassword) {
-      console.error('❌ SITE_PASSWORD non configuré dans les variables d\'environnement');
+      console.error(' SITE_PASSWORD non configuré dans les variables d\'environnement');
       return NextResponse.json({
         success: false,
         error: 'Configuration manquante sur le serveur'
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     // Vérifier le mot de passe
     if (password !== correctPassword) {
-      console.log('🔐 Tentative de connexion échouée - mot de passe incorrect');
+      console.log(' Tentative de connexion échouée - mot de passe incorrect');
       return NextResponse.json({
         success: false,
         error: 'Mot de passe incorrect'
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       // Pas de maxAge = expire à la fermeture du navigateur
     });
 
-    console.log('✅ Connexion réussie - session créée');
+    console.log(' Connexion réussie - session créée');
     
     return NextResponse.json({
       success: true,
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('❌ Erreur lors de la connexion:', error);
+    console.error(' Erreur lors de la connexion:', error);
     return NextResponse.json({
       success: false,
       error: 'Erreur serveur lors de la connexion'

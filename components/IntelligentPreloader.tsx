@@ -44,7 +44,7 @@ export default function IntelligentPreloader() {
     const startTime = Date.now();
 
     try {
-      console.log('🚀 PRÉCHARGEMENT INTELLIGENT: Démarrage...');
+      console.log(' PRÉCHARGEMENT INTELLIGENT: Démarrage...');
       
       // ÉTAPE 1: Vérifier l'état du cache
       setProgress(20);
@@ -52,7 +52,7 @@ export default function IntelligentPreloader() {
       const cacheStatus = await cacheResponse.json();
       
       if (!cacheStatus.cacheStatus?.lawyersInCache) {
-        console.log('📦 CACHE VIDE - Démarrage du réchauffage...');
+        console.log(' CACHE VIDE - Démarrage du réchauffage...');
         setProgress(30);
         
         // ÉTAPE 2: Réchauffer le cache Google Sheets en arrière-plan
@@ -62,7 +62,7 @@ export default function IntelligentPreloader() {
         setProgress(70);
         
         if (warmResult.success) {
-          console.log(`✅ CACHE RÉCHAUFFÉ: ${warmResult.lawyerCount} avocats en ${warmResult.duration}ms`);
+          console.log(` CACHE RÉCHAUFFÉ: ${warmResult.lawyerCount} avocats en ${warmResult.duration}ms`);
           setStatus(prev => ({ 
             ...prev, 
             cacheWarmed: true,
@@ -70,7 +70,7 @@ export default function IntelligentPreloader() {
           }));
         }
       } else {
-        console.log('✅ CACHE DÉJÀ CHAUD - Pas de réchauffage nécessaire');
+        console.log(' CACHE DÉJÀ CHAUD - Pas de réchauffage nécessaire');
         setStatus(prev => ({ 
           ...prev, 
           cacheWarmed: true,
@@ -87,11 +87,11 @@ export default function IntelligentPreloader() {
           const firmsData = await firmsResponse.json();
           
           if (firmsData.success) {
-            console.log(`📊 STATISTIQUES PRÉCHARGÉES: ${firmsData.firms?.length || 0} cabinets`);
+            console.log(` STATISTIQUES PRÉCHARGÉES: ${firmsData.firms?.length || 0} cabinets`);
             setStatus(prev => ({ ...prev, dataPreloaded: true }));
           }
         } catch (error) {
-          console.warn('⚠️ Échec préchargement statistiques (non critique):', error);
+          console.warn(' Échec préchargement statistiques (non critique):', error);
         }
       }
 
@@ -99,10 +99,10 @@ export default function IntelligentPreloader() {
       const totalTime = Date.now() - startTime;
       setStatus(prev => ({ ...prev, preloadTime: totalTime }));
       
-      console.log(`🎉 PRÉCHARGEMENT TERMINÉ en ${totalTime}ms`);
+      console.log(` PRÉCHARGEMENT TERMINÉ en ${totalTime}ms`);
 
     } catch (error) {
-      console.error('❌ ERREUR PRÉCHARGEMENT:', error);
+      console.error(' ERREUR PRÉCHARGEMENT:', error);
       setStatus(prev => ({ 
         ...prev, 
         error: error instanceof Error ? error.message : 'Erreur inconnue' 

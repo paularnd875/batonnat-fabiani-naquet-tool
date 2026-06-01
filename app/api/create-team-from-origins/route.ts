@@ -15,7 +15,7 @@ function getSupabaseClient() {
 
 export async function POST() {
   try {
-    console.log('👥 Création des membres d\'équipe basés sur les origines...');
+    console.log(' Création des membres d\'équipe basés sur les origines...');
     
     const supabase = getSupabaseClient();
     
@@ -29,14 +29,14 @@ export async function POST() {
       }
     });
     
-    console.log('🔍 Origines trouvées:', Array.from(origines));
+    console.log(' Origines trouvées:', Array.from(origines));
     
     // 2. Récupérer les membres d'équipe existants
     const { data: existingMembers } = await supabase
       .from('team_members')
       .select('prenom, nom, email');
     
-    console.log('👥 Membres existants:', existingMembers?.map((m: any) => `${m.prenom} ${m.nom}`));
+    console.log(' Membres existants:', existingMembers?.map((m: any) => `${m.prenom} ${m.nom}`));
     
     // 3. Mapping des noms vers emails et infos complètes
     const nameToInfo: { [key: string]: { prenom: string; nom: string; email: string } } = {
@@ -82,7 +82,7 @@ export async function POST() {
       }
     }
     
-    console.log('➕ Membres à créer:', teamMembersToCreate);
+    console.log(' Membres à créer:', teamMembersToCreate);
     
     // 5. Créer les nouveaux membres
     let createdCount = 0;
@@ -93,11 +93,11 @@ export async function POST() {
         .select();
       
       if (error) {
-        console.error('❌ Erreur création membres:', error);
+        console.error(' Erreur création membres:', error);
         throw error;
       } else {
         createdCount = teamMembersToCreate.length;
-        console.log(`✅ ${createdCount} membres d'équipe créés:`, data?.map((m: any) => `${m.prenom} ${m.nom}`));
+        console.log(` ${createdCount} membres d'équipe créés:`, data?.map((m: any) => `${m.prenom} ${m.nom}`));
       }
     }
     
@@ -110,7 +110,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur création équipe depuis origines:', error);
+    console.error(' Erreur création équipe depuis origines:', error);
     
     return NextResponse.json({
       success: false,

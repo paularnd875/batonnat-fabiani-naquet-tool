@@ -3,7 +3,7 @@ import { supabase } from '@/lib/db';
 
 export async function GET() {
   try {
-    console.log('🔍 Test des colonnes dans la base de données...');
+    console.log(' Test des colonnes dans la base de données...');
 
     // 1. Test lecture d'un avocat avec toutes les colonnes
     const { data: testLawyer, error: readError } = await supabase
@@ -13,7 +13,7 @@ export async function GET() {
       .single();
 
     if (readError) {
-      console.error('❌ Erreur lecture:', readError);
+      console.error(' Erreur lecture:', readError);
       return NextResponse.json({
         success: false,
         error: `Erreur lecture: ${readError.message}`,
@@ -21,7 +21,7 @@ export async function GET() {
       });
     }
 
-    console.log('✅ Lecture OK:', testLawyer);
+    console.log(' Lecture OK:', testLawyer);
 
     // 2. Test insertion d'un avocat de test
     const testData = {
@@ -41,7 +41,7 @@ export async function GET() {
       .select();
 
     if (insertError) {
-      console.error('❌ Erreur insertion:', insertError);
+      console.error(' Erreur insertion:', insertError);
       return NextResponse.json({
         success: false,
         error: `Erreur insertion: ${insertError.message}`,
@@ -49,7 +49,7 @@ export async function GET() {
       });
     }
 
-    console.log('✅ Insertion OK:', insertResult);
+    console.log(' Insertion OK:', insertResult);
 
     // 3. Nettoyage du test
     await supabase
@@ -57,7 +57,7 @@ export async function GET() {
       .delete()
       .eq('prenomnom', testData.prenomnom);
 
-    console.log('✅ Nettoyage OK');
+    console.log(' Nettoyage OK');
 
     // 4. Test table firms 
     const { data: testFirm, error: firmError } = await supabase
@@ -67,7 +67,7 @@ export async function GET() {
       .single();
 
     if (firmError) {
-      console.error('❌ Erreur firms:', firmError);
+      console.error(' Erreur firms:', firmError);
       return NextResponse.json({
         success: false,
         error: `Erreur table firms: ${firmError.message}`,
@@ -75,7 +75,7 @@ export async function GET() {
       });
     }
 
-    console.log('✅ Table firms OK:', testFirm);
+    console.log(' Table firms OK:', testFirm);
 
     return NextResponse.json({
       success: true,
@@ -88,7 +88,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur test:', error);
+    console.error(' Erreur test:', error);
     
     return NextResponse.json({
       success: false,

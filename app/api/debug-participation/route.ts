@@ -3,17 +3,17 @@ import { googleSheets } from '@/lib/google-sheets';
 
 export async function GET() {
   try {
-    console.log('🧪 Test lecture des taux de participation depuis Google Sheets...');
+    console.log(' Test lecture des taux de participation depuis Google Sheets...');
     
     // Lire les données de participation depuis Google Sheets
     const firmsData = await googleSheets.readFirmsData();
-    console.log(`📊 ${firmsData.length} cabinets avec taux trouvés dans Google Sheets`);
+    console.log(` ${firmsData.length} cabinets avec taux trouvés dans Google Sheets`);
     
     // Afficher les premiers exemples
     const examples = firmsData.slice(0, 10);
-    console.log('📋 Exemples de taux de participation :');
+    console.log(' Exemples de taux de participation :');
     examples.forEach((firm: any) => {
-      console.log(`  🏢 ${firm.cabinet}: ${(firm.taux_participation_moyen * 100).toFixed(1)}%`);
+      console.log(`   ${firm.cabinet}: ${(firm.taux_participation_moyen * 100).toFixed(1)}%`);
     });
     
     // Statistiques
@@ -39,7 +39,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur lecture taux de participation:', error);
+    console.error(' Erreur lecture taux de participation:', error);
     
     return NextResponse.json({
       success: false,

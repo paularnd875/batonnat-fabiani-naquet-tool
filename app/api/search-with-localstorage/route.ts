@@ -17,8 +17,8 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    console.log(`🔍 Recherche avec localStorage: "${query}" (type: ${type}, classification: ${classification}, exercice: ${exercice}, taille: ${taille}, limit: ${limit})`);
-    console.log(`🔄 LocalStorage: ${Object.keys(localStorageStatuses || {}).length} statuts appliqués`);
+    console.log(` Recherche avec localStorage: "${query}" (type: ${type}, classification: ${classification}, exercice: ${exercice}, taille: ${taille}, limit: ${limit})`);
+    console.log(` LocalStorage: ${Object.keys(localStorageStatuses || {}).length} statuts appliqués`);
     
     const startTime = Date.now();
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const allLawyers = await unifiedData.getAllLawyersWithStatuses(true); // Force refresh
     const loadTime = Date.now() - loadStartTime;
     
-    console.log(`📋 ${allLawyers.length} avocats chargés depuis service unifié (${loadTime}ms)`);
+    console.log(` ${allLawyers.length} avocats chargés depuis service unifié (${loadTime}ms)`);
 
     // 🔄 APPLIQUER LES CHANGEMENTS LOCALSTORAGE
     const lawyersWithLocalStorage = allLawyers.map((lawyer: any) => {
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       return lawyer;
     });
 
-    console.log(`🔄 Recherche: Fusion localStorage appliquée à ${allLawyers.length} avocats`);
+    console.log(` Recherche: Fusion localStorage appliquée à ${allLawyers.length} avocats`);
 
     const queryLower = query ? query.toLowerCase() : '';
     const results: {
@@ -271,7 +271,7 @@ export async function POST(request: Request) {
     results.totalFound = results.lawyers.length + results.cabinets.length;
     results.searchTime = Date.now() - startTime;
 
-    console.log(`🔍 Recherche avec localStorage "${query}" (${classification}) terminée: ${results.totalFound} résultats en ${results.searchTime}ms`);
+    console.log(` Recherche avec localStorage "${query}" (${classification}) terminée: ${results.totalFound} résultats en ${results.searchTime}ms`);
 
     return NextResponse.json({
       success: true,
@@ -279,7 +279,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('❌ Erreur recherche avec localStorage:', error);
+    console.error(' Erreur recherche avec localStorage:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur de recherche'

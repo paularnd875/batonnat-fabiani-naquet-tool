@@ -35,7 +35,7 @@ class StatusChangesStorage {
     // Mettre à jour le statut actuel
     this.updateCurrentStatus(change.lawyer_id, change.new_status);
 
-    console.log(`✅ Changement sauvegardé: ${change.lawyer_prenom} ${change.lawyer_nom} (${change.old_status} → ${change.new_status})`);
+    console.log(` Changement sauvegardé: ${change.lawyer_prenom} ${change.lawyer_nom} (${change.old_status}  ${change.new_status})`);
     
     return newChange;
   }
@@ -66,7 +66,7 @@ class StatusChangesStorage {
     );
     this.saveChangesToStorage(updatedChanges);
     
-    console.log(`📤 ${ids.length} changements marqués comme exportés`);
+    console.log(` ${ids.length} changements marqués comme exportés`);
   }
 
   // Supprimer un changement par ID
@@ -75,7 +75,7 @@ class StatusChangesStorage {
     const updatedChanges = changes.filter(change => change.id !== id);
     this.saveChangesToStorage(updatedChanges);
     
-    console.log(`🗑️ Changement ${id} supprimé`);
+    console.log(` Changement ${id} supprimé`);
   }
 
   // Supprimer plusieurs changements par leurs IDs
@@ -84,7 +84,7 @@ class StatusChangesStorage {
     const updatedChanges = changes.filter(change => !ids.includes(change.id));
     this.saveChangesToStorage(updatedChanges);
     
-    console.log(`🗑️ ${ids.length} changements supprimés`);
+    console.log(` ${ids.length} changements supprimés`);
   }
 
   // Mettre à jour le statut actuel d'un avocat
@@ -185,14 +185,14 @@ class StatusChangesStorage {
     const unexportedIds = this.getUnexportedChanges().map(c => c.id);
     this.markAsExported(unexportedIds);
 
-    console.log(`📥 CSV téléchargé: ${filename}`);
+    console.log(` CSV téléchargé: ${filename}`);
   }
 
   // Nettoyer le stockage (pour debug)
   clearAll(): void {
     localStorage.removeItem(this.STORAGE_KEY);
     localStorage.removeItem(this.CURRENT_STATUSES_KEY);
-    console.log('🗑️ Stockage nettoyé');
+    console.log(' Stockage nettoyé');
   }
 }
 

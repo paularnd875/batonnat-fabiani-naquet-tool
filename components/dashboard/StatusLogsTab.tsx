@@ -62,7 +62,7 @@ const StatusLogsTab: React.FC = () => {
   // 🔄 NOUVEAU: Écouter les changements localStorage pour la synchronisation
   useEffect(() => {
     const handleStatusChange = (event: any) => {
-      console.log('📡 StatusLogs: Changement de statut détecté, rechargement des logs...');
+      console.log(' StatusLogs: Changement de statut détecté, rechargement des logs...');
       fetchData();
     };
 
@@ -82,7 +82,7 @@ const StatusLogsTab: React.FC = () => {
       const localStorageChanges = statusChangesStorage.getUnexportedChanges();
       const localStorageStatuses = statusChangesStorage.getCurrentStatuses();
       
-      console.log(`🔄 StatusLogs: Récupération ${localStorageChanges.length} changements localStorage non exportés`);
+      console.log(` StatusLogs: Récupération ${localStorageChanges.length} changements localStorage non exportés`);
       
       // Charger les logs SQLite et statistiques avec localStorage en parallèle
       const [logsResponse, statsResponse] = await Promise.all([
@@ -105,7 +105,7 @@ const StatusLogsTab: React.FC = () => {
       if (logsResponse.ok) {
         const logsData = await logsResponse.json();
         const sqliteLogs = logsData.logs || [];
-        console.log(`📊 StatusLogs: ${sqliteLogs.length} logs SQLite récupérés`);
+        console.log(` StatusLogs: ${sqliteLogs.length} logs SQLite récupérés`);
         allLogs.push(...sqliteLogs);
       }
       
@@ -123,14 +123,14 @@ const StatusLogsTab: React.FC = () => {
         exported_at: change.exported ? change.changed_at : null
       }));
       
-      console.log(`🔄 StatusLogs: ${localStorageLogs.length} changements localStorage convertis`);
+      console.log(` StatusLogs: ${localStorageLogs.length} changements localStorage convertis`);
       allLogs.push(...localStorageLogs);
       
       // Trier tous les logs par date (plus récent en premier)
       allLogs.sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime());
       
       setLogs(allLogs);
-      console.log(`📊 StatusLogs: ${allLogs.length} logs totaux affichés (SQLite + localStorage)`);
+      console.log(` StatusLogs: ${allLogs.length} logs totaux affichés (SQLite + localStorage)`);
 
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
@@ -295,7 +295,7 @@ const StatusLogsTab: React.FC = () => {
           const cleanId = id.replace('localStorage_', '');
           statusChangesStorage.deleteChange(cleanId);
         });
-        console.log(`✅ ${localStorageIds.length} logs localStorage supprimés`);
+        console.log(` ${localStorageIds.length} logs localStorage supprimés`);
       }
 
       // Supprimer les logs SQLite via API
@@ -310,7 +310,7 @@ const StatusLogsTab: React.FC = () => {
           const errorData = await response.json();
           throw new Error(`Erreur API SQLite: ${errorData.error || 'Erreur inconnue'}`);
         }
-        console.log(`✅ ${sqliteIds.length} logs SQLite supprimés`);
+        console.log(` ${sqliteIds.length} logs SQLite supprimés`);
       }
 
       // Recharger les données et réinitialiser la sélection
@@ -350,7 +350,7 @@ const StatusLogsTab: React.FC = () => {
           const cleanId = id.replace('localStorage_', '');
           statusChangesStorage.markAsExported([cleanId]);
         });
-        console.log(`✅ ${localStorageIds.length} logs localStorage marqués comme lus`);
+        console.log(` ${localStorageIds.length} logs localStorage marqués comme lus`);
       }
 
       // Marquer les logs SQLite comme exportés via API
@@ -368,7 +368,7 @@ const StatusLogsTab: React.FC = () => {
           const errorData = await response.json();
           throw new Error(`Erreur API SQLite: ${errorData.error || 'Erreur inconnue'}`);
         }
-        console.log(`✅ ${sqliteIds.length} logs SQLite marqués comme lus`);
+        console.log(` ${sqliteIds.length} logs SQLite marqués comme lus`);
       }
 
       // Recharger les données et réinitialiser la sélection

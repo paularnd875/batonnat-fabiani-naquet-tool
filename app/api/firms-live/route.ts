@@ -8,7 +8,7 @@ export async function GET() {
     // 🚀 OPTIMISATION: Vérifier le cache en premier
     const cachedFirmsStats = memoryCache.get(CACHE_KEYS.FIRMS_STATS);
     if (cachedFirmsStats) {
-      console.log('🚀 Statistiques cabinets chargées depuis le cache (ULTRA RAPIDE!)');
+      console.log(' Statistiques cabinets chargées depuis le cache (ULTRA RAPIDE!)');
       return NextResponse.json({
         success: true,
         source: 'Cache (Google Sheets)',
@@ -16,7 +16,7 @@ export async function GET() {
       });
     }
 
-    console.log('🏢 Calcul statistiques cabinets LIVE avec service unifié...');
+    console.log(' Calcul statistiques cabinets LIVE avec service unifié...');
     const startTime = Date.now();
 
     // 🚀 UTILISER LE SERVICE UNIFIÉ pour garantir la cohérence
@@ -54,7 +54,7 @@ export async function GET() {
     
     try {
       const firmsParticipationData = await googleSheets.readFirmsData();
-      console.log(`📊 ${firmsParticipationData.length} taux de participation récupérés depuis Google Sheets`);
+      console.log(` ${firmsParticipationData.length} taux de participation récupérés depuis Google Sheets`);
       
       firmsParticipationData.forEach((firmData: any) => {
         // Normaliser les noms pour éviter les erreurs de matching
@@ -66,7 +66,7 @@ export async function GET() {
         
         // Debug des premiers
         if (firmsParticipationData.indexOf(firmData) < 3) {
-          console.log(`📋 ${normalizedName}: ${(firmData.taux_participation_moyen * 100).toFixed(1)}% participation`);
+          console.log(` ${normalizedName}: ${(firmData.taux_participation_moyen * 100).toFixed(1)}% participation`);
         }
 
         // 6. Ajouter les tailles de cabinet
@@ -75,7 +75,7 @@ export async function GET() {
         }
       });
     } catch (error) {
-      console.warn('⚠️ Données Google Sheets non disponibles, utilisation calcul local');
+      console.warn(' Données Google Sheets non disponibles, utilisation calcul local');
     }
 
     // 7. Finaliser avec les taux de participation et tailles depuis Google Sheets
@@ -87,7 +87,7 @@ export async function GET() {
       if (participationRate === undefined) {
         participationRate = firm.lawyer_count > 0 ? firm.vote_count / firm.lawyer_count : 0;
         if (firm.vote_count > 0) {
-          console.log(`⚠️ Calcul local pour ${firm.name}: ${firm.vote_count}/${firm.lawyer_count} = ${(participationRate * 100).toFixed(1)}%`);
+          console.log(` Calcul local pour ${firm.name}: ${firm.vote_count}/${firm.lawyer_count} = ${(participationRate * 100).toFixed(1)}%`);
         }
       }
       
@@ -101,20 +101,20 @@ export async function GET() {
     // 8. Trier par nombre d'avocats décroissant
     cabinetsArray.sort((a, b) => b.lawyer_count - a.lawyer_count);
 
-    console.log(`✅ ${cabinetsArray.length} cabinets calculés avec statistiques LIVE`);
+    console.log(` ${cabinetsArray.length} cabinets calculés avec statistiques LIVE`);
 
     // Afficher quelques exemples pour debugging
     const examples = cabinetsArray.filter((c: any) => 
       c.soutien_public_count > 0 || c.c1_count > 0 || c.c2_count > 0 || c.c3_count > 0
     ).slice(0, 5);
     
-    console.log('📋 Exemples cabinets avec classifications LIVE:');
+    console.log(' Exemples cabinets avec classifications LIVE:');
     examples.forEach((cabinet: any) => {
       console.log(`   ${cabinet.name}: SP:${cabinet.soutien_public_count}, C1:${cabinet.c1_count}, C2:${cabinet.c2_count}, C3:${cabinet.c3_count}, BL:${cabinet.bl_count}`);
     });
 
     const processingDuration = Date.now() - startTime;
-    console.log(`⚡ Calcul terminé en ${processingDuration}ms`);
+    console.log(` Calcul terminé en ${processingDuration}ms`);
 
     // 🚀 OPTIMISATION: Mettre en cache le résultat pour 10 minutes
     const result = {
@@ -125,7 +125,7 @@ export async function GET() {
     };
     
     memoryCache.set(CACHE_KEYS.FIRMS_STATS, result, CACHE_TTL.STATS);
-    console.log(`💾 Statistiques de ${cabinetsArray.length} cabinets mises en cache pour 30 minutes`);
+    console.log(` Statistiques de ${cabinetsArray.length} cabinets mises en cache pour 30 minutes`);
 
     return NextResponse.json({
       success: true,
@@ -133,7 +133,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur firms live:', error);
+    console.error(' Erreur firms live:', error);
     
     return NextResponse.json({
       success: false,

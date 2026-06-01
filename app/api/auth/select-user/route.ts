@@ -54,11 +54,11 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24 * 7 // 7 jours
     });
 
-    console.log(`✅ Utilisateur sélectionné: ${user.prenom} ${user.nom} (ID: ${user.id})`);
+    console.log(` Utilisateur sélectionné: ${user.prenom} ${user.nom} (ID: ${user.id})`);
 
     return response;
   } catch (error) {
-    console.error('❌ Erreur sélection utilisateur:', error);
+    console.error(' Erreur sélection utilisateur:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'

@@ -65,7 +65,7 @@ export default function LawyersTab({}: LawyersTabProps) {
 
     // Fonction pour détecter les changements localStorage
     const handleStorageChange = () => {
-      console.log('🔄 Changement localStorage détecté, rechargement des avocats...');
+      console.log(' Changement localStorage détecté, rechargement des avocats...');
       loadLawyers();
     };
 
@@ -74,7 +74,7 @@ export default function LawyersTab({}: LawyersTabProps) {
     
     // Écouter l'événement personnalisé de changement de statut
     const handleLawyerStatusChanged = (event: any) => {
-      console.log('📡 Événement lawyerStatusChanged reçu:', event.detail);
+      console.log(' Événement lawyerStatusChanged reçu:', event.detail);
       loadLawyers();
     };
 
@@ -83,7 +83,7 @@ export default function LawyersTab({}: LawyersTabProps) {
     // Écouter la visibilité de la page (quand l'utilisateur revient)
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        console.log('👁️ Page redevient visible, vérification des données...');
+        console.log(' Page redevient visible, vérification des données...');
         loadLawyers();
       }
     };
@@ -116,7 +116,7 @@ export default function LawyersTab({}: LawyersTabProps) {
         status: selectedStatusFilters.length > 0 ? selectedStatusFilters.join(',') : 'all',
       });
 
-      console.log('🔍 Chargement des avocats avec filtres:', Object.fromEntries(params));
+      console.log(' Chargement des avocats avec filtres:', Object.fromEntries(params));
       
       // 🔄 NOUVEAU: Utiliser l'API qui fusionne localStorage
       // D'abord récupérer les statuts localStorage
@@ -199,12 +199,12 @@ export default function LawyersTab({}: LawyersTabProps) {
           total: filteredLawyers.length,
           totalPages: Math.ceil(filteredLawyers.length / 50)
         });
-        console.log(`✅ ${filteredLawyers.length} avocats chargés avec localStorage`);
+        console.log(` ${filteredLawyers.length} avocats chargés avec localStorage`);
       } else {
-        console.error('❌ Erreur API avocats avec localStorage:', data.error);
+        console.error(' Erreur API avocats avec localStorage:', data.error);
       }
     } catch (error) {
-      console.error('❌ Erreur chargement avocats:', error);
+      console.error(' Erreur chargement avocats:', error);
     } finally {
       setLoading(false);
     }
@@ -232,18 +232,18 @@ export default function LawyersTab({}: LawyersTabProps) {
   // Charger les membres de l'équipe
   const loadTeamMembers = async () => {
     try {
-      console.log('🔄 LawyersTab: Chargement des membres d\'équipe...');
+      console.log(' LawyersTab: Chargement des membres d\'équipe...');
       const response = await fetch('/api/team');
       const data = await response.json();
-      console.log('👥 LawyersTab: Réponse team API:', data);
+      console.log(' LawyersTab: Réponse team API:', data);
       if (data.success) {
         setTeamMembers(data.team_members || []);
-        console.log('✅ LawyersTab: Membres d\'équipe chargés:', data.team_members?.length, 'membres');
+        console.log(' LawyersTab: Membres d\'équipe chargés:', data.team_members?.length, 'membres');
       } else {
-        console.error('❌ LawyersTab: Erreur chargement équipe:', data.error);
+        console.error(' LawyersTab: Erreur chargement équipe:', data.error);
       }
     } catch (error) {
-      console.error('❌ LawyersTab: Erreur chargement équipe:', error);
+      console.error(' LawyersTab: Erreur chargement équipe:', error);
     }
   };
 
@@ -264,7 +264,7 @@ export default function LawyersTab({}: LawyersTabProps) {
       if (data.success) {
         // Recharger les données des avocats
         loadLawyers();
-        console.log('✅ Avocat assigné avec succès');
+        console.log(' Avocat assigné avec succès');
       } else {
         alert('Erreur assignation: ' + data.error);
       }
@@ -277,7 +277,7 @@ export default function LawyersTab({}: LawyersTabProps) {
   // Fonction de désassignation (même logique que Cabinet)
   const handleUnassign = async (lawyerPrenomnom: string) => {
     try {
-      console.log('🔄 LawyersTab: Début désassignation:', lawyerPrenomnom);
+      console.log(' LawyersTab: Début désassignation:', lawyerPrenomnom);
       const response = await fetch('/api/assignments', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -285,24 +285,24 @@ export default function LawyersTab({}: LawyersTabProps) {
       });
       
       const data = await response.json();
-      console.log('📝 LawyersTab: Réponse désassignation:', data);
+      console.log(' LawyersTab: Réponse désassignation:', data);
       
       if (data.success) {
-        console.log('✅ LawyersTab: Désassignation réussie, rechargement des données...');
+        console.log(' LawyersTab: Désassignation réussie, rechargement des données...');
         await loadLawyers();
-        console.log('✅ LawyersTab: Données rechargées');
+        console.log(' LawyersTab: Données rechargées');
       } else {
         alert('Erreur désassignation: ' + data.error);
       }
     } catch (error) {
-      console.error('❌ LawyersTab: Erreur désassignation:', error);
+      console.error(' LawyersTab: Erreur désassignation:', error);
       alert('Erreur désassignation');
     }
   };
 
   // Wrapper pour la signature attendue par LawyerCard
   const handleAssignWrapper = async (lawyer: Lawyer, teamMemberId: string) => {
-    console.log('📋 LawyersTab: Assignation demandée:', {
+    console.log(' LawyersTab: Assignation demandée:', {
       lawyerName: lawyer.prenomnom,
       teamMemberId,
       teamMembersCount: teamMembers.length
@@ -312,7 +312,7 @@ export default function LawyersTab({}: LawyersTabProps) {
 
   // Wrapper pour la désassignation attendue par LawyerCard
   const handleUnassignWrapper = async (lawyer: Lawyer) => {
-    console.log('📋 LawyersTab: Désassignation demandée:', lawyer.prenomnom);
+    console.log(' LawyersTab: Désassignation demandée:', lawyer.prenomnom);
     await handleUnassign(lawyer.prenomnom);
   };
 
@@ -655,7 +655,7 @@ export default function LawyersTab({}: LawyersTabProps) {
           <div className="grid gap-4">
             {lawyers.map((lawyer, index) => {
               if (index === 0) {
-                console.log('🃏 LawyersTab: Premier LawyerCard - teamMembers:', teamMembers);
+                console.log(' LawyersTab: Premier LawyerCard - teamMembers:', teamMembers);
               }
               return (
                 <LawyerCard 

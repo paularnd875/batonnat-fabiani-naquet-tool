@@ -46,11 +46,11 @@ export function middleware(request: NextRequest) {
     // Pas de session
     if (pathname.startsWith('/api')) {
       // Pour les APIs, retourner 401 Unauthorized
-      console.log(`🔐 Accès API non autorisé à ${pathname}`);
+      console.log(` Accès API non autorisé à ${pathname}`);
       return new NextResponse('Unauthorized', { status: 401 });
     } else {
       // Pour les pages, rediriger vers login
-      console.log(`🔐 Accès non autorisé à ${pathname} - redirection vers login`);
+      console.log(` Accès non autorisé à ${pathname} - redirection vers login`);
       const loginUrl = new URL('/login', request.url);
       return NextResponse.redirect(loginUrl);
     }
@@ -61,7 +61,7 @@ export function middleware(request: NextRequest) {
   
   // Si pas de profil utilisateur sélectionné et pas déjà sur la page de sélection
   if (!userInfoCookie?.value && pathname !== '/user-selection') {
-    console.log(`👤 Utilisateur authentifié mais sans profil - redirection vers sélection utilisateur`);
+    console.log(` Utilisateur authentifié mais sans profil - redirection vers sélection utilisateur`);
     const userSelectionUrl = new URL('/user-selection', request.url);
     return NextResponse.redirect(userSelectionUrl);
   }

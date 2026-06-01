@@ -8,7 +8,7 @@ export async function POST() {
     // Supprimer le cookie de session
     cookieStore.delete('auth-session');
     
-    console.log('✅ Déconnexion réussie - session supprimée');
+    console.log(' Déconnexion réussie - session supprimée');
     
     return NextResponse.json({
       success: true,
@@ -16,7 +16,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur lors de la déconnexion:', error);
+    console.error(' Erreur lors de la déconnexion:', error);
     return NextResponse.json({
       success: false,
       error: 'Erreur serveur lors de la déconnexion'

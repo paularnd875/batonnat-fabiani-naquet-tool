@@ -4,11 +4,11 @@ import { supabase } from '@/lib/db';
 
 export async function GET() {
   try {
-    console.log('🔍 Analyse correspondance noms cabinets...');
+    console.log(' Analyse correspondance noms cabinets...');
     
     // 1. Récupérer les cabinets depuis Google Sheets
     const sheetsData = await googleSheets.readFirmsData();
-    console.log(`📊 ${sheetsData.length} cabinets trouvés dans Google Sheets`);
+    console.log(` ${sheetsData.length} cabinets trouvés dans Google Sheets`);
     
     // 2. Récupérer les cabinets depuis la base locale
     const { data: localFirms } = await supabase
@@ -17,7 +17,7 @@ export async function GET() {
       .order('lawyer_count', { ascending: false })
       .limit(100); // Top 100 cabinets
     
-    console.log(`🏢 ${localFirms?.length || 0} cabinets trouvés en base locale`);
+    console.log(` ${localFirms?.length || 0} cabinets trouvés en base locale`);
     
     // 3. Analyser les correspondances
     const sheetsNamesSet = new Set(sheetsData.map((f: any) => f.cabinet.toLowerCase().trim()));
@@ -89,7 +89,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur analyse correspondance:', error);
+    console.error(' Erreur analyse correspondance:', error);
     
     return NextResponse.json({
       success: false,

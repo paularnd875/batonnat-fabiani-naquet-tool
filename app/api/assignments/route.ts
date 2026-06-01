@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     // Calcul de l'offset pour la pagination
     const offset = (page - 1) * limit;
 
-    console.log('📋 Récupération historique assignations...');
+    console.log(' Récupération historique assignations...');
     
     // Récupérer les assignations avec jointure sur les avocats et membres d'équipe
     const { data: assignments, error, count } = await supabase
@@ -77,7 +77,7 @@ export async function GET(request: Request) {
       };
     });
 
-    console.log(`✅ ${formattedAssignments.length} assignations récupérées`);
+    console.log(` ${formattedAssignments.length} assignations récupérées`);
 
     return NextResponse.json({
       success: true,
@@ -91,7 +91,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('❌ Erreur API assignations:', error);
+    console.error(' Erreur API assignations:', error);
     
     return NextResponse.json({
       success: false,
@@ -180,7 +180,7 @@ export async function DELETE(request: Request) {
       }, { status: 400 });
     }
 
-    console.log('🗑️ DELETE: Tentative suppression assignation pour:', lawyer_prenomnom);
+    console.log(' DELETE: Tentative suppression assignation pour:', lawyer_prenomnom);
 
     // Vérifier d'abord si l'assignation existe
     const { data: existing, error: checkError } = await supabase
@@ -189,11 +189,11 @@ export async function DELETE(request: Request) {
       .eq('lawyer_prenomnom', lawyer_prenomnom);
 
     if (checkError) {
-      console.error('❌ DELETE: Erreur vérification existence:', checkError);
+      console.error(' DELETE: Erreur vérification existence:', checkError);
       throw checkError;
     }
 
-    console.log('📋 DELETE: Assignations trouvées:', existing?.length, existing);
+    console.log(' DELETE: Assignations trouvées:', existing?.length, existing);
 
     const { error, count } = await supabase
       .from('assignments')
@@ -201,11 +201,11 @@ export async function DELETE(request: Request) {
       .eq('lawyer_prenomnom', lawyer_prenomnom);
 
     if (error) {
-      console.error('❌ DELETE: Erreur suppression:', error);
+      console.error(' DELETE: Erreur suppression:', error);
       throw error;
     }
 
-    console.log('✅ DELETE: Assignation supprimée, lignes affectées:', count);
+    console.log(' DELETE: Assignation supprimée, lignes affectées:', count);
 
     return NextResponse.json({
       success: true,
@@ -218,7 +218,7 @@ export async function DELETE(request: Request) {
     });
 
   } catch (error) {
-    console.error('❌ DELETE: Erreur suppression assignation:', error);
+    console.error(' DELETE: Erreur suppression assignation:', error);
     
     return NextResponse.json({
       success: false,

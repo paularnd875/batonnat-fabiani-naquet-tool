@@ -60,7 +60,7 @@ const StatusChangeNotification: React.FC<NotificationProps> = ({ userInfo }) => 
       
       setUnexportedCount(count);
     } catch (error) {
-      console.error('❌ Erreur lors du chargement du localStorage:', error);
+      console.error(' Erreur lors du chargement du localStorage:', error);
     } finally {
       setLoading(false);
     }

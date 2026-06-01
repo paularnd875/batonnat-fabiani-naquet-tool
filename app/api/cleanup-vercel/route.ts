@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST() {
   try {
-    console.log('🧹 Nettoyage automatique Vercel démarré...');
+    console.log(' Nettoyage automatique Vercel démarré...');
     
     // Simuler le nettoyage des données que ferait la page /reset
     const cleanupActions = [
@@ -28,7 +28,7 @@ export async function POST() {
     });
     
   } catch (error) {
-    console.error('❌ Erreur nettoyage Vercel:', error);
+    console.error(' Erreur nettoyage Vercel:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue',

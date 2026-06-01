@@ -105,10 +105,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ nam
       stats.bl_count = Math.max(0, (cabinetData.cabinet.stats.bl_count || 0) + deltaBL);
       stats.unclassified_count = Math.max(0, (cabinetData.cabinet.stats.unclassified_count || 0) + deltaUnclassified);
       
-      console.log(`🔄 Fusion localStorage Cabinet ${cabinetName}: ${Object.keys(localStorageStatuses).length} statuts appliqués - Deltas: C1${deltaC1>=0?'+':''}${deltaC1} C2${deltaC2>=0?'+':''}${deltaC2} C3${deltaC3>=0?'+':''}${deltaC3} BL${deltaBL>=0?'+':''}${deltaBL}`);
+      console.log(` Fusion localStorage Cabinet ${cabinetName}: ${Object.keys(localStorageStatuses).length} statuts appliqués - Deltas: C1${deltaC1>=0?'+':''}${deltaC1} C2${deltaC2>=0?'+':''}${deltaC2} C3${deltaC3>=0?'+':''}${deltaC3} BL${deltaBL>=0?'+':''}${deltaBL}`);
     } else {
       // Pas de changements localStorage, garder les stats originales
-      console.log(`📊 Cabinet ${cabinetName}: Aucun changement localStorage, stats originales conservées`);
+      console.log(` Cabinet ${cabinetName}: Aucun changement localStorage, stats originales conservées`);
     }
     
     return NextResponse.json({
@@ -121,7 +121,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ nam
     });
     
   } catch (error) {
-    console.error('❌ Erreur API cabinet-with-localstorage:', error);
+    console.error(' Erreur API cabinet-with-localstorage:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'

@@ -43,7 +43,7 @@ export default function CabinetPage() {
   // 🔄 NOUVEAU: Écouter les changements localStorage pour la synchronisation
   useEffect(() => {
     const handleStatusChange = (event: any) => {
-      console.log('📡 Cabinet: Changement de statut détecté, rechargement des données...');
+      console.log(' Cabinet: Changement de statut détecté, rechargement des données...');
       loadCabinetData();
     };
 
@@ -62,7 +62,7 @@ export default function CabinetPage() {
       const { statusChangesStorage } = await import('@/lib/status-changes-storage');
       const localStorageStatuses = statusChangesStorage.getCurrentStatuses();
       
-      console.log(`🔄 Cabinet: Récupération ${Object.keys(localStorageStatuses).length} statuts localStorage`);
+      console.log(` Cabinet: Récupération ${Object.keys(localStorageStatuses).length} statuts localStorage`);
       
       // 🚀 UTILISER L'API CABINET AVEC LOCALSTORAGE pour la synchronisation
       // Cette API applique les changements localStorage en temps réel
@@ -86,7 +86,7 @@ export default function CabinetPage() {
         const allLawyersData = data.cabinet.lawyers;
         
         // 🚀 UTILISER LES STATS DE L'API (calculées avec service unifié)
-        console.log('📊 Stats reçues de l\'API:', data.cabinet.stats);
+        console.log(' Stats reçues de l\'API:', data.cabinet.stats);
         setFirmStats(data.cabinet.stats);
         
         // Appliquer les filtres côté client
@@ -186,7 +186,7 @@ export default function CabinetPage() {
 
   const handleAssign: AssignFunction = async (lawyerPrenomnom: string, teamMemberId: string) => {
     try {
-      console.log('📝 Cabinet: Début assignation:', { lawyerPrenomnom, teamMemberId });
+      console.log(' Cabinet: Début assignation:', { lawyerPrenomnom, teamMemberId });
       setAssignmentLoading(true);
       
       const response = await fetch('/api/assignments', {
@@ -199,17 +199,17 @@ export default function CabinetPage() {
       });
       
       const data = await response.json();
-      console.log('📝 Cabinet: Réponse assignation:', data);
+      console.log(' Cabinet: Réponse assignation:', data);
       
       if (data.success) {
-        console.log('✅ Cabinet: Assignation réussie, rechargement des données...');
+        console.log(' Cabinet: Assignation réussie, rechargement des données...');
         await loadCabinetData();
-        console.log('✅ Cabinet: Données rechargées');
+        console.log(' Cabinet: Données rechargées');
       } else {
         alert('Erreur assignation: ' + data.error);
       }
     } catch (error) {
-      console.error('❌ Cabinet: Erreur assignation:', error);
+      console.error(' Cabinet: Erreur assignation:', error);
       alert('Erreur assignation');
     } finally {
       setAssignmentLoading(false);
@@ -223,7 +223,7 @@ export default function CabinetPage() {
 
   const handleUnassign = async (lawyerPrenomnom: string) => {
     try {
-      console.log('🔄 Cabinet: Début désassignation:', lawyerPrenomnom);
+      console.log(' Cabinet: Début désassignation:', lawyerPrenomnom);
       setAssignmentLoading(true);
       
       const response = await fetch('/api/assignments', {
@@ -233,17 +233,17 @@ export default function CabinetPage() {
       });
       
       const data = await response.json();
-      console.log('📝 Cabinet: Réponse désassignation:', data);
+      console.log(' Cabinet: Réponse désassignation:', data);
       
       if (data.success) {
-        console.log('✅ Cabinet: Désassignation réussie, rechargement des données...');
+        console.log(' Cabinet: Désassignation réussie, rechargement des données...');
         await loadCabinetData();
-        console.log('✅ Cabinet: Données rechargées');
+        console.log(' Cabinet: Données rechargées');
       } else {
         alert('Erreur désassignation: ' + data.error);
       }
     } catch (error) {
-      console.error('❌ Cabinet: Erreur désassignation:', error);
+      console.error(' Cabinet: Erreur désassignation:', error);
       alert('Erreur désassignation');
     } finally {
       setAssignmentLoading(false);

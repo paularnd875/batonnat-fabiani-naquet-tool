@@ -3,11 +3,11 @@ import { googleSheets } from '@/lib/google-sheets';
 
 export async function GET() {
   try {
-    console.log('📊 Calcul statistiques LIVE depuis Google Sheets...');
+    console.log(' Calcul statistiques LIVE depuis Google Sheets...');
 
     // 1. Lire tous les avocats directement depuis Google Sheets
     const allLawyers = await googleSheets.readLawyers();
-    console.log(`📋 ${allLawyers.length} avocats lus depuis Google Sheets`);
+    console.log(` ${allLawyers.length} avocats lus depuis Google Sheets`);
 
     // 2. Calculer les statistiques globales
     let totalStats = {
@@ -67,7 +67,7 @@ export async function GET() {
     const cabinetsArray = Array.from(cabinetStats.values());
 
     // 4. Afficher quelques exemples pour debug
-    console.log('📊 STATISTIQUES LIVE GOOGLE SHEETS:');
+    console.log(' STATISTIQUES LIVE GOOGLE SHEETS:');
     console.log(`   Total avocats: ${totalStats.total_lawyers}`);
     console.log(`   Soutiens publics: ${totalStats.soutien_public_count}`);
     console.log(`   C1: ${totalStats.c1_count}, C2: ${totalStats.c2_count}, C3: ${totalStats.c3_count}`);
@@ -80,7 +80,7 @@ export async function GET() {
       c.soutien_public_count > 0 || c.c1_count > 0 || c.c2_count > 0 || c.c3_count > 0 || c.bl_count > 0
     ).slice(0, 5);
     
-    console.log('📋 Exemples cabinets avec classifications:');
+    console.log(' Exemples cabinets avec classifications:');
     interessantCabinets.forEach((cabinet: any) => {
       console.log(`   ${cabinet.name}: SP:${cabinet.soutien_public_count}, C1:${cabinet.c1_count}, C2:${cabinet.c2_count}, C3:${cabinet.c3_count}, BL:${cabinet.bl_count}`);
     });
@@ -95,7 +95,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur statistiques live:', error);
+    console.error(' Erreur statistiques live:', error);
     
     return NextResponse.json({
       success: false,

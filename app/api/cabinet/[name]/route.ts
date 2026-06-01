@@ -17,7 +17,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     const limit = Math.min(requestedLimit, 100); // Maximum 100 par page
     const offset = (page - 1) * limit;
     
-    console.log(`🚀 API Cabinet: ${cabinetName} (limit: ${requestedLimit} → ${limit}, page: ${page})`);
+    console.log(` API Cabinet: ${cabinetName} (limit: ${requestedLimit}  ${limit}, page: ${page})`);
     
     // 🛡️ PROTECTION CRITIQUE: Détecter les gros cabinets qui causent des timeouts 
     let normalizedCabinetName = cabinetName;
@@ -25,7 +25,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       normalizedCabinetName = 'Individuel';
       
       // 🚨 ÉVITEMENT DE TIMEOUT: Pour les 13K+ avocats individuels, utiliser l'API optimisée
-      console.log('🚨 GROS CABINET DÉTECTÉ (13K+ avocats): Redirection vers API optimisée');
+      console.log(' GROS CABINET DÉTECTÉ (13K+ avocats): Redirection vers API optimisée');
       try {
         const baseUrl = request.url.split('/api/cabinet/')[0];
         const optimizedUrl = `${baseUrl}/api/cabinet/${encodeURIComponent(cabinetName)}/optimized?${searchParams.toString()}`;
@@ -36,12 +36,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
           return NextResponse.json(optimizedData);
         }
       } catch (error) {
-        console.warn('⚠️ Redirection API optimisée échouée, continuation avec API normale (limitée)');
+        console.warn(' Redirection API optimisée échouée, continuation avec API normale (limitée)');
       }
     }
     
     // 🚀 UTILISER LE SERVICE UNIFIÉ pour garantir la cohérence avec dashboard
-    console.log('🔍 Récupération avocats avec service unifié...');
+    console.log(' Récupération avocats avec service unifié...');
     const startTime = Date.now();
     const { unifiedData } = await import('@/lib/unified-data');
     
@@ -50,9 +50,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     
     // Récupérer les avocats filtrés par cabinet avec toutes les fusions appliquées
     const filteredLawyers = await unifiedData.getLawyersByCabinet(cabinetName, true); // Force refresh
-    console.log(`⚡ Données unifiées récupérées en ${Date.now() - startTime}ms`);
+    console.log(` Données unifiées récupérées en ${Date.now() - startTime}ms`);
     
-    console.log(`🔍 Cabinet "${cabinetName}": ${filteredLawyers.length} avocats trouvés`);
+    console.log(` Cabinet "${cabinetName}": ${filteredLawyers.length} avocats trouvés`);
     
     // Debug des statuts pour voir ce qui se passe
     await unifiedData.debugStatuses(normalizedCabinetName);
@@ -62,7 +62,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     const isLargeFirm = totalLawyers > 1000;
     
     if (isLargeFirm && requestedLimit > 50) {
-      console.log(`🚨 GROS CABINET AUTO-DÉTECTÉ: ${cabinetName} (${totalLawyers} avocats) - Limite forcée à 50`);
+      console.log(` GROS CABINET AUTO-DÉTECTÉ: ${cabinetName} (${totalLawyers} avocats) - Limite forcée à 50`);
       // Pour les gros cabinets, forcer une limite encore plus stricte
       const safeLimitForLargeFirms = Math.min(limit, 50);
       const safePaginatedLawyers = filteredLawyers.slice(offset, offset + safeLimitForLargeFirms);
@@ -155,7 +155,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       })
     );
 
-    console.log(`📊 Cabinet ${cabinetName}: ${lawyersWithAssignments.length} avocats avec photos`);
+    console.log(` Cabinet ${cabinetName}: ${lawyersWithAssignments.length} avocats avec photos`);
 
     // 🚀 UTILISER LE SERVICE UNIFIÉ pour les statistiques aussi
     const allCabinetStats = await unifiedData.getCabinetStatistics(false);
@@ -169,7 +169,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       realStats.name = cabinetName; // Garder le nom d'affichage
       realStats.lawyer_count = filteredLawyers.length;
       
-      console.log(`📊 STATS TROUVÉES pour ${normalizedForStats}:`, {
+      console.log(` STATS TROUVÉES pour ${normalizedForStats}:`, {
         c1: realStats.c1_count,
         c2: realStats.c2_count,
         c3: realStats.c3_count,

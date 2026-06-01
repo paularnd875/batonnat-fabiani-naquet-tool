@@ -54,15 +54,15 @@ export async function GET(request: NextRequest) {
     const statusFilters = statusFilter === 'all' ? [] : statusFilter.split(',');
     
     // Récupération des données depuis Google Sheets
-    console.log('🔍 Récupération des avocats depuis Google Sheets...');
+    console.log(' Récupération des avocats depuis Google Sheets...');
     const allLawyers = await googleSheets.readLawyers();
-    console.log(`📊 ${allLawyers.length} avocats récupérés`);
+    console.log(` ${allLawyers.length} avocats récupérés`);
     
     // Fusionner avec les statuts de la base SQLite
-    console.log('🔄 Fusion avec les statuts SQLite...');
+    console.log(' Fusion avec les statuts SQLite...');
     const db = getDatabase();
     const latestStatuses = await db.getAllLatestStatuses();
-    console.log(`📋 ${latestStatuses.size} statuts trouvés en base SQLite`);
+    console.log(` ${latestStatuses.size} statuts trouvés en base SQLite`);
     
     // Mettre à jour les statuts des avocats avec ceux de la base SQLite
     const lawyersWithUpdatedStatuses = allLawyers.map(lawyer => {
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
       return lawyer;
     });
     
-    console.log(`✅ Fusion terminée - ${lawyersWithUpdatedStatuses.length} avocats avec statuts à jour`);
+    console.log(` Fusion terminée - ${lawyersWithUpdatedStatuses.length} avocats avec statuts à jour`);
     
     // Application des filtres (utiliser les données fusionnées)
     let filteredLawyers = lawyersWithUpdatedStatuses.filter(lawyer => {
@@ -177,7 +177,7 @@ export async function GET(request: NextRequest) {
       return true;
     });
     
-    console.log(`🔍 ${filteredLawyers.length} avocats après filtrage`);
+    console.log(` ${filteredLawyers.length} avocats après filtrage`);
     
     // Calcul des statistiques (utiliser les données fusionnées)
     const stats = {
@@ -224,7 +224,7 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(filteredLawyers.length / limit)
     };
     
-    console.log(`📄 Page ${page}/${pagination.totalPages} - ${paginatedLawyers.length} avocats retournés`);
+    console.log(` Page ${page}/${pagination.totalPages} - ${paginatedLawyers.length} avocats retournés`);
     
     // Récupérer les assignations depuis Supabase pour chaque avocat (seulement pour la page courante)
     const lawyersWithAssignments = await Promise.all(
@@ -264,7 +264,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
     
   } catch (error) {
-    console.error('❌ Erreur API lawyers:', error);
+    console.error(' Erreur API lawyers:', error);
     const errorResponse: LawyersApiResponse = {
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'

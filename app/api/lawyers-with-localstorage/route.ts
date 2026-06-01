@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       return lawyer;
     });
     
-    console.log(`🔄 Fusion localStorage: ${Object.keys(localStorageStatuses).length} statuts appliqués`);
+    console.log(` Fusion localStorage: ${Object.keys(localStorageStatuses).length} statuts appliqués`);
     
     return NextResponse.json({
       ...lawyersData,
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     });
     
   } catch (error) {
-    console.error('❌ Erreur API lawyers-with-localstorage:', error);
+    console.error(' Erreur API lawyers-with-localstorage:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue'

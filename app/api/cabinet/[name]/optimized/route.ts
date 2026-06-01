@@ -59,17 +59,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     }
 
     // Pour les autres cabinets, utiliser l'approche normale mais optimisée
-    console.log(`🚀 API Optimisée - Cabinet: ${cabinetName} (page ${page}, limit ${limit})`);
+    console.log(` API Optimisée - Cabinet: ${cabinetName} (page ${page}, limit ${limit})`);
     
     const startTime = Date.now();
     const allLawyersFromSheet = await googleSheets.readLawyers();
-    console.log(`⚡ Google Sheets lu en ${Date.now() - startTime}ms`);
+    console.log(` Google Sheets lu en ${Date.now() - startTime}ms`);
 
     // Fusionner avec les statuts de la base SQLite (même logique que /api/lawyers)
-    console.log('🔄 Fusion avec les statuts SQLite...');
+    console.log(' Fusion avec les statuts SQLite...');
     const db = getDatabase();
     const latestStatuses = await db.getAllLatestStatuses();
-    console.log(`📋 ${latestStatuses.size} statuts trouvés en base SQLite`);
+    console.log(` ${latestStatuses.size} statuts trouvés en base SQLite`);
     
     // Mettre à jour les statuts des avocats avec ceux de la base SQLite
     const lawyersWithUpdatedStatuses = allLawyersFromSheet.map(lawyer => {
@@ -83,7 +83,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       return lawyer;
     });
     
-    console.log(`✅ Fusion terminée - ${lawyersWithUpdatedStatuses.length} avocats avec statuts à jour`);
+    console.log(` Fusion terminée - ${lawyersWithUpdatedStatuses.length} avocats avec statuts à jour`);
 
     // Filtrage optimisé (utiliser données fusionnées)
     let filteredLawyers;
@@ -151,7 +151,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
 
     const totalPages = Math.ceil(totalLawyers / limit);
     
-    console.log(`⚡ API Optimisée terminée en ${Date.now() - startTime}ms`);
+    console.log(` API Optimisée terminée en ${Date.now() - startTime}ms`);
 
     return NextResponse.json({
       success: true,
@@ -173,7 +173,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     });
 
   } catch (error) {
-    console.error('❌ Erreur API cabinet optimisée:', error);
+    console.error(' Erreur API cabinet optimisée:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue',

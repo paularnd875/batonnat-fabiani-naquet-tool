@@ -40,14 +40,14 @@ class DatabaseSupabaseService {
         .limit(1);
         
       if (error && error.code === 'PGRST116') {
-        console.log('📋 Création de la table status_change_logs_sqlite...');
+        console.log(' Création de la table status_change_logs_sqlite...');
         // La table n'existe pas, on devra la créer via migration
-        console.log('⚠️ Table status_change_logs_sqlite nécessite une migration SQL');
+        console.log(' Table status_change_logs_sqlite nécessite une migration SQL');
       }
       
-      console.log('✅ Service de base de données Supabase initialisé');
+      console.log(' Service de base de données Supabase initialisé');
     } catch (error) {
-      console.error('❌ Erreur initialisation base Supabase:', error);
+      console.error(' Erreur initialisation base Supabase:', error);
     }
   }
 
@@ -86,7 +86,7 @@ class DatabaseSupabaseService {
       .single();
 
     if (error) {
-      console.error('❌ Erreur insertion log status:', error);
+      console.error(' Erreur insertion log status:', error);
       throw error;
     }
 
@@ -119,7 +119,7 @@ class DatabaseSupabaseService {
     const { data, error } = await query;
 
     if (error) {
-      console.error('❌ Erreur récupération logs:', error);
+      console.error(' Erreur récupération logs:', error);
       return [];
     }
 
@@ -138,7 +138,7 @@ class DatabaseSupabaseService {
       .is('exported_at', null);
 
     if (error) {
-      console.error('❌ Erreur comptage non exportés:', error);
+      console.error(' Erreur comptage non exportés:', error);
       return 0;
     }
 
@@ -154,7 +154,7 @@ class DatabaseSupabaseService {
       .in('id', ids);
 
     if (error) {
-      console.error('❌ Erreur marquage exportés:', error);
+      console.error(' Erreur marquage exportés:', error);
       throw error;
     }
   }
@@ -169,7 +169,7 @@ class DatabaseSupabaseService {
       .limit(1);
 
     if (error) {
-      console.error('❌ Erreur récupération dernier statut:', error);
+      console.error(' Erreur récupération dernier statut:', error);
       return null;
     }
 
@@ -184,7 +184,7 @@ class DatabaseSupabaseService {
       .order('changed_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Erreur récupération tous statuts:', error);
+      console.error(' Erreur récupération tous statuts:', error);
       return new Map();
     }
 
@@ -203,7 +203,7 @@ class DatabaseSupabaseService {
   // === GESTION DES UTILISATEURS ===
 
   async createUser(nom: string, prenom: string, email: string): Promise<User> {
-    console.log('📝 Création utilisateur Supabase:', { nom, prenom, email });
+    console.log(' Création utilisateur Supabase:', { nom, prenom, email });
     
     // Utiliser la table team_members existante pour créer un nouvel utilisateur
     const { data, error } = await supabase
@@ -218,11 +218,11 @@ class DatabaseSupabaseService {
       .single();
 
     if (error) {
-      console.error('❌ Erreur création utilisateur Supabase:', error);
+      console.error(' Erreur création utilisateur Supabase:', error);
       throw error;
     }
 
-    console.log('✅ Utilisateur créé avec succès dans Supabase:', data);
+    console.log(' Utilisateur créé avec succès dans Supabase:', data);
     
     // Convertir le format Supabase vers notre interface User
     return {
@@ -243,7 +243,7 @@ class DatabaseSupabaseService {
       .single();
 
     if (error) {
-      console.error('❌ Erreur récupération utilisateur par ID:', error);
+      console.error(' Erreur récupération utilisateur par ID:', error);
       return null;
     }
 
@@ -269,7 +269,7 @@ class DatabaseSupabaseService {
     if (error) {
       // Pas d'erreur si l'utilisateur n'existe pas
       if (error.code === 'PGRST116') return null;
-      console.error('❌ Erreur récupération utilisateur par email:', error);
+      console.error(' Erreur récupération utilisateur par email:', error);
       return null;
     }
 
@@ -292,7 +292,7 @@ class DatabaseSupabaseService {
       .order('prenom', { ascending: true });
 
     if (error) {
-      console.error('❌ Erreur récupération tous utilisateurs:', error);
+      console.error(' Erreur récupération tous utilisateurs:', error);
       // Retourner utilisateurs par défaut en cas d'erreur
       return [
         { id: 1, nom: 'Arnould', prenom: 'Paul', email: 'paul@batonnat.com', created_at: new Date().toISOString() },

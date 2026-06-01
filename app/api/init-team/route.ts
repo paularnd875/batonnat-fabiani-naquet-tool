@@ -3,7 +3,7 @@ import { supabase } from '@/lib/db';
 
 export async function POST() {
   try {
-    console.log('🏗️ Initialisation équipe de test...');
+    console.log(' Initialisation équipe de test...');
     
     const testTeam = [
       { prenom: 'Marie-Hélène', nom: 'Fabiani', email: 'mh.fabiani@batonnat2026.fr' },
@@ -56,7 +56,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur initialisation équipe:', error);
+    console.error(' Erreur initialisation équipe:', error);
     
     return NextResponse.json({
       success: false,

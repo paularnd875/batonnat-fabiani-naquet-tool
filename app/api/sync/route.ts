@@ -16,29 +16,29 @@ function getSupabaseClient() {
 
 export async function POST() {
   try {
-    console.log('🔄 Début de synchronisation Google Sheets...');
+    console.log(' Début de synchronisation Google Sheets...');
     
     // Obtenir le client Supabase
-    console.log('🔧 Initialisation client Supabase...');
+    console.log(' Initialisation client Supabase...');
     const supabase = getSupabaseClient();
-    console.log('✅ Client Supabase initialisé');
+    console.log(' Client Supabase initialisé');
     
     // Test de connexion Supabase
-    console.log('🔍 Test connexion Supabase...');
+    console.log(' Test connexion Supabase...');
     const { data: connectionTestData, error: connectionError } = await supabase.from('lawyers').select('*').limit(1);
     if (connectionError) {
-      console.error('❌ Erreur test Supabase:', connectionError);
+      console.error(' Erreur test Supabase:', connectionError);
       throw new Error(`Supabase connexion failed: ${connectionError.message}`);
     }
-    console.log('✅ Supabase connecté, test OK');
+    console.log(' Supabase connecté, test OK');
     
     // 1. Lecture des avocats depuis Google Sheets
-    console.log('📋 Lecture onglet avocats...');
+    console.log(' Lecture onglet avocats...');
     const lawyers = await googleSheets.readLawyers();
-    console.log(`📊 ${lawyers.length} avocats lus depuis Google Sheets`);
+    console.log(` ${lawyers.length} avocats lus depuis Google Sheets`);
 
     // 2. Insertion/mise à jour dans Supabase (on va utiliser l'upsert Supabase)
-    console.log('💾 Synchronisation vers base de données...');
+    console.log(' Synchronisation vers base de données...');
     
     // Préparer les données pour Supabase et éliminer les doublons
     const uniqueLawyers = new Map();
@@ -65,7 +65,7 @@ export async function POST() {
     });
     
     const lawyersForDB = Array.from(uniqueLawyers.values());
-    console.log(`🔍 ${lawyers.length} lignes lues → ${lawyersForDB.length} avocats uniques`);
+    console.log(` ${lawyers.length} lignes lues  ${lawyersForDB.length} avocats uniques`);
 
     // Extraire les origines uniques pour créer les membres d'équipe
     const origines = new Set<string>();
@@ -74,10 +74,10 @@ export async function POST() {
         origines.add(lawyer.origine.trim());
       }
     });
-    console.log(`🔍 Origines trouvées:`, Array.from(origines));
+    console.log(` Origines trouvées:`, Array.from(origines));
 
     // Test avec un seul avocat d'abord
-    console.log('🧪 Test avec un avocat:', JSON.stringify(lawyersForDB[0], null, 2));
+    console.log(' Test avec un avocat:', JSON.stringify(lawyersForDB[0], null, 2));
     
     const { data: upsertTestResult, error: testUpsertError } = await supabase
       .from('lawyers')
@@ -87,11 +87,11 @@ export async function POST() {
       });
 
     if (testUpsertError) {
-      console.error('❌ Erreur test upsert:', JSON.stringify(testUpsertError, null, 2));
+      console.error(' Erreur test upsert:', JSON.stringify(testUpsertError, null, 2));
       throw new Error(`Test upsert failed: ${JSON.stringify(testUpsertError)}`);
     }
     
-    console.log('✅ Test upsert réussi, procédure normale...');
+    console.log(' Test upsert réussi, procédure normale...');
 
     // Upsert en lots de 50 pour éviter les timeouts 
     const batchSize = 50;
@@ -99,7 +99,7 @@ export async function POST() {
     
     for (let i = 0; i < Math.min(lawyersForDB.length, 200); i += batchSize) { // Limité à 200 pour debug
       const batch = lawyersForDB.slice(i, i + batchSize);
-      console.log(`💾 Insertion batch ${i+1}-${Math.min(i + batchSize, lawyersForDB.length)}/${lawyersForDB.length}...`);
+      console.log(` Insertion batch ${i+1}-${Math.min(i + batchSize, lawyersForDB.length)}/${lawyersForDB.length}...`);
       
       const { error } = await supabase
         .from('lawyers')
@@ -109,12 +109,12 @@ export async function POST() {
         });
 
       if (error) {
-        console.error(`❌ Erreur batch ${i}-${i + batchSize}:`, JSON.stringify(error, null, 2));
+        console.error(` Erreur batch ${i}-${i + batchSize}:`, JSON.stringify(error, null, 2));
         throw new Error(`Batch upsert failed: ${JSON.stringify(error)}`);
       }
       
       totalInserted += batch.length;
-      console.log(`✅ ${totalInserted}/${Math.min(lawyersForDB.length, 200)} avocats synchronisés`);
+      console.log(` ${totalInserted}/${Math.min(lawyersForDB.length, 200)} avocats synchronisés`);
       
       // Petite pause entre les batches
       if (i + batchSize < Math.min(lawyersForDB.length, 200)) {
@@ -123,25 +123,25 @@ export async function POST() {
     }
 
     // 3. Créer automatiquement les membres d'équipe basés sur les origines
-    console.log('👥 Création des membres d\'équipe...');
+    console.log(' Création des membres d\'équipe...');
     const teamMembersCount = await createTeamMembersFromOrigines(supabase, origines);
     
     // 4. Lire les taux de participation réels depuis Google Sheets
-    console.log('📈 Lecture taux de participation depuis Google Sheets...');
+    console.log(' Lecture taux de participation depuis Google Sheets...');
     let participationRatesMap = new Map<string, number>();
     try {
       const firmsParticipationData = await googleSheets.readFirmsData();
-      console.log(`📊 ${firmsParticipationData.length} cabinets avec taux trouvés dans Google Sheets`);
+      console.log(` ${firmsParticipationData.length} cabinets avec taux trouvés dans Google Sheets`);
       
       firmsParticipationData.forEach((firmData: any) => {
         participationRatesMap.set(firmData.cabinet, firmData.taux_participation_moyen);
       });
     } catch (error) {
-      console.warn('⚠️ Impossible de lire les taux depuis Google Sheets, utilisation calcul local:', error);
+      console.warn(' Impossible de lire les taux depuis Google Sheets, utilisation calcul local:', error);
     }
 
     // 4. Recalculer les statistiques des cabinets
-    console.log('📊 Recalcul statistiques cabinets...');
+    console.log(' Recalcul statistiques cabinets...');
     
     // Supprimer toutes les anciennes stats pour éviter les incohérences
     const { error: deleteError } = await supabase
@@ -255,12 +255,12 @@ export async function POST() {
           participation_rate: participationRate
         };
       });
-      console.log(`📊 Recalcul pour ${firmsArray.length} cabinets (${allLawyers.length} avocats traités)`);
+      console.log(` Recalcul pour ${firmsArray.length} cabinets (${allLawyers.length} avocats traités)`);
       
       // Afficher quelques exemples pour debugging
       const exampleFirms = firmsArray.slice(0, 3);
       exampleFirms.forEach((firm: any) => {
-        console.log(`🏢 ${firm.name}: ${firm.lawyer_count} avocats (SP:${firm.soutien_public_count}, C1:${firm.c1_count}, C2:${firm.c2_count}, C3:${firm.c3_count}, BL:${firm.bl_count}, NC:${firm.unclassified_count}, Assignés:${firm.assigned_count})`);
+        console.log(` ${firm.name}: ${firm.lawyer_count} avocats (SP:${firm.soutien_public_count}, C1:${firm.c1_count}, C2:${firm.c2_count}, C3:${firm.c3_count}, BL:${firm.bl_count}, NC:${firm.unclassified_count}, Assignés:${firm.assigned_count})`);
       });
       
       const { error: firmsError } = await supabase
@@ -272,7 +272,7 @@ export async function POST() {
         throw firmsError;
       }
       
-      console.log(`✅ ${firmsArray.length} cabinets mis à jour avec stats correctes`);
+      console.log(` ${firmsArray.length} cabinets mis à jour avec stats correctes`);
     }
 
     return NextResponse.json({
@@ -286,10 +286,10 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur synchronisation complète:', error);
-    console.error('❌ Stack trace:', error instanceof Error ? error.stack : 'Pas de stack');
-    console.error('❌ Message:', error instanceof Error ? error.message : 'Pas de message');
-    console.error('❌ Type erreur:', typeof error);
+    console.error(' Erreur synchronisation complète:', error);
+    console.error(' Stack trace:', error instanceof Error ? error.stack : 'Pas de stack');
+    console.error(' Message:', error instanceof Error ? error.message : 'Pas de message');
+    console.error(' Type erreur:', typeof error);
     
     return NextResponse.json({
       success: false,
@@ -351,7 +351,7 @@ async function createTeamMembersFromOrigines(supabase: any, origines: Set<string
     if (error) {
       console.error('Erreur création membres équipe:', error);
     } else {
-      console.log(`✅ ${teamMembersToCreate.length} membres d'équipe créés automatiquement`);
+      console.log(` ${teamMembersToCreate.length} membres d'équipe créés automatiquement`);
     }
   }
   

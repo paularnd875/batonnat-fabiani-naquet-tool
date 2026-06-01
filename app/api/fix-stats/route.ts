@@ -4,14 +4,14 @@ import { googleSheets } from '@/lib/google-sheets';
 
 export async function POST() {
   try {
-    console.log('🔧 Début réparation statistiques cabinets...');
+    console.log(' Début réparation statistiques cabinets...');
 
     // 1. Supprimer TOUTES les anciennes stats pour éviter les conflits
-    console.log('🗑️ Suppression anciennes statistiques...');
+    console.log(' Suppression anciennes statistiques...');
     await supabase.from('firms').delete().neq('name', '');
 
     // 2. Récupérer TOUS les avocats par pagination pour éviter les limites
-    console.log('📊 Lecture TOUS les avocats par pagination...');
+    console.log(' Lecture TOUS les avocats par pagination...');
     
     let allLawyers: any[] = [];
     let page = 0;
@@ -32,7 +32,7 @@ export async function POST() {
         hasMore = false;
       } else {
         allLawyers = allLawyers.concat(lawyers);
-        console.log(`📄 Page ${page}: ${lawyers.length} avocats (Total: ${allLawyers.length})`);
+        console.log(` Page ${page}: ${lawyers.length} avocats (Total: ${allLawyers.length})`);
         
         if (lawyers.length < pageSize) {
           hasMore = false;
@@ -45,14 +45,14 @@ export async function POST() {
       throw new Error('Aucun avocat trouvé');
     }
 
-    console.log(`📊 Total avocats récupérés: ${allLawyers.length}`);
+    console.log(` Total avocats récupérés: ${allLawyers.length}`);
 
     // Lire les taux de participation réels depuis Google Sheets
-    console.log('📈 Lecture taux de participation depuis Google Sheets...');
+    console.log(' Lecture taux de participation depuis Google Sheets...');
     let participationRatesMap = new Map<string, number>();
     try {
       const firmsParticipationData = await googleSheets.readFirmsData();
-      console.log(`📊 ${firmsParticipationData.length} cabinets avec taux trouvés dans Google Sheets`);
+      console.log(` ${firmsParticipationData.length} cabinets avec taux trouvés dans Google Sheets`);
       
       firmsParticipationData.forEach((firmData: any) => {
         participationRatesMap.set(firmData.cabinet, firmData.taux_participation_moyen);
@@ -61,14 +61,14 @@ export async function POST() {
       // Afficher quelques exemples
       const exampleParticipation = firmsParticipationData.slice(0, 3);
       exampleParticipation.forEach((firm: any) => {
-        console.log(`📈 ${firm.cabinet}: ${(firm.taux_participation_moyen * 100).toFixed(1)}%`);
+        console.log(` ${firm.cabinet}: ${(firm.taux_participation_moyen * 100).toFixed(1)}%`);
       });
     } catch (error) {
-      console.warn('⚠️ Impossible de lire les taux depuis Google Sheets, utilisation calcul local:', error);
+      console.warn(' Impossible de lire les taux depuis Google Sheets, utilisation calcul local:', error);
     }
 
     // 3. Calculer les stats par cabinet
-    console.log(`💾 Calcul stats pour ${allLawyers.length} avocats...`);
+    console.log(` Calcul stats pour ${allLawyers.length} avocats...`);
     const firmsMap = new Map();
 
     allLawyers.forEach((lawyer: any) => {
@@ -107,7 +107,7 @@ export async function POST() {
     });
 
     // 4. Récupérer TOUTES les assignations par pagination
-    console.log('📋 Calcul assignations...');
+    console.log(' Calcul assignations...');
     let allAssignments: any[] = [];
     let assignPage = 0;
     let hasMoreAssignments = true;
@@ -119,7 +119,7 @@ export async function POST() {
         .range(assignPage * pageSize, (assignPage + 1) * pageSize - 1);
 
       if (assignError) {
-        console.log(`⚠️ Erreur assignations page ${assignPage}, continuer sans:`, assignError);
+        console.log(` Erreur assignations page ${assignPage}, continuer sans:`, assignError);
         break;
       }
 
@@ -127,7 +127,7 @@ export async function POST() {
         hasMoreAssignments = false;
       } else {
         allAssignments = allAssignments.concat(assignments);
-        console.log(`📋 Page assignations ${assignPage}: ${assignments.length} (Total: ${allAssignments.length})`);
+        console.log(` Page assignations ${assignPage}: ${assignments.length} (Total: ${allAssignments.length})`);
         
         if (assignments.length < pageSize) {
           hasMoreAssignments = false;
@@ -138,7 +138,7 @@ export async function POST() {
 
     if (allAssignments.length > 0) {
       const uniqueAssigned = new Set(allAssignments.map((a: any) => a.lawyer_prenomnom));
-      console.log(`📊 ${uniqueAssigned.size} avocats uniques assignés`);
+      console.log(` ${uniqueAssigned.size} avocats uniques assignés`);
       
       uniqueAssigned.forEach((lawyerName: any) => {
         const lawyer = allLawyers.find((l: any) => l.prenomnom === lawyerName);
@@ -184,12 +184,12 @@ export async function POST() {
       };
     });
     
-    console.log(`✅ Insertion ${firmsArray.length} cabinets avec taux de participation...`);
+    console.log(` Insertion ${firmsArray.length} cabinets avec taux de participation...`);
 
     // Afficher quelques exemples
     const examples = firmsArray.slice(0, 5);
     examples.forEach((firm: any) => {
-      console.log(`🏢 ${firm.name}: ${firm.lawyer_count} avocats (Assignés:${firm.assigned_count}, Taux:${(firm.participation_rate * 100).toFixed(1)}%, SP:${firm.soutien_public_count}, C1:${firm.c1_count}, C2:${firm.c2_count}, C3:${firm.c3_count})`)
+      console.log(` ${firm.name}: ${firm.lawyer_count} avocats (Assignés:${firm.assigned_count}, Taux:${(firm.participation_rate * 100).toFixed(1)}%, SP:${firm.soutien_public_count}, C1:${firm.c1_count}, C2:${firm.c2_count}, C3:${firm.c3_count})`)
     });
 
     const { error: insertError } = await supabase
@@ -200,7 +200,7 @@ export async function POST() {
       throw new Error(`Erreur insertion: ${insertError.message}`);
     }
 
-    console.log(`🎉 Réparation terminée: ${firmsArray.length} cabinets mis à jour`);
+    console.log(` Réparation terminée: ${firmsArray.length} cabinets mis à jour`);
 
     return NextResponse.json({
       success: true,
@@ -212,7 +212,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('❌ Erreur réparation stats:', error);
+    console.error(' Erreur réparation stats:', error);
     
     return NextResponse.json({
       success: false,

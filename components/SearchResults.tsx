@@ -133,7 +133,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
       const data = await response.json();
       
       if (data.success) {
-        console.log('✅ Avocat assigné avec succès');
+        console.log(' Avocat assigné avec succès');
       } else {
         alert('Erreur assignation: ' + data.error);
       }
@@ -167,7 +167,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
       const data = await response.json();
       
       if (data.success) {
-        console.log('✅ Avocat désassigné avec succès');
+        console.log(' Avocat désassigné avec succès');
       } else {
         alert('Erreur désassignation: ' + data.error);
       }
@@ -215,7 +215,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
         changed_by: `${currentUser.prenom} ${currentUser.nom}`
       });
 
-      console.log(`✅ Statut sauvegardé: ${lawyer.prenomnom} (${oldStatus || 'Non classifié'} → ${newStatus || 'Non classifié'})`);
+      console.log(` Statut sauvegardé: ${lawyer.prenomnom} (${oldStatus || 'Non classifié'}  ${newStatus || 'Non classifié'})`);
       
       // Mettre à jour l'état local pour refléter immédiatement le changement
       setLawyerStatuses(prev => ({
@@ -233,7 +233,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
         }
       }));
       
-      console.log('📡 Événement lawyerStatusChanged dispatché pour synchronisation cross-pages');
+      console.log(' Événement lawyerStatusChanged dispatché pour synchronisation cross-pages');
       
     } catch (error) {
       console.error('Erreur changement de statut:', error);

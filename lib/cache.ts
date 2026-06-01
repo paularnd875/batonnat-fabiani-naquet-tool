@@ -64,7 +64,7 @@ class MemoryCache {
     this.stats.cacheSize = this.cache.size;
     
     const sizeInfo = compressed ? ' (compressed)' : '';
-    console.log(`💾 Cache SET: ${key} (TTL: ${Math.round((ttl || this.defaultTTL) / 1000)}s, Size: ${this.stats.cacheSize}${sizeInfo})`);
+    console.log(` Cache SET: ${key} (TTL: ${Math.round((ttl || this.defaultTTL) / 1000)}s, Size: ${this.stats.cacheSize}${sizeInfo})`);
     
     // Nettoyage automatique si le cache devient trop volumineux
     if (this.cache.size > 100) {
@@ -88,7 +88,7 @@ class MemoryCache {
       }
       
       this.stats.misses++;
-      console.log(`💾 Cache MISS: ${key} (Hit rate: ${this.getHitRate()}%)`);
+      console.log(` Cache MISS: ${key} (Hit rate: ${this.getHitRate()}%)`);
       return null;
     }
 
@@ -98,7 +98,7 @@ class MemoryCache {
     
     this.stats.hits++;
     const ageSeconds = Math.round((Date.now() - entry.timestamp) / 1000);
-    console.log(`💾 Cache HIT: ${key} (Age: ${ageSeconds}s, Hit rate: ${this.getHitRate()}%)`);
+    console.log(` Cache HIT: ${key} (Age: ${ageSeconds}s, Hit rate: ${this.getHitRate()}%)`);
     
     return entry.data;
   }
@@ -110,7 +110,7 @@ class MemoryCache {
     const deleted = this.cache.delete(key);
     if (deleted) {
       this.stats.cacheSize = this.cache.size;
-      console.log(`💾 Cache DELETE: ${key} (Size: ${this.stats.cacheSize})`);
+      console.log(` Cache DELETE: ${key} (Size: ${this.stats.cacheSize})`);
     }
     return deleted;
   }
@@ -122,7 +122,7 @@ class MemoryCache {
     const previousSize = this.cache.size;
     this.cache.clear();
     this.stats.cacheSize = 0;
-    console.log(`💾 Cache CLEAR: ${previousSize} entrées supprimées`);
+    console.log(` Cache CLEAR: ${previousSize} entrées supprimées`);
   }
 
   /**
@@ -142,7 +142,7 @@ class MemoryCache {
     this.stats.cacheSize = this.cache.size;
     
     if (cleaned > 0) {
-      console.log(`💾 Cache CLEANUP: ${cleaned} entrées expirées supprimées (Size: ${this.stats.cacheSize})`);
+      console.log(` Cache CLEANUP: ${cleaned} entrées expirées supprimées (Size: ${this.stats.cacheSize})`);
     }
     
     return cleaned;
@@ -212,14 +212,14 @@ class MemoryCache {
     }
     
     this.stats.cacheSize = this.cache.size;
-    console.log(`💾 Cache EVICTION: ${toRemove} entrées supprimées (Size: ${this.stats.cacheSize})`);
+    console.log(` Cache EVICTION: ${toRemove} entrées supprimées (Size: ${this.stats.cacheSize})`);
   }
 
   /**
    * Précharge les données importantes pour améliorer les performances
    */
   async preload(): Promise<void> {
-    console.log('🚀 PRELOAD: Démarrage du préchargement intelligent...');
+    console.log(' PRELOAD: Démarrage du préchargement intelligent...');
     
     try {
       // Précharger les données les plus importantes en parallèle
@@ -229,9 +229,9 @@ class MemoryCache {
         fetch('/api/team')
       ]);
       
-      console.log('🚀 PRELOAD: Préchargement terminé');
+      console.log(' PRELOAD: Préchargement terminé');
     } catch (error) {
-      console.warn('⚠️ PRELOAD: Erreur lors du préchargement:', error);
+      console.warn(' PRELOAD: Erreur lors du préchargement:', error);
     }
   }
 }

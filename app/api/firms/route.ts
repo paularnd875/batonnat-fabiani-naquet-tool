@@ -3,7 +3,7 @@ import { supabase } from '@/lib/db';
 
 export async function GET() {
   try {
-    console.log('📋 Récupération de tous les cabinets par pagination...');
+    console.log(' Récupération de tous les cabinets par pagination...');
     
     let allFirms: any[] = [];
     let page = 0;
@@ -22,7 +22,7 @@ export async function GET() {
       if (data && data.length > 0) {
         allFirms.push(...data);
         page++;
-        console.log(`📄 Page ${page}: +${data.length} cabinets (total: ${allFirms.length})`);
+        console.log(` Page ${page}: +${data.length} cabinets (total: ${allFirms.length})`);
         
         // Si cette page a moins de 1000 enregistrements, on a atteint la fin
         if (data.length < pageSize) {
@@ -33,7 +33,7 @@ export async function GET() {
       }
     }
 
-    console.log(`✅ ${allFirms.length} cabinets récupérés au total`);
+    console.log(` ${allFirms.length} cabinets récupérés au total`);
 
     return NextResponse.json({
       success: true,
