@@ -28,14 +28,14 @@ export function middleware(request: NextRequest) {
     pathname.match(/\.(ico|png|jpg|jpeg|svg|gif|woff|woff2|ttf|css|js|map)$/)
   ) {
     const response = NextResponse.next();
-    addSecurityHeaders(response);
+    addSecurityHeaders(response, pathname);
     return response;
   }
 
   // Si la route est publique, laisser passer
   if (publicRoutes.includes(pathname)) {
     const response = NextResponse.next();
-    addSecurityHeaders(response);
+    addSecurityHeaders(response, pathname);
     return response;
   }
 
@@ -68,18 +68,24 @@ export function middleware(request: NextRequest) {
 
   // Session et profil présents - autoriser l'accès avec headers de sécurité
   const response = NextResponse.next();
-  addSecurityHeaders(response);
+  addSecurityHeaders(response, pathname);
   return response;
 }
 
-function addSecurityHeaders(response: NextResponse) {
+function addSecurityHeaders(response: NextResponse, pathname: string) {
   // Headers pour éviter les problèmes d'hydratation et sécurité
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
   
-  // Headers de performance
-  response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+  // Cache uniquement les assets statiques, PAS les APIs dynamiques
+  if (pathname.startsWith('/_next/static') || 
+      pathname.match(/\.(ico|png|jpg|jpeg|svg|gif|woff|woff2|ttf|css|js|map)$/)) {
+    response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+  } else if (pathname.startsWith('/api')) {
+    // APIs dynamiques : jamais de cache
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  }
 }
 
 export const config = {

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET - Récupérer l'historique des assignations
 export async function GET(request: Request) {
   try {
@@ -129,7 +132,7 @@ export async function POST(request: Request) {
     }
 
     // Upsert l'assignation (écrase la précédente si elle existe)
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from('assignments')
       .upsert({ 
         lawyer_prenomnom, 
@@ -147,14 +150,22 @@ export async function POST(request: Request) {
           nom,
           email
         )
-      `)
+      `, { count: 'exact' })
       .single();
 
     if (error) throw error;
 
+    if (!data) {
+      return NextResponse.json({
+        success: false,
+        error: 'Echec de l\'assignation, aucune donnée retournée',
+      }, { status: 500 });
+    }
+
     return NextResponse.json({
       success: true,
       assignment: data,
+      affected_rows: count
     });
 
   } catch (error) {
@@ -195,6 +206,19 @@ export async function DELETE(request: Request) {
 
     console.log(' DELETE: Assignations trouvées:', existing?.length, existing);
 
+    // Vérifier s'il y a quelque chose à supprimer AVANT de tenter la suppression
+    if (!existing || existing.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Aucune assignation trouvée à supprimer',
+        debug: {
+          lawyer_prenomnom,
+          deleted_count: 0,
+          existing_before: 0
+        }
+      }, { status: 404 });
+    }
+
     const { error, count } = await supabase
       .from('assignments')
       .delete({ count: 'exact' })
@@ -209,7 +233,7 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `Assignation supprimée (${count} ligne(s) affectée(s))`,
+      message: `Assignation supprimée (${count || 'inconnu'} ligne(s) affectée(s))`,
       debug: {
         lawyer_prenomnom,
         deleted_count: count,

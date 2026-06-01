@@ -3,6 +3,9 @@ import { supabase } from '@/lib/db';
 import { googleSheets } from '@/lib/google-sheets';
 import { getDatabase } from '@/lib/database';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request: Request, { params }: { params: Promise<{ name: string }> }) {
   try {
     const resolvedParams = await params;
