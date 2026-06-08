@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { User, Users, Plus, Loader2, UserPlus, Mail, Phone } from 'lucide-react';
 
 interface TeamMember {
-  id: number;
+  id: string | number;
   nom: string;
   prenom: string;
   email: string;
@@ -15,7 +15,7 @@ export default function UserSelectionPage() {
   const [users, setUsers] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<number | null>(null);
+  const [selectedUser, setSelectedUser] = useState<string | number | null>(null);
   const [error, setError] = useState('');
   
   // États pour le formulaire de création
@@ -50,7 +50,7 @@ export default function UserSelectionPage() {
     }
   };
 
-  const handleUserSelect = async (userId: number) => {
+  const handleUserSelect = async (userId: string | number) => {
     try {
       setSelectedUser(userId);
       
