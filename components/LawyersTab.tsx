@@ -262,8 +262,9 @@ export default function LawyersTab({}: LawyersTabProps) {
       const data = await response.json();
       
       if (data.success) {
-        // Recharger les données des avocats
-        loadLawyers();
+        // Recharger les données des avocats (await pour un refetch déterministe
+        // post-commit, évite la course qui écrasait l'état "assigné")
+        await loadLawyers();
         console.log(' Avocat assigné avec succès');
       } else {
         alert('Erreur assignation: ' + data.error);

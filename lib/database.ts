@@ -96,11 +96,14 @@ class DatabaseService {
     if (existingUsers.length === 0) {
       console.log(' Création des utilisateurs par défaut...');
       
+      // Membres reels de la campagne (identiques a la table team_members Supabase)
       const defaultUsers = [
-        { nom: 'Arnould', prenom: 'Paul', email: 'paul@batonnat.com' },
-        { nom: 'Test', prenom: 'Utilisateur', email: 'test@example.com' },
-        { nom: 'Fabiani', prenom: 'Marie-Hélène', email: 'mhfabiani@example.com' },
-        { nom: 'Naquet', prenom: 'Franck', email: 'fnaquet@example.com' }
+        { nom: 'Deborde', prenom: 'Alexis', email: 'alexis@bl-nk.fr' },
+        { nom: 'Naquet', prenom: 'Frédéric', email: 'f.naquet@naquet.com' },
+        { nom: 'Giannesini', prenom: 'Jérôme', email: 'jerome.giannesini@outlook.fr' },
+        { nom: 'Fabiani', prenom: 'Marie-Hélène', email: 'mhfabiani@gsmart-avocats.com' },
+        { nom: 'Fabiani-Naquet', prenom: 'Marie-Hélène & Frédéric', email: 'batonnatfabianinaquet@gmail.com' },
+        { nom: 'Arnould', prenom: 'Paul', email: 'paul@bl-nk.fr' }
       ];
       
       for (const user of defaultUsers) {

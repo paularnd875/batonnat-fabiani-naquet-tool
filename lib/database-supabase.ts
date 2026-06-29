@@ -293,10 +293,14 @@ class DatabaseSupabaseService {
 
     if (error) {
       console.error(' Erreur récupération tous utilisateurs:', error);
-      // Retourner utilisateurs par défaut en cas d'erreur
+      // Retourner les membres reels de la campagne en cas d'erreur
       return [
-        { id: 1, nom: 'Arnould', prenom: 'Paul', email: 'paul@batonnat.com', created_at: new Date().toISOString() },
-        { id: 2, nom: 'Test', prenom: 'Utilisateur', email: 'test@example.com', created_at: new Date().toISOString() },
+        { id: 1, nom: 'Deborde', prenom: 'Alexis', email: 'alexis@bl-nk.fr', created_at: new Date().toISOString() },
+        { id: 2, nom: 'Naquet', prenom: 'Frédéric', email: 'f.naquet@naquet.com', created_at: new Date().toISOString() },
+        { id: 3, nom: 'Giannesini', prenom: 'Jérôme', email: 'jerome.giannesini@outlook.fr', created_at: new Date().toISOString() },
+        { id: 4, nom: 'Fabiani', prenom: 'Marie-Hélène', email: 'mhfabiani@gsmart-avocats.com', created_at: new Date().toISOString() },
+        { id: 5, nom: 'Fabiani-Naquet', prenom: 'Marie-Hélène & Frédéric', email: 'batonnatfabianinaquet@gmail.com', created_at: new Date().toISOString() },
+        { id: 6, nom: 'Arnould', prenom: 'Paul', email: 'paul@bl-nk.fr', created_at: new Date().toISOString() },
       ];
     }
 

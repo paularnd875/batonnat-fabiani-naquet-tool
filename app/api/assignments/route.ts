@@ -206,17 +206,20 @@ export async function DELETE(request: Request) {
 
     console.log(' DELETE: Assignations trouvées:', existing?.length, existing);
 
-    // Vérifier s'il y a quelque chose à supprimer AVANT de tenter la suppression
+    // Suppression idempotente : si rien à supprimer, l'état voulu est déjà
+    // atteint (assignation absente). On renvoie un succès pour que le front
+    // rafraichisse sa liste sans afficher d'erreur sur une ligne déjà retirée.
     if (!existing || existing.length === 0) {
+      console.log(' DELETE: Aucune assignation à supprimer (déjà absente), réponse idempotente');
       return NextResponse.json({
-        success: false,
-        error: 'Aucune assignation trouvée à supprimer',
+        success: true,
+        message: 'Aucune assignation à supprimer (déjà absente)',
         debug: {
           lawyer_prenomnom,
           deleted_count: 0,
           existing_before: 0
         }
-      }, { status: 404 });
+      });
     }
 
     const { error, count } = await supabase
