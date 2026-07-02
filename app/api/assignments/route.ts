@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
+import { logAssignmentAction } from '@/lib/sheet-log';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -120,7 +121,7 @@ export async function POST(request: Request) {
     // Vérifier que l'avocat n'est pas blacklisté
     const { data: lawyer } = await supabase
       .from('lawyers')
-      .select('classement')
+      .select('classement, nom_complet')
       .eq('prenomnom', lawyer_prenomnom)
       .single();
 
@@ -162,6 +163,16 @@ export async function POST(request: Request) {
       }, { status: 500 });
     }
 
+    // Journalisation durable dans l'onglet Google Sheet (best-effort)
+    const m = (data as any)?.team_members;
+    const membre = m ? `${m.prenom || ''} ${m.nom || ''}`.trim() : '';
+    await logAssignmentAction({
+      avocat: (lawyer as any)?.nom_complet || lawyer_prenomnom,
+      prenomnom: lawyer_prenomnom,
+      membre,
+      action: 'Assignation',
+    });
+
     return NextResponse.json({
       success: true,
       assignment: data,
@@ -196,7 +207,7 @@ export async function DELETE(request: Request) {
     // Vérifier d'abord si l'assignation existe
     const { data: existing, error: checkError } = await supabase
       .from('assignments')
-      .select('*')
+      .select('*, lawyers(nom_complet), team_members(prenom, nom)')
       .eq('lawyer_prenomnom', lawyer_prenomnom);
 
     if (checkError) {
@@ -233,6 +244,17 @@ export async function DELETE(request: Request) {
     }
 
     console.log(' DELETE: Assignation supprimée, lignes affectées:', count);
+
+    // Journalisation durable dans l'onglet Google Sheet (best-effort)
+    const ex = (existing as any)?.[0];
+    const lw = ex?.lawyers;
+    const mb = ex?.team_members;
+    await logAssignmentAction({
+      avocat: lw?.nom_complet || lawyer_prenomnom,
+      prenomnom: lawyer_prenomnom,
+      membre: mb ? `${mb.prenom || ''} ${mb.nom || ''}`.trim() : '',
+      action: 'Désassignation',
+    });
 
     return NextResponse.json({
       success: true,
