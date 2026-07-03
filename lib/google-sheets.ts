@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { memoryCache, CACHE_KEYS, CACHE_TTL } from './cache';
+import { columnIndices } from './column-map';
 
 // Interface pour les données d'avocat depuis le Google Sheet
 export interface SheetLawyer {
@@ -109,6 +110,13 @@ class GoogleSheetsService {
     const headers = rows[0];
     const soutienColumns = this.findSoutienColumns(headers);
 
+    // Résolution des colonnes par NOM d'en-tête (avec index de secours)
+    const idx = columnIndices(headers);
+    const at = (row: any[], key: string): string => {
+      const i = idx[key];
+      return i != null && i >= 0 ? (row[i] || '') : '';
+    };
+
     const lawyersData = rows.slice(1).map((row: any[]) => {
       // Extraction des soutiens précédents
       const soutiens: string[] = [];
@@ -119,32 +127,32 @@ class GoogleSheetsService {
       });
 
       // Extraire nom et prénom du nom_complet
-      const nomComplet = row[8] || '';
+      const nomComplet = at(row, 'nom_complet');
       const parts = nomComplet.split(' ');
       const nom = parts.length > 0 ? parts[0] : '';
       const prenom = parts.length > 1 ? parts.slice(1).join(' ') : '';
 
       const lawyer = {
-        prenomnom: row[0] || '', // nomcomplet
-        civilite: row[1] || '', // Nature  
-        nom_complet: nomComplet, // Nom complet
-        nom: nom, // Nom extrait
-        prenom: prenom, // Prénom extrait
-        telephone: row[9] || '', // Numéro de téléphone
-        email: row[14] || '', // Adresse e-mail
-        annee_serment: parseInt(row[27]) || 0, // Année de serment
-        cabinet: row[34] || '', // Structure
-        statut_cabinet: row[33] || '', // Colonne AH (index 33) - Statut cabinet (associé/collaborateur/etc)
-        classement: row[47] || '', // Colonne AV (index 47) - Classement agrégé C1/C2/C3
-        origine: row[48] || '', // Colonne AW (index 48) - Origine/Prénom
-        soutien_public: row[50] === '1', // Colonne AY (index 50) - Soutien public
+        prenomnom: at(row, 'prenomnom'),
+        civilite: at(row, 'civilite'),
+        nom_complet: nomComplet,
+        nom: nom,
+        prenom: prenom,
+        telephone: at(row, 'telephone'),
+        email: at(row, 'email'),
+        annee_serment: parseInt(at(row, 'annee_serment')) || 0,
+        cabinet: at(row, 'cabinet'),
+        statut_cabinet: at(row, 'statut_cabinet'),
+        classement: at(row, 'classement'),
+        origine: at(row, 'origine'),
+        soutien_public: at(row, 'soutien_public') === '1',
         soutiens_precedents: soutiens,
-        ami_linkedin_mhf: row[60] === '1', // LINKEDIN MHF
-        ami_linkedin_fn: row[61] === '1', // LINKEDIN FN
-        photo_url: row[72] || '', // Colonne BU (index 72)
+        ami_linkedin_mhf: at(row, 'linkedin_mhf') === '1',
+        ami_linkedin_fn: at(row, 'linkedin_fn') === '1',
+        photo_url: at(row, 'photo_url'),
         raw_data: row,
       };
-      
+
       return lawyer;
     }).filter((lawyer: any) => lawyer.prenomnom); // Filtrer les lignes vides
 
