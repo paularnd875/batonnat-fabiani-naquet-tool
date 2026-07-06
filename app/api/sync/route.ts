@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { googleSheets } from '@/lib/google-sheets';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300; // sync complète ~38k lignes
+
 // Fonction pour obtenir le client Supabase de manière défensive
 function getSupabaseClient() {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -93,33 +96,28 @@ export async function POST() {
     
     console.log(' Test upsert réussi, procédure normale...');
 
-    // Upsert en lots de 50 pour éviter les timeouts 
-    const batchSize = 50;
+    // Upsert de TOUS les avocats en lots de 500 (plus de bridage à 200)
+    const batchSize = 500;
     let totalInserted = 0;
-    
-    for (let i = 0; i < Math.min(lawyersForDB.length, 200); i += batchSize) { // Limité à 200 pour debug
+
+    for (let i = 0; i < lawyersForDB.length; i += batchSize) {
       const batch = lawyersForDB.slice(i, i + batchSize);
-      console.log(` Insertion batch ${i+1}-${Math.min(i + batchSize, lawyersForDB.length)}/${lawyersForDB.length}...`);
-      
+      console.log(` Insertion batch ${i + 1}-${Math.min(i + batchSize, lawyersForDB.length)}/${lawyersForDB.length}...`);
+
       const { error } = await supabase
         .from('lawyers')
-        .upsert(batch, { 
+        .upsert(batch, {
           onConflict: 'prenomnom',
-          ignoreDuplicates: false 
+          ignoreDuplicates: false
         });
 
       if (error) {
         console.error(` Erreur batch ${i}-${i + batchSize}:`, JSON.stringify(error, null, 2));
         throw new Error(`Batch upsert failed: ${JSON.stringify(error)}`);
       }
-      
+
       totalInserted += batch.length;
-      console.log(` ${totalInserted}/${Math.min(lawyersForDB.length, 200)} avocats synchronisés`);
-      
-      // Petite pause entre les batches
-      if (i + batchSize < Math.min(lawyersForDB.length, 200)) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
+      console.log(` ${totalInserted}/${lawyersForDB.length} avocats synchronisés`);
     }
 
     // 3. Créer automatiquement les membres d'équipe basés sur les origines
@@ -143,14 +141,16 @@ export async function POST() {
     // 4. Recalculer les statistiques des cabinets
     console.log(' Recalcul statistiques cabinets...');
     
-    // Supprimer toutes les anciennes stats pour éviter les incohérences
+    // Supprimer toutes les anciennes stats pour éviter les incohérences.
+    // La table "firms" a pour clé primaire "name" (pas de colonne "id") -> on
+    // filtre sur "name" pour réellement tout supprimer (sinon duplicate key).
     const { error: deleteError } = await supabase
       .from('firms')
       .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000'); // Supprime tous les enregistrements
-    
+      .neq('name', '__none__'); // Supprime tous les enregistrements
+
     if (deleteError) {
-      console.log('Note: Première synchronisation, aucune stat à supprimer');
+      console.log('Note: Première synchronisation, aucune stat à supprimer', deleteError?.message);
     }
     
     // Récupérer tous les avocats SANS jointure pour éviter les problèmes de doublons
