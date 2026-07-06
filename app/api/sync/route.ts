@@ -287,15 +287,25 @@ export async function POST() {
 
   } catch (error) {
     console.error(' Erreur synchronisation complète:', error);
-    console.error(' Stack trace:', error instanceof Error ? error.stack : 'Pas de stack');
-    console.error(' Message:', error instanceof Error ? error.message : 'Pas de message');
-    console.error(' Type erreur:', typeof error);
-    
+    // Détail complet, y compris pour les objets d'erreur Supabase (non-Error)
+    const anyErr = error as any;
+    const detail = error instanceof Error
+      ? { message: error.message, name: error.name, stack: error.stack }
+      : {
+          message: anyErr?.message,
+          code: anyErr?.code,
+          details: anyErr?.details,
+          hint: anyErr?.hint,
+          keys: anyErr && typeof anyErr === 'object' ? Object.keys(anyErr) : [],
+          json: (() => { try { return JSON.stringify(anyErr); } catch { return String(anyErr); } })(),
+        };
+    console.error(' Détail erreur:', detail);
+
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Erreur inconnue',
+      error: (error instanceof Error ? error.message : anyErr?.message) || detail.json || 'Erreur inconnue',
       errorType: typeof error,
-      stack: error instanceof Error ? error.stack : undefined,
+      detail,
     }, { status: 500 });
   }
 }
