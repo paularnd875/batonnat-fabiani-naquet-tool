@@ -512,7 +512,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
                                   Assignation...
                                 </>
                               ) : (
-                                isAssigned ? '+ Ajouter un soutien' : 'Assigner'
+                                isAssigned ? '+ Ajouter une assignation' : 'Assigner'
                               )}
                             </Button>
                           </DropdownMenuTrigger>

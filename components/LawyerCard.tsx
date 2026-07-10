@@ -288,7 +288,7 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
                       Assignation...
                     </>
                   ) : (
-                    hasAssignments ? '+ Ajouter un soutien' : 'Assigner'
+                    hasAssignments ? '+ Ajouter une assignation' : 'Assigner'
                   )}
                 </Button>
               </DropdownMenuTrigger>
