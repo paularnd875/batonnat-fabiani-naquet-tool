@@ -412,8 +412,12 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
           <div className="grid gap-4">
             {currentLawyers.map((lawyer, index) => {
               const currentStatus = lawyerStatuses[lawyer.prenomnom] || lawyer.classement || '';
-              const isAssigned = lawyer.assignments && lawyer.assignments.length > 0;
-              const assignedMember = isAssigned ? lawyer.assignments?.[0]?.team_members : null;
+              const assignedMembers = (lawyer.assignments || [])
+                .map((a) => a?.team_members)
+                .filter((m): m is { id: string; prenom: string; nom: string } => !!m && !!m.id);
+              const isAssigned = assignedMembers.length > 0;
+              const assignedIds = new Set(assignedMembers.map((m) => m.id));
+              const availableMembers = teamMembers.filter((m) => !assignedIds.has(m.id));
               const states = assignmentStates[lawyer.prenomnom] || { isAssigning: false, isUnassigning: false };
               
               return (
@@ -508,25 +512,31 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
                                   Assignation...
                                 </>
                               ) : (
-                                isAssigned ? 'Réassigner' : 'Assigner'
+                                isAssigned ? '+ Ajouter un soutien' : 'Assigner'
                               )}
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {teamMembers.map((member) => (
-                              <DropdownMenuItem 
-                                key={member.id}
-                                onClick={() => handleAssign(lawyer, member.id)}
-                                className="cursor-pointer"
-                                disabled={states.isAssigning || states.isUnassigning}
-                              >
-                                {member.prenom} {member.nom}
+                            {availableMembers.length === 0 ? (
+                              <DropdownMenuItem disabled className="text-gray-400">
+                                Tous les membres sont assignés
                               </DropdownMenuItem>
-                            ))}
+                            ) : (
+                              availableMembers.map((member) => (
+                                <DropdownMenuItem
+                                  key={member.id}
+                                  onClick={() => handleAssign(lawyer, member.id)}
+                                  className="cursor-pointer"
+                                  disabled={states.isAssigning || states.isUnassigning}
+                                >
+                                  {member.prenom} {member.nom}
+                                </DropdownMenuItem>
+                              ))
+                            )}
                             {isAssigned && (
                               <>
                                 <div className="border-t my-1" />
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   onClick={() => handleUnassign(lawyer)}
                                   className="cursor-pointer text-red-600 hover:bg-red-50"
                                   disabled={states.isAssigning || states.isUnassigning}
@@ -537,7 +547,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
                                       Désassignation...
                                     </>
                                   ) : (
-                                    '❌ Désassigner'
+                                    '❌ Retirer tous les soutiens'
                                   )}
                                 </DropdownMenuItem>
                               </>
@@ -559,10 +569,18 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
                           disabled={states.isAssigning || states.isUnassigning}
                         />
 
-                        {/* Étiquette d'assignation */}
+                        {/* Étiquettes des soutiens assignés (un badge par membre) */}
                         {isAssigned && (
-                          <div className="flex items-center justify-center gap-1 bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                            <span>✅ Assigné</span>
+                          <div className="flex flex-col gap-1">
+                            {assignedMembers.map((member) => (
+                              <div
+                                key={member.id}
+                                className="flex items-center justify-center gap-1 bg-green-100 text-green-800 text-xs px-2 py-1 rounded"
+                                title={`Soutien : ${member.prenom} ${member.nom}`}
+                              >
+                                <span className="truncate">✅ {member.prenom} {member.nom}</span>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>

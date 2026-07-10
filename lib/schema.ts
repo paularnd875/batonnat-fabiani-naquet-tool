@@ -46,7 +46,9 @@ export const assignments = pgTable('assignments', {
   team_member_id: uuid('team_member_id').notNull().references(() => teamMembers.id),
   assigned_at: timestamp('assigned_at', { withTimezone: true }).defaultNow(),
 }, (table) => ({
-  uniqueAssignment: unique().on(table.lawyer_prenomnom),
+  // Multi-soutiens : un avocat peut être assigné à plusieurs membres d'équipe,
+  // mais pas deux fois au même. Unicité sur le couple (avocat, membre).
+  uniqueAssignment: unique('assignments_lawyer_team_unique').on(table.lawyer_prenomnom, table.team_member_id),
 }));
 
 export const mailLogs = pgTable('mail_logs', {

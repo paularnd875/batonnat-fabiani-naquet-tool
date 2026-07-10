@@ -221,20 +221,23 @@ export default function CabinetPage() {
     await handleAssign(lawyer.prenomnom, teamMemberId);
   };
 
-  const handleUnassign = async (lawyerPrenomnom: string) => {
+  const handleUnassign = async (lawyerPrenomnom: string, teamMemberId?: string) => {
     try {
-      console.log(' Cabinet: Début désassignation:', lawyerPrenomnom);
+      console.log(' Cabinet: Début désassignation:', lawyerPrenomnom, teamMemberId || '(tous)');
       setAssignmentLoading(true);
-      
+
       const response = await fetch('/api/assignments', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lawyer_prenomnom: lawyerPrenomnom }),
+        body: JSON.stringify({
+          lawyer_prenomnom: lawyerPrenomnom,
+          ...(teamMemberId ? { team_member_id: teamMemberId } : {}),
+        }),
       });
-      
+
       const data = await response.json();
       console.log(' Cabinet: Réponse désassignation:', data);
-      
+
       if (data.success) {
         console.log(' Cabinet: Désassignation réussie, rechargement des données...');
         await loadCabinetData();
@@ -251,8 +254,8 @@ export default function CabinetPage() {
   };
 
   // Wrapper pour la nouvelle signature de LawyerCard (désassignation)
-  const handleUnassignWrapper = async (lawyer: Lawyer) => {
-    await handleUnassign(lawyer.prenomnom);
+  const handleUnassignWrapper = async (lawyer: Lawyer, teamMemberId?: string) => {
+    await handleUnassign(lawyer.prenomnom, teamMemberId);
   };
 
   // Fonction pour réinitialiser tous les filtres

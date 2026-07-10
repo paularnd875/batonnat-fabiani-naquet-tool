@@ -48,25 +48,29 @@ export default function StatisticsTab() {
     }
   };
 
-  const handleDeleteAssignment = async (lawyerPrenomnom: string) => {
+  const handleDeleteAssignment = async (lawyerPrenomnom: string, teamMemberId?: string) => {
     const assignment = teamStats
       .flatMap(member => member.assigned_lawyers)
       .find(lawyer => lawyer.lawyer_prenomnom === lawyerPrenomnom);
-    
+
     const lawyerName = assignment?.lawyer_nom_complet || lawyerPrenomnom;
     const cabinet = assignment?.lawyer_cabinet ? ` (${assignment.lawyer_cabinet})` : '';
-    
+
     if (!confirm(`Êtes-vous sûr de vouloir supprimer l'assignation de :\n\n${lawyerName}${cabinet}\n\nCette action est irréversible.`)) {
       return;
     }
 
-    setDeletingAssignment(lawyerPrenomnom);
-    
+    // Clé de chargement par couple (membre, avocat) : multi-soutiens possible.
+    setDeletingAssignment(teamMemberId ? `${teamMemberId}:${lawyerPrenomnom}` : lawyerPrenomnom);
+
     try {
       const response = await fetch('/api/assignments', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lawyer_prenomnom: lawyerPrenomnom }),
+        body: JSON.stringify({
+          lawyer_prenomnom: lawyerPrenomnom,
+          ...(teamMemberId ? { team_member_id: teamMemberId } : {}),
+        }),
       });
 
       const data = await response.json();
@@ -271,11 +275,11 @@ export default function StatisticsTab() {
                                 <Button
                                   variant="destructive"
                                   size="sm"
-                                  onClick={() => handleDeleteAssignment(assignment.lawyer_prenomnom)}
-                                  disabled={deletingAssignment === assignment.lawyer_prenomnom}
+                                  onClick={() => handleDeleteAssignment(assignment.lawyer_prenomnom, member.id)}
+                                  disabled={deletingAssignment === `${member.id}:${assignment.lawyer_prenomnom}`}
                                   className="icon-hover focus-ring"
                                 >
-                                  {deletingAssignment === assignment.lawyer_prenomnom ? (
+                                  {deletingAssignment === `${member.id}:${assignment.lawyer_prenomnom}` ? (
                                     <div className="h-4 w-4 animate-spin border-2 border-white border-t-transparent rounded-full" />
                                   ) : (
                                     <Trash2 className="h-4 w-4" />

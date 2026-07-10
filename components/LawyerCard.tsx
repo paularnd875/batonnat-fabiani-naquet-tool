@@ -9,30 +9,34 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Mail, Phone, AlertTriangle, User, Loader2 } from 'lucide-react';
+import { Mail, Phone, AlertTriangle, User, Loader2, X } from 'lucide-react';
 import { Lawyer, LawyerCardProps } from '@/types';
 import BallotBoxIcon from '@/components/ui/BallotBoxIcon';
 import StatusButton from '@/components/StatusButton';
 
+type AssignedMember = { id: string; prenom: string; nom: string };
+
 const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, onUnassign, teamMembers }) => {
+  // Liste des soutiens (membres d'équipe) actuellement assignés à cet avocat.
+  const membersFromProps = React.useCallback((): AssignedMember[] => {
+    return (lawyer.assignments || [])
+      .map((a) => {
+        const tm = a.team_members;
+        if (!tm || !tm.id) return null;
+        return { id: tm.id, prenom: tm.prenom, nom: tm.nom };
+      })
+      .filter((m): m is AssignedMember => m !== null);
+  }, [lawyer.assignments]);
+
   const [isAssigning, setIsAssigning] = React.useState(false);
-  const [isUnassigning, setIsUnassigning] = React.useState(false);
+  const [busyMemberId, setBusyMemberId] = React.useState<string | null>(null);
   const [currentStatus, setCurrentStatus] = React.useState(lawyer.classement || '');
-  const [assignmentState, setAssignmentState] = React.useState({
-    isAssigned: lawyer.assignments && lawyer.assignments.length > 0,
-    assignedMember: lawyer.assignments && lawyer.assignments.length > 0 ? lawyer.assignments[0].team_members : null
-  });
+  const [assignedMembers, setAssignedMembers] = React.useState<AssignedMember[]>(membersFromProps);
 
   // Synchroniser l'état local avec les props quand elles changent
   React.useEffect(() => {
-    const isAssigned = lawyer.assignments && lawyer.assignments.length > 0;
-    const assignedMember = isAssigned && lawyer.assignments ? lawyer.assignments[0].team_members : null;
-    
-    setAssignmentState({
-      isAssigned,
-      assignedMember
-    });
-  }, [lawyer.assignments]);
+    setAssignedMembers(membersFromProps());
+  }, [membersFromProps]);
 
   const getClassementColor = (classement: string) => {
     switch (classement) {
@@ -44,52 +48,49 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
     }
   };
 
-  // Utiliser l'état local pour l'assignation
-  const isAssigned = assignmentState.isAssigned;
-  const assignedMember = assignmentState.assignedMember;
+  // Soutiens déjà assignés vs membres encore disponibles à ajouter
+  const hasAssignments = assignedMembers.length > 0;
+  const assignedIds = new Set(assignedMembers.map((m) => m.id));
+  const availableMembers = teamMembers.filter((m) => !assignedIds.has(m.id));
 
-  // Fonction de désassignation avec confirmation
-  const handleUnassign = async () => {
-    if (!onUnassign) return;
-    if (!confirm('Êtes-vous sûr de vouloir désassigner cet avocat ?')) return;
-    
-    setIsUnassigning(true);
-    try {
-      await onUnassign(lawyer);
-      // Mise à jour immédiate pour feedback utilisateur
-      setAssignmentState({
-        isAssigned: false,
-        assignedMember: null
-      });
-    } catch (error) {
-      console.error('Erreur désassignation:', error);
-      // En cas d'erreur, rester sur l'état actuel
-    } finally {
-      setIsUnassigning(false);
-    }
-  };
-
-  // Fonction d'assignation avec indicateur de chargement
-  const handleAssignClick = async (teamMemberId: string) => {
+  // Ajouter un soutien (sans écraser les autres)
+  const handleAddMember = async (teamMemberId: string) => {
     if (!onAssign) return;
-    
+    const member = teamMembers.find((m) => m.id === teamMemberId);
+
     setIsAssigning(true);
     try {
       await onAssign(lawyer, teamMemberId);
-      
-      // Trouver le membre assigné pour l'affichage immédiat
-      const assignedTeamMember = teamMembers.find(member => member.id === teamMemberId);
-      
-      // Mise à jour immédiate pour feedback utilisateur
-      setAssignmentState({
-        isAssigned: true,
-        assignedMember: assignedTeamMember || null
-      });
+      // Ajout optimiste (sans doublon)
+      if (member) {
+        setAssignedMembers((prev) =>
+          prev.some((m) => m.id === member.id)
+            ? prev
+            : [...prev, { id: member.id, prenom: member.prenom, nom: member.nom }]
+        );
+      }
     } catch (error) {
       console.error('Erreur assignation:', error);
       // En cas d'erreur, rester sur l'état actuel
     } finally {
       setIsAssigning(false);
+    }
+  };
+
+  // Retirer un soutien précis
+  const handleRemoveMember = async (teamMemberId: string) => {
+    if (!onUnassign) return;
+
+    setBusyMemberId(teamMemberId);
+    try {
+      await onUnassign(lawyer, teamMemberId);
+      // Retrait optimiste
+      setAssignedMembers((prev) => prev.filter((m) => m.id !== teamMemberId));
+    } catch (error) {
+      console.error('Erreur désassignation:', error);
+      // En cas d'erreur, rester sur l'état actuel
+    } finally {
+      setBusyMemberId(null);
     }
   };
 
@@ -275,11 +276,11 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
           <div className="flex flex-col gap-2 ml-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="whitespace-nowrap icon-hover focus-ring"
-                  disabled={isAssigning || isUnassigning}
+                  disabled={isAssigning || busyMemberId !== null || availableMembers.length === 0}
                 >
                   {isAssigning ? (
                     <>
@@ -287,39 +288,26 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
                       Assignation...
                     </>
                   ) : (
-                    isAssigned ? 'Réassigner' : 'Assigner'
+                    hasAssignments ? '+ Ajouter un soutien' : 'Assigner'
                   )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {teamMembers.map((member) => (
-                  <DropdownMenuItem 
-                    key={member.id}
-                    onClick={() => handleAssignClick(member.id)}
-                    className="cursor-pointer"
-                    disabled={isAssigning || isUnassigning}
-                  >
-                    {member.prenom} {member.nom}
+                {availableMembers.length === 0 ? (
+                  <DropdownMenuItem disabled className="text-gray-400">
+                    Tous les membres sont assignés
                   </DropdownMenuItem>
-                ))}
-                {isAssigned && onUnassign && (
-                  <>
-                    <div className="border-t my-1" />
-                    <DropdownMenuItem 
-                      onClick={handleUnassign}
-                      className="cursor-pointer text-red-600 hover:bg-red-50"
-                      disabled={isAssigning || isUnassigning}
+                ) : (
+                  availableMembers.map((member) => (
+                    <DropdownMenuItem
+                      key={member.id}
+                      onClick={() => handleAddMember(member.id)}
+                      className="cursor-pointer"
+                      disabled={isAssigning || busyMemberId !== null}
                     >
-                      {isUnassigning ? (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                          Désassignation...
-                        </>
-                      ) : (
-                        '❌ Désassigner'
-                      )}
+                      {member.prenom} {member.nom}
                     </DropdownMenuItem>
-                  </>
+                  ))
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -335,28 +323,43 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
                 cabinet: lawyer.cabinet || ''
               }}
               onStatusChange={handleStatusChange}
-              disabled={isAssigning || isUnassigning}
+              disabled={isAssigning || busyMemberId !== null}
             />
 
-            {/* Étiquette d'assignation */}
-            {isAssigned && (
-              <div 
-                onClick={handleUnassign}
-                className={`flex items-center justify-center gap-1 bg-green-100 text-green-800 text-xs px-2 py-1 rounded transition-colors ${
-                  isUnassigning 
-                    ? 'cursor-not-allowed opacity-70' 
-                    : 'cursor-pointer hover:bg-green-200'
-                }`}
-                title={isUnassigning ? 'Désassignation en cours...' : 'Cliquer pour désassigner'}
-              >
-                {isUnassigning ? (
-                  <>
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    <span>Désassignation...</span>
-                  </>
-                ) : (
-                  <span>✅ Assigné</span>
-                )}
+            {/* Étiquettes des soutiens assignés : une pastille par membre, ✕ pour retirer */}
+            {hasAssignments && (
+              <div className="flex flex-col gap-1">
+                {assignedMembers.map((member) => {
+                  const removing = busyMemberId === member.id;
+                  return (
+                    <div
+                      key={member.id}
+                      className={`flex items-center justify-between gap-1 bg-green-100 text-green-800 text-xs px-2 py-1 rounded transition-colors ${
+                        removing ? 'opacity-70' : ''
+                      }`}
+                      title={`Soutien : ${member.prenom} ${member.nom}`}
+                    >
+                      <span className="truncate">✅ {member.prenom} {member.nom}</span>
+                      {onUnassign && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMember(member.id)}
+                          disabled={removing || isAssigning}
+                          className={`flex-shrink-0 rounded p-0.5 transition-colors ${
+                            removing ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-green-200'
+                          }`}
+                          title="Retirer ce soutien"
+                        >
+                          {removing ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <X className="w-3 h-3" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 

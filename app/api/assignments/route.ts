@@ -132,29 +132,71 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Upsert l'assignation (écrase la précédente si elle existe)
-    const { data, error, count } = await supabase
-      .from('assignments')
-      .upsert({ 
-        lawyer_prenomnom, 
-        team_member_id,
-        assigned_at: new Date().toISOString()
-      }, { 
-        onConflict: 'lawyer_prenomnom',
-        ignoreDuplicates: false 
-      })
-      .select(`
-        *,
-        team_members (
-          id,
-          prenom,
-          nom,
-          email
-        )
-      `, { count: 'exact' })
-      .single();
+    // Multi-soutiens : on AJOUTE une assignation (avocat ↔ membre) sans écraser
+    // les autres soutiens de l'avocat. Idempotent si le couple existe déjà.
+    // Volontairement sans upsert onConflict : reste robuste avant ET après la
+    // migration de contrainte (qui remplace l'unicité mono-colonne par le couple).
+    const selectMember = `*, team_members ( id, prenom, nom, email )`;
 
-    if (error) throw error;
+    // 1. Le couple (avocat, membre) existe déjà ? -> succès idempotent, sans re-log.
+    const { data: existingPair } = await supabase
+      .from('assignments')
+      .select(selectMember)
+      .eq('lawyer_prenomnom', lawyer_prenomnom)
+      .eq('team_member_id', team_member_id)
+      .maybeSingle();
+
+    let data: any = existingPair;
+
+    if (!existingPair) {
+      // 2. Sinon on insère la nouvelle assignation.
+      const { data: inserted, error } = await supabase
+        .from('assignments')
+        .insert({
+          lawyer_prenomnom,
+          team_member_id,
+          assigned_at: new Date().toISOString(),
+        })
+        .select(selectMember)
+        .single();
+
+      if (error) {
+        // 23505 = violation d'unicité. Deux cas possibles :
+        //  - couple inséré en concurrence -> on le relit (succès idempotent) ;
+        //  - AVANT migration : l'ancienne contrainte mono-colonne bloque un 2e
+        //    soutien pour cet avocat -> message clair.
+        if ((error as any).code === '23505') {
+          const { data: raced } = await supabase
+            .from('assignments')
+            .select(selectMember)
+            .eq('lawyer_prenomnom', lawyer_prenomnom)
+            .eq('team_member_id', team_member_id)
+            .maybeSingle();
+          if (raced) {
+            data = raced;
+          } else {
+            return NextResponse.json({
+              success: false,
+              error: "La multi-assignation n'est pas encore activée (migration de base en attente). Cet avocat est déjà assigné à un autre membre.",
+            }, { status: 409 });
+          }
+        } else {
+          throw error;
+        }
+      } else {
+        data = inserted;
+        // Journalisation durable dans l'onglet Google Sheet (best-effort),
+        // uniquement sur une VRAIE nouvelle assignation.
+        const m = (inserted as any)?.team_members;
+        const membre = m ? `${m.prenom || ''} ${m.nom || ''}`.trim() : '';
+        await logAssignmentAction({
+          avocat: (lawyer as any)?.nom_complet || lawyer_prenomnom,
+          prenomnom: lawyer_prenomnom,
+          membre,
+          action: 'Assignation',
+        });
+      }
+    }
 
     if (!data) {
       return NextResponse.json({
@@ -163,20 +205,9 @@ export async function POST(request: Request) {
       }, { status: 500 });
     }
 
-    // Journalisation durable dans l'onglet Google Sheet (best-effort)
-    const m = (data as any)?.team_members;
-    const membre = m ? `${m.prenom || ''} ${m.nom || ''}`.trim() : '';
-    await logAssignmentAction({
-      avocat: (lawyer as any)?.nom_complet || lawyer_prenomnom,
-      prenomnom: lawyer_prenomnom,
-      membre,
-      action: 'Assignation',
-    });
-
     return NextResponse.json({
       success: true,
       assignment: data,
-      affected_rows: count
     });
 
   } catch (error) {
@@ -193,7 +224,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const body = await request.json();
-    const { lawyer_prenomnom } = body;
+    const { lawyer_prenomnom, team_member_id } = body;
 
     if (!lawyer_prenomnom) {
       return NextResponse.json({
@@ -202,13 +233,17 @@ export async function DELETE(request: Request) {
       }, { status: 400 });
     }
 
-    console.log(' DELETE: Tentative suppression assignation pour:', lawyer_prenomnom);
+    // Multi-soutiens : si team_member_id est fourni, on ne retire QUE ce soutien.
+    // Sinon (compatibilité ascendante), on retire tous les soutiens de l'avocat.
+    console.log(' DELETE: Tentative suppression assignation pour:', lawyer_prenomnom, team_member_id ? `(membre ${team_member_id})` : '(tous soutiens)');
 
-    // Vérifier d'abord si l'assignation existe
-    const { data: existing, error: checkError } = await supabase
+    // Vérifier d'abord ce qui existe (filtré sur le couple si un membre est visé)
+    let checkQuery = supabase
       .from('assignments')
       .select('*, lawyers(nom_complet), team_members(prenom, nom)')
       .eq('lawyer_prenomnom', lawyer_prenomnom);
+    if (team_member_id) checkQuery = checkQuery.eq('team_member_id', team_member_id);
+    const { data: existing, error: checkError } = await checkQuery;
 
     if (checkError) {
       console.error(' DELETE: Erreur vérification existence:', checkError);
@@ -227,16 +262,19 @@ export async function DELETE(request: Request) {
         message: 'Aucune assignation à supprimer (déjà absente)',
         debug: {
           lawyer_prenomnom,
+          team_member_id: team_member_id || null,
           deleted_count: 0,
           existing_before: 0
         }
       });
     }
 
-    const { error, count } = await supabase
+    let deleteQuery = supabase
       .from('assignments')
       .delete({ count: 'exact' })
       .eq('lawyer_prenomnom', lawyer_prenomnom);
+    if (team_member_id) deleteQuery = deleteQuery.eq('team_member_id', team_member_id);
+    const { error, count } = await deleteQuery;
 
     if (error) {
       console.error(' DELETE: Erreur suppression:', error);
@@ -245,22 +283,25 @@ export async function DELETE(request: Request) {
 
     console.log(' DELETE: Assignation supprimée, lignes affectées:', count);
 
-    // Journalisation durable dans l'onglet Google Sheet (best-effort)
-    const ex = (existing as any)?.[0];
-    const lw = ex?.lawyers;
-    const mb = ex?.team_members;
-    await logAssignmentAction({
-      avocat: lw?.nom_complet || lawyer_prenomnom,
-      prenomnom: lawyer_prenomnom,
-      membre: mb ? `${mb.prenom || ''} ${mb.nom || ''}`.trim() : '',
-      action: 'Désassignation',
-    });
+    // Journalisation durable dans l'onglet Google Sheet (best-effort) : une ligne
+    // par soutien retiré (utile quand on retire tous les soutiens d'un coup).
+    for (const ex of (existing as any[])) {
+      const lw = ex?.lawyers;
+      const mb = ex?.team_members;
+      await logAssignmentAction({
+        avocat: lw?.nom_complet || lawyer_prenomnom,
+        prenomnom: lawyer_prenomnom,
+        membre: mb ? `${mb.prenom || ''} ${mb.nom || ''}`.trim() : '',
+        action: 'Désassignation',
+      });
+    }
 
     return NextResponse.json({
       success: true,
       message: `Assignation supprimée (${count || 'inconnu'} ligne(s) affectée(s))`,
       debug: {
         lawyer_prenomnom,
+        team_member_id: team_member_id || null,
         deleted_count: count,
         existing_before: existing?.length || 0
       }

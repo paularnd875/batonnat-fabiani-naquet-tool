@@ -49,28 +49,33 @@ export default function RecapitulatifPage() {
     }
   };
 
-  const handleDeleteAssignment = async (lawyerPrenomnom: string) => {
+  const handleDeleteAssignment = async (lawyerPrenomnom: string, teamMemberId?: string) => {
     // Trouver les détails de l'avocat pour un message plus clair
     const assignment = teamStats
       .flatMap(member => member.assigned_lawyers)
       .find(lawyer => lawyer.lawyer_prenomnom === lawyerPrenomnom);
-    
+
     const lawyerName = assignment?.lawyer_nom_complet || lawyerPrenomnom;
     const cabinet = assignment?.lawyer_cabinet ? ` (${assignment.lawyer_cabinet})` : '';
-    
+
     if (!confirm(`Êtes-vous sûr de vouloir supprimer l'assignation de :\n\n${lawyerName}${cabinet}\n\nCette action est irréversible.`)) {
       return;
     }
 
-    setDeletingAssignment(lawyerPrenomnom);
-    
+    // Clé de chargement par couple (membre, avocat) : un même avocat peut
+    // apparaître sous plusieurs membres (multi-soutiens).
+    setDeletingAssignment(teamMemberId ? `${teamMemberId}:${lawyerPrenomnom}` : lawyerPrenomnom);
+
     try {
       const response = await fetch('/api/assignments', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ lawyer_prenomnom: lawyerPrenomnom }),
+        body: JSON.stringify({
+          lawyer_prenomnom: lawyerPrenomnom,
+          ...(teamMemberId ? { team_member_id: teamMemberId } : {}),
+        }),
       });
 
       const data = await response.json();
@@ -252,12 +257,12 @@ export default function RecapitulatifPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleDeleteAssignment(assignment.lawyer_prenomnom)}
-                              disabled={deletingAssignment === assignment.lawyer_prenomnom}
+                              onClick={() => handleDeleteAssignment(assignment.lawyer_prenomnom, member.id)}
+                              disabled={deletingAssignment === `${member.id}:${assignment.lawyer_prenomnom}`}
                               className="ml-2 text-red-600 hover:text-red-800 hover:bg-red-50 border-red-300"
                               title="Supprimer cette assignation"
                             >
-                              {deletingAssignment === assignment.lawyer_prenomnom ? (
+                              {deletingAssignment === `${member.id}:${assignment.lawyer_prenomnom}` ? (
                                 <>⏳ Suppression...</>
                               ) : (
                                 <>🗑️ Supprimer</>

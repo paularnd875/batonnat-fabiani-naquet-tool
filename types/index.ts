@@ -47,7 +47,8 @@ export interface Lawyer {
 export interface LawyerCardProps {
   lawyer: Lawyer;
   onAssign: (lawyer: Lawyer, memberId: string) => Promise<void>;
-  onUnassign?: (lawyer: Lawyer) => Promise<void>;
+  // teamMemberId optionnel : si fourni, ne retire QUE ce soutien ; sinon, tous.
+  onUnassign?: (lawyer: Lawyer, teamMemberId?: string) => Promise<void>;
   teamMembers: TeamMember[];
 }
 

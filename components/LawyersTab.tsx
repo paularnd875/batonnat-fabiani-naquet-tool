@@ -276,13 +276,16 @@ export default function LawyersTab({}: LawyersTabProps) {
   };
 
   // Fonction de désassignation (même logique que Cabinet)
-  const handleUnassign = async (lawyerPrenomnom: string) => {
+  const handleUnassign = async (lawyerPrenomnom: string, teamMemberId?: string) => {
     try {
-      console.log(' LawyersTab: Début désassignation:', lawyerPrenomnom);
+      console.log(' LawyersTab: Début désassignation:', lawyerPrenomnom, teamMemberId || '(tous)');
       const response = await fetch('/api/assignments', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lawyer_prenomnom: lawyerPrenomnom }),
+        body: JSON.stringify({
+          lawyer_prenomnom: lawyerPrenomnom,
+          ...(teamMemberId ? { team_member_id: teamMemberId } : {}),
+        }),
       });
       
       const data = await response.json();
@@ -312,9 +315,9 @@ export default function LawyersTab({}: LawyersTabProps) {
   };
 
   // Wrapper pour la désassignation attendue par LawyerCard
-  const handleUnassignWrapper = async (lawyer: Lawyer) => {
-    console.log(' LawyersTab: Désassignation demandée:', lawyer.prenomnom);
-    await handleUnassign(lawyer.prenomnom);
+  const handleUnassignWrapper = async (lawyer: Lawyer, teamMemberId?: string) => {
+    console.log(' LawyersTab: Désassignation demandée:', lawyer.prenomnom, teamMemberId || '(tous)');
+    await handleUnassign(lawyer.prenomnom, teamMemberId);
   };
 
   // Gestion des étiquettes cliquables
