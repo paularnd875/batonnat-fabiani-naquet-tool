@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/database';
 
+// Toujours servir une liste fraîche : la liste des profils ne doit jamais être
+// figée en cache (un ancien cache d'IDs pouvait casser la sélection de profil).
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const db = getDatabase();

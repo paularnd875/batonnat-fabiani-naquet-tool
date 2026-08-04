@@ -293,15 +293,13 @@ class DatabaseSupabaseService {
 
     if (error) {
       console.error(' Erreur récupération tous utilisateurs:', error);
-      // Retourner les membres reels de la campagne en cas d'erreur
-      return [
-        { id: 1, nom: 'Deborde', prenom: 'Alexis', email: 'alexis@bl-nk.fr', created_at: new Date().toISOString() },
-        { id: 2, nom: 'Naquet', prenom: 'Frédéric', email: 'f.naquet@naquet.com', created_at: new Date().toISOString() },
-        { id: 3, nom: 'Giannesini', prenom: 'Jérôme', email: 'jerome.giannesini@outlook.fr', created_at: new Date().toISOString() },
-        { id: 4, nom: 'Fabiani', prenom: 'Marie-Hélène', email: 'mhfabiani@gsmart-avocats.com', created_at: new Date().toISOString() },
-        { id: 5, nom: 'Fabiani-Naquet', prenom: 'Marie-Hélène & Frédéric', email: 'batonnatfabianinaquet@gmail.com', created_at: new Date().toISOString() },
-        { id: 6, nom: 'Arnould', prenom: 'Paul', email: 'paul@bl-nk.fr', created_at: new Date().toISOString() },
-      ];
+      // NE PAS retourner de fallback avec des IDs numériques factices : ces IDs
+      // n'existent pas dans team_members (qui utilise des UUID), donc leur
+      // sélection échouerait ensuite sur select-user → "Utilisateur introuvable".
+      // Pire, cette liste pouvait être mise en cache navigateur (ancien header
+      // immutable) et bloquer durablement la connexion. On propage l'erreur pour
+      // que l'API renvoie un échec honnête plutôt qu'une liste non sélectionnable.
+      throw new Error(`Impossible de charger les membres de l'équipe: ${error.message}`);
     }
 
     // Convertir le format Supabase vers notre interface User
