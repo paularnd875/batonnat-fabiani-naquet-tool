@@ -17,7 +17,9 @@ export default function CabinetPage() {
   const params = useParams();
   const router = useRouter();
   const cabinetName = params?.name ? decodeURIComponent(params.name as string) : '';
-  
+  // Nom commercial (affichage) ; le routing/clé reste la raison sociale (cabinetName).
+  const [cabinetDisplayName, setCabinetDisplayName] = useState<string>('');
+
   const [lawyers, setLawyers] = useState<Lawyer[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,7 +86,11 @@ export default function CabinetPage() {
       
       if (data.success) {
         const allLawyersData = data.cabinet.lawyers;
-        
+
+        // Nom commercial du cabinet (pour l'affichage du titre), depuis les avocats du cabinet.
+        const nc = allLawyersData.find((l: any) => l.cabinet_nom_commercial)?.cabinet_nom_commercial;
+        if (nc) setCabinetDisplayName(nc);
+
         // 🚀 UTILISER LES STATS DE L'API (calculées avec service unifié)
         console.log(' Stats reçues de l\'API:', data.cabinet.stats);
         setFirmStats(data.cabinet.stats);
@@ -321,7 +327,7 @@ export default function CabinetPage() {
           Retour
         </Button>
         
-        <h1 className="text-4xl font-bold mb-2 text-balance">{cabinetName}</h1>
+        <h1 className="text-4xl font-bold mb-2 text-balance">{cabinetDisplayName || cabinetName}</h1>
         <p className="text-xl text-gray-600 stats-numbers">
           {totalLawyers} avocat{totalLawyers > 1 ? 's' : ''} au total
         </p>

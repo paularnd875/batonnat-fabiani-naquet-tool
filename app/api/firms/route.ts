@@ -1,39 +1,39 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/db';
+import { getAllAssignments } from '@/lib/assignments-store';
 
 export async function GET() {
   try {
-    console.log(' Récupération de tous les cabinets par pagination...');
-    
-    let allFirms: any[] = [];
-    let page = 0;
-    const pageSize = 1000;
-    let hasMore = true;
+    console.log(' Calcul des cabinets LIVE (Google Sheets + Vercel Blob)...');
 
-    while (hasMore) {
-      const { data, error } = await supabase
-        .from('firms')
-        .select('*')
-        .order('lawyer_count', { ascending: false })
-        .range(page * pageSize, (page + 1) * pageSize - 1);
+    // Statistiques cabinets calculées à la volée depuis le service unifié
+    const { unifiedData } = await import('@/lib/unified-data');
+    const cabinetStats = await unifiedData.getCabinetStatistics(false);
+    const allLawyers = await unifiedData.getAllLawyersWithStatuses(false);
 
-      if (error) throw error;
+    // Assignations (soutiens) depuis Vercel Blob pour assigned_count
+    const assignments = await getAllAssignments();
+    const assignedLawyersSet = new Set(assignments.map((a) => a.lawyer_prenomnom));
 
-      if (data && data.length > 0) {
-        allFirms.push(...data);
-        page++;
-        console.log(` Page ${page}: +${data.length} cabinets (total: ${allFirms.length})`);
-        
-        // Si cette page a moins de 1000 enregistrements, on a atteint la fin
-        if (data.length < pageSize) {
-          hasMore = false;
+    allLawyers.forEach((lawyer: any) => {
+      if (assignedLawyersSet.has(lawyer.prenomnom)) {
+        const cabinet = lawyer.cabinet || 'Individuel';
+        const stats = cabinetStats.get(cabinet);
+        if (stats) {
+          stats.assigned_count++;
         }
-      } else {
-        hasMore = false;
       }
-    }
+    });
 
-    console.log(` ${allFirms.length} cabinets récupérés au total`);
+    // « Couverture » = part des avocats du cabinet déjà assignés
+    const allFirms = Array.from(cabinetStats.values()).map((firm: any) => ({
+      ...firm,
+      participation_rate: firm.lawyer_count > 0 ? (firm.assigned_count || 0) / firm.lawyer_count : 0,
+    }));
+
+    // Trier par nombre d'avocats décroissant
+    allFirms.sort((a, b) => b.lawyer_count - a.lawyer_count);
+
+    console.log(` ${allFirms.length} cabinets calculés`);
 
     return NextResponse.json({
       success: true,
@@ -43,7 +43,7 @@ export async function GET() {
 
   } catch (error) {
     console.error('Erreur récupération cabinets:', error);
-    
+
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue',

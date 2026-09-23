@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 import { memoryCache, CACHE_KEYS, CACHE_TTL } from './cache';
-import { columnIndices } from './column-map';
+import { columnIndices, CERCLES, MAIN_TAB, SOURCE_TAB_GID } from './column-map';
 
 // Interface pour les données d'avocat depuis le Google Sheet
 export interface SheetLawyer {
@@ -11,6 +11,8 @@ export interface SheetLawyer {
   email: string;
   annee_serment: number;
   cabinet: string;
+  cabinet_nom_commercial?: string;
+  cabinet_display?: string;
   statut_cabinet: string;
   classement: string;
   origine: string;
@@ -19,6 +21,21 @@ export interface SheetLawyer {
   ami_linkedin_mhf: boolean;
   ami_linkedin_fn: boolean;
   photo_url?: string;
+  // Phase 2 : nom/prénom persistés + champs profil + cercles + élus 2026
+  nom?: string;
+  prenom?: string;
+  xp?: string;
+  specialite?: string;
+  mandat?: string;
+  langue?: string;
+  nationalite?: string;
+  tranche_taille_cabinet?: string;
+  siren?: string;
+  st_siren?: string;
+  nbr_occur_siren?: string;
+  elus_statut?: string;
+  elus_certitude?: string;
+  cercles?: string[];
   // Données de vote du Barreau de Paris 2024
   premier_tour_vote?: boolean;
   second_tour_vote?: boolean;
@@ -49,6 +66,7 @@ export interface SheetVoteData {
 class GoogleSheetsService {
   private sheets: any;
   private sheetId: string;
+  private sourceTabTitle: string | null = null;
 
   constructor() {
     if (!process.env.GOOGLE_SERVICE_ACCOUNT_KEY || !process.env.GOOGLE_SHEET_ID) {
@@ -80,6 +98,34 @@ class GoogleSheetsService {
   }
 
   /**
+   * Résout le TITRE de l'onglet source par son gid (immuable), pour survivre aux
+   * renommages d'onglet. Fallback sur MAIN_TAB si le gid est introuvable. Le titre
+   * est mis en cache pour la durée de vie de l'instance. Renvoie une plage A1
+   * citée (le titre peut contenir des espaces).
+   */
+  private async getSourceRange(suffix: string = 'A:CZ'): Promise<string> {
+    if (!this.sourceTabTitle) {
+      try {
+        const meta = await this.sheets.spreadsheets.get({
+          spreadsheetId: this.sheetId,
+          fields: 'sheets.properties(sheetId,title)',
+        });
+        const match = (meta.data.sheets || []).find(
+          (s: any) => s.properties?.sheetId === SOURCE_TAB_GID
+        );
+        this.sourceTabTitle = match?.properties?.title || MAIN_TAB;
+        if (match && match.properties.title !== MAIN_TAB) {
+          console.log(` Onglet source résolu par gid ${SOURCE_TAB_GID} → "${this.sourceTabTitle}"`);
+        }
+      } catch (e) {
+        console.warn(' Résolution onglet par gid impossible, fallback MAIN_TAB:', e);
+        this.sourceTabTitle = MAIN_TAB;
+      }
+    }
+    return `'${this.sourceTabTitle}'!${suffix}`;
+  }
+
+  /**
    * Lit l'onglet avocats et retourne les données structurées
    * 🚀 OPTIMISÉ: Utilise un cache mémoire pour éviter les appels répétés à Google Sheets
    */
@@ -97,7 +143,7 @@ class GoogleSheetsService {
     
     const response = await this.sheets.spreadsheets.values.get({
       spreadsheetId: this.sheetId,
-      range: 'Base principale!A:BU', // Étendu jusqu'à BU pour inclure les photos et AH pour statut_cabinet
+      range: await this.getSourceRange('A:CZ'), // onglet résolu par gid ; résolution par NOM ensuite
     });
 
     const duration = Date.now() - startTime;
@@ -106,9 +152,7 @@ class GoogleSheetsService {
     const rows = response.data.values || [];
     if (rows.length === 0) return [];
 
-    // Première ligne = entêtes pour identifier les colonnes des soutiens précédents
     const headers = rows[0];
-    const soutienColumns = this.findSoutienColumns(headers);
 
     // Résolution des colonnes par NOM d'en-tête (avec index de secours)
     const idx = columnIndices(headers);
@@ -118,38 +162,66 @@ class GoogleSheetsService {
     };
 
     const lawyersData = rows.slice(1).map((row: any[]) => {
-      // Extraction des soutiens précédents
-      const soutiens: string[] = [];
-      soutienColumns.forEach(({ index, binome }) => {
-        if (row[index] === '1') {
-          soutiens.push(binome);
-        }
-      });
-
-      // Extraire nom et prénom du nom_complet
+      // Nom / prénom lus depuis leurs colonnes dédiées (NOM / PRENOM1) ;
+      // nom_complet reste disponible pour l'affichage.
       const nomComplet = at(row, 'nom_complet');
-      const parts = nomComplet.split(' ');
-      const nom = parts.length > 0 ? parts[0] : '';
-      const prenom = parts.length > 1 ? parts.slice(1).join(' ') : '';
+      const nom = at(row, 'nom_seul');
+      const prenom = at(row, 'prenom_seul');
+
+      // Cabinet : `cabinet` = raison sociale (clé technique/regroupement).
+      // `cabinet_display` = nom commercial (plus lisible) si présent, sinon raison sociale.
+      const cabinetRaisonSociale = at(row, 'cabinet');
+      const cabinetNomCommercial = at(row, 'cabinet_nom_commercial');
+      const cabinetDisplay = cabinetNomCommercial || cabinetRaisonSociale;
+
+      // Cercles / réseaux : liste des cercles où la valeur vaut '1'.
+      const cercles = CERCLES
+        .filter(({ key }) => at(row, key) === '1')
+        .map(({ label }) => label);
+
+      // Civilité F/M : brute si présente, sinon dérivée de la salutation
+      // « Cher / chère » (Chère → F, Cher → M) car l'onglet client ne fournit
+      // plus la lettre F/M directement.
+      const civBrut = at(row, 'civilite').trim();
+      const salut = at(row, 'civilite_salutation')
+        .normalize('NFD').replace(/[̀-ͯ]/g, '') // enlève les accents (chère → chere)
+        .trim().toLowerCase();
+      const civilite = civBrut || (salut.startsWith('chere') ? 'F' : salut.startsWith('cher') ? 'M' : '');
 
       const lawyer = {
         prenomnom: at(row, 'prenomnom'),
-        civilite: at(row, 'civilite'),
+        civilite,
         nom_complet: nomComplet,
         nom: nom,
         prenom: prenom,
         telephone: at(row, 'telephone'),
         email: at(row, 'email'),
         annee_serment: parseInt(at(row, 'annee_serment')) || 0,
-        cabinet: at(row, 'cabinet'),
+        cabinet: cabinetRaisonSociale,
+        cabinet_nom_commercial: cabinetNomCommercial,
+        cabinet_display: cabinetDisplay,
         statut_cabinet: at(row, 'statut_cabinet'),
         classement: at(row, 'classement'),
         origine: at(row, 'origine'),
         soutien_public: at(row, 'soutien_public') === '1',
-        soutiens_precedents: soutiens,
+        // Conformité : les soutiens des campagnes précédentes ne sont plus collectés ni stockés.
+        soutiens_precedents: [] as string[],
         ami_linkedin_mhf: at(row, 'linkedin_mhf') === '1',
         ami_linkedin_fn: at(row, 'linkedin_fn') === '1',
         photo_url: at(row, 'photo_url'),
+        // Phase 2 : champs profil + cercles + élus 2026
+        xp: at(row, 'xp'),
+        specialite: at(row, 'specialite'),
+        mandat: at(row, 'mandat'),
+        langue: at(row, 'langue'),
+        nationalite: at(row, 'nationalite'),
+        tranche_taille_cabinet: at(row, 'tranche_taille_cabinet'),
+        siren: at(row, 'siren'),
+        st_siren: at(row, 'st_siren'),
+        nbr_occur_siren: at(row, 'nbr_occur_siren'),
+        elus_statut: at(row, 'elus_statut'),
+        elus_certitude: at(row, 'elus_certitude'),
+        cercles,
         raw_data: row,
       };
 
@@ -158,28 +230,19 @@ class GoogleSheetsService {
 
     // Appliquer la logique de distribution des photos
     const processedLawyers = this.distributePhotos(lawyersData);
-    
-    // 📊 Récupérer et fusionner les données de vote du Barreau de Paris 2024
-    const voteData = await this.readVoteData();
-    const voteMap = new Map<string, SheetVoteData>();
-    voteData.forEach(vote => {
-      voteMap.set(vote.prenomnom, vote);
-    });
 
-    // Fusionner les données de vote avec les données d'avocats
-    const lawyersWithVotes = processedLawyers.map(lawyer => {
-      const voteInfo = voteMap.get(lawyer.prenomnom);
-      return {
-        ...lawyer,
-        premier_tour_vote: voteInfo?.premier_tour_vote,
-        second_tour_vote: voteInfo?.second_tour_vote,
-      };
-    });
-    
+    // Conformité : la participation aux votes des campagnes précédentes n'est plus
+    // exploitée (données non conservées). Champs laissés indéfinis.
+    const lawyersWithVotes = processedLawyers.map(lawyer => ({
+      ...lawyer,
+      premier_tour_vote: undefined as boolean | undefined,
+      second_tour_vote: undefined as boolean | undefined,
+    }));
+
     // 🚀 OPTIMISATION: Mettre en cache pour 60 minutes (Google Sheets très lent)
     memoryCache.set(CACHE_KEYS.LAWYERS_ALL, lawyersWithVotes, CACHE_TTL.LAWYERS);
-    console.log(` ${lawyersWithVotes.length} avocats mis en cache pour 60 minutes (avec données de vote)`);
-    
+    console.log(` ${lawyersWithVotes.length} avocats mis en cache pour 60 minutes`);
+
     return lawyersWithVotes;
   }
 
@@ -599,7 +662,7 @@ class GoogleSheetsService {
   async testConnection(): Promise<any[]> {
     const response = await this.sheets.spreadsheets.values.get({
       spreadsheetId: this.sheetId,
-      range: 'Base principale!A1:BU10', // Étendu jusqu'à BU pour inclure les photos
+      range: await this.getSourceRange('A1:CZ10'), // onglet résolu par gid (test connexion)
     });
 
     return response.data.values || [];

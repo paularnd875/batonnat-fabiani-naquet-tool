@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/db';
+import { attachAssignments } from '@/lib/attach-assignments';
+import { getAllAssignments } from '@/lib/assignments-store';
 import { googleSheets } from '@/lib/google-sheets';
 import { getDatabase } from '@/lib/database';
 
@@ -109,17 +110,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     const offset = (page - 1) * limit;
     const paginatedLawyers = sortedLawyers.slice(offset, offset + limit);
     
-    // OPTIMISATION 4: Assignations seulement pour la page courante
-    const { data: assignments } = await supabase
-      .from('assignments')
-      .select('lawyer_prenomnom');
+    // OPTIMISATION 4: Assignations (soutiens) depuis Vercel Blob
+    const allAssignments = await getAllAssignments();
+    const assignedLawyersSet = new Set(allAssignments.map((a) => a.lawyer_prenomnom));
 
-    const assignedLawyersSet = new Set(assignments?.map((a: any) => a.lawyer_prenomnom) || []);
-    
-    const lawyersWithAssignments = paginatedLawyers.map(lawyer => ({
-      ...lawyer,
-      assignments: assignedLawyersSet.has(lawyer.prenomnom) ? ['assigned'] : []
-    }));
+    // Attacher les soutiens (avec infos membres) à la page courante
+    const lawyersWithAssignments = await attachAssignments(paginatedLawyers);
 
     // Stats calculées de façon optimisée
     const stats = {
@@ -131,11 +127,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     };
 
     // Calcul rapide des stats
-    let voteCount = 0;
     filteredLawyers.forEach((lawyer: any) => {
       if (lawyer.soutien_public) stats.soutien_public_count++;
-      if (lawyer.premier_tour_vote || lawyer.second_tour_vote) voteCount++;
-      
+
       switch (lawyer.classement) {
         case 'C1': stats.c1_count++; break;
         case 'C2': stats.c2_count++; break;
@@ -143,11 +137,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
         case 'Blacklist': stats.bl_count++; break;
         default: stats.unclassified_count++; break;
       }
-      
+
       if (assignedLawyersSet.has(lawyer.prenomnom)) stats.assigned_count++;
     });
-    
-    stats.participation_rate = totalLawyers > 0 ? voteCount / totalLawyers : 0;
+
+    // « Couverture » = part des avocats du cabinet déjà assignés
+    stats.participation_rate = totalLawyers > 0 ? stats.assigned_count / totalLawyers : 0;
 
     const totalPages = Math.ceil(totalLawyers / limit);
     

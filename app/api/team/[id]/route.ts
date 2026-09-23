@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/db';
+import { getTeamMembers, updateTeamMember, removeTeamMember } from '@/lib/team-store';
+import { getAllAssignments } from '@/lib/assignments-store';
 
 // PUT - Mettre à jour un membre d'équipe
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -17,15 +18,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     // Vérifier si l'email existe déjà pour un autre membre
-    const { data: existingMembers, error: checkError } = await supabase
-      .from('team_members')
-      .select('id')
-      .eq('email', email)
-      .neq('id', memberId);
+    const members = await getTeamMembers();
+    const emailTaken = members.some((m) => m.email === email && m.id !== memberId);
 
-    if (checkError) throw checkError;
-
-    if (existingMembers && existingMembers.length > 0) {
+    if (emailTaken) {
       return NextResponse.json({
         success: false,
         error: 'Cet email est déjà utilisé par un autre collaborateur',
@@ -33,14 +29,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     // Mettre à jour le membre
-    const { data, error } = await supabase
-      .from('team_members')
-      .update({ prenom, nom, email })
-      .eq('id', memberId)
-      .select()
-      .single();
-
-    if (error) throw error;
+    const data = await updateTeamMember(memberId, { prenom, nom, email });
 
     if (!data) {
       return NextResponse.json({
@@ -56,7 +45,48 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
   } catch (error) {
     console.error('Erreur mise à jour membre équipe:', error);
-    
+
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue',
+    }, { status: 500 });
+  }
+}
+
+// DELETE - Supprimer un membre d'équipe (refusé s'il a des assignations)
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const resolvedParams = await params;
+    const memberId = resolvedParams.id;
+
+    // Refuser la suppression si le membre a des assignations (soutiens)
+    const assignments = await getAllAssignments();
+    const hasAssignments = assignments.some((a) => a.team_member_id === memberId);
+
+    if (hasAssignments) {
+      return NextResponse.json({
+        success: false,
+        error: 'Impossible de supprimer ce collaborateur : il a des soutiens assignés',
+      }, { status: 400 });
+    }
+
+    const removed = await removeTeamMember(memberId);
+
+    if (!removed) {
+      return NextResponse.json({
+        success: false,
+        error: 'Collaborateur non trouvé',
+      }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Collaborateur supprimé',
+    });
+
+  } catch (error) {
+    console.error('Erreur suppression membre équipe:', error);
+
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue',

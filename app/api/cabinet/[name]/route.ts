@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/db';
-import { googleSheets } from '@/lib/google-sheets';
-import { getDatabase } from '@/lib/database';
+import { attachAssignments } from '@/lib/attach-assignments';
+import { getAllAssignments } from '@/lib/assignments-store';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -130,33 +129,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
     const paginatedLawyers = sortedLawyers.slice(offset, offset + limit);
     const totalPages = Math.ceil(totalLawyers / limit);
 
-    // Récupérer les assignations depuis Supabase pour chaque avocat (seulement pour la page courante)
-    const lawyersWithAssignments = await Promise.all(
-      paginatedLawyers.map(async (lawyer) => {
-        // Récupérer les assignations pour cet avocat via prenomnom
-        const { data: assignments, error: assignError } = await supabase
-          .from('assignments')
-          .select(`
-            id,
-            team_member_id,
-            assigned_at,
-            team_members (
-              id,
-              prenom,
-              nom,
-              email
-            )
-          `)
-          .eq('lawyer_prenomnom', lawyer.prenomnom);
-
-        if (assignError) console.error('Erreur assignations:', assignError);
-
-        return {
-          ...lawyer,
-          assignments: assignments || []
-        };
-      })
-    );
+    // Attacher les assignations (soutiens) depuis Vercel Blob à la page courante
+    const lawyersWithAssignments = await attachAssignments(paginatedLawyers);
 
     console.log(` Cabinet ${cabinetName}: ${lawyersWithAssignments.length} avocats avec photos`);
 
@@ -209,30 +183,18 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       });
     }
 
-    // Calculer les assignations pour ce cabinet (pour l'interface admin)
-    const { data: assignments } = await supabase
-      .from('assignments')
-      .select('lawyer_prenomnom');
-    
-    if (assignments) {
-      const assignedLawyersSet = new Set(assignments.map((a: any) => a.lawyer_prenomnom));
-      filteredLawyers.forEach((lawyer: any) => {
-        if (assignedLawyersSet.has(lawyer.prenomnom)) {
-          realStats.assigned_count++;
-        }
-      });
-    }
-
-    // CORRECTION: Calculer le vrai taux de participation depuis les données de vote Google Sheets
-    let voteCount = 0;
+    // Nombre d'avocats du cabinet déjà assignés (depuis Vercel Blob)
+    const allAssignments = await getAllAssignments();
+    const assignedLawyersSet = new Set(allAssignments.map((a) => a.lawyer_prenomnom));
+    realStats.assigned_count = 0;
     filteredLawyers.forEach((lawyer: any) => {
-      // Compter les avocats qui ont voté au moins à un tour
-      if (lawyer.premier_tour_vote || lawyer.second_tour_vote) {
-        voteCount++;
-      }
+      if (assignedLawyersSet.has(lawyer.prenomnom)) realStats.assigned_count++;
     });
-    
-    realStats.participation_rate = realStats.lawyer_count > 0 ? voteCount / realStats.lawyer_count : 0;
+
+    // « Couverture » = part des avocats du cabinet déjà assignés (plus de participation aux votes)
+    realStats.participation_rate = realStats.lawyer_count > 0
+      ? realStats.assigned_count / realStats.lawyer_count
+      : 0;
 
     return NextResponse.json({
       success: true,

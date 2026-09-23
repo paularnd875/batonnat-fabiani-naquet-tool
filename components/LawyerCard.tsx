@@ -253,22 +253,49 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
               {lawyer.ami_linkedin_mhf && (
                 <Badge variant="outline">LinkedIn MHF</Badge>
               )}
-              
+
               {lawyer.ami_linkedin_fn && (
                 <Badge variant="outline">LinkedIn FN</Badge>
               )}
+
+              {/* Élu 2026 (source : base) — le degré de certitude est en info-bulle */}
+              {lawyer.elus_statut && (
+                <Badge
+                  variant="default"
+                  className="bg-amber-100 text-amber-800"
+                  title={lawyer.elus_certitude || undefined}
+                >
+                  🏛️ {lawyer.elus_statut}
+                </Badge>
+              )}
+
+              {/* Cercles / réseaux (source : MHF) */}
+              {(lawyer.cercles || []).map((cercle) => (
+                <Badge
+                  key={cercle}
+                  variant="outline"
+                  className="bg-indigo-50 text-indigo-700 border-indigo-200"
+                >
+                  {cercle}
+                </Badge>
+              ))}
             </div>
 
-            {lawyer.soutiens_precedents && lawyer.soutiens_precedents.length > 0 && (
-              <div className="mt-2">
-                <p className="text-xs text-gray-500 mb-1">Soutiens précédents :</p>
-                <div className="flex flex-wrap gap-1">
-                  {lawyer.soutiens_precedents.map((soutien, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {soutien}
-                    </Badge>
-                  ))}
-                </div>
+            {/* Profil (source : base) : spécialité / mandat / langue / nationalité */}
+            {(lawyer.specialite || lawyer.mandat || lawyer.langue || lawyer.nationalite) && (
+              <div className="mt-2 space-y-0.5 text-xs text-gray-500">
+                {lawyer.specialite && (
+                  <p><span className="font-medium text-gray-600">Spécialité :</span> {lawyer.specialite}</p>
+                )}
+                {lawyer.mandat && (
+                  <p><span className="font-medium text-gray-600">Mandat :</span> {lawyer.mandat}</p>
+                )}
+                {lawyer.langue && (
+                  <p><span className="font-medium text-gray-600">Langues :</span> {lawyer.langue}</p>
+                )}
+                {lawyer.nationalite && (
+                  <p><span className="font-medium text-gray-600">Nationalité :</span> {lawyer.nationalite}</p>
+                )}
               </div>
             )}
           </div>

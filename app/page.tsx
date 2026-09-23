@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { createClient } from '@supabase/supabase-js';
 import FabianiNaquetHeader from '@/components/FabianiNaquetHeader';
 import SearchBar from '@/components/SearchBar';
 import SearchResults from '@/components/SearchResults';

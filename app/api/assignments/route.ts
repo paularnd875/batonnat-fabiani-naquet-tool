@@ -1,218 +1,132 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/db';
+import {
+  getAllAssignments,
+  addAssignment,
+  removeAssignments,
+  type StoredAssignment,
+} from '@/lib/assignments-store';
+import { getTeamMembers, type TeamMember } from '@/lib/team-store';
+import { getLawyerMap } from '@/lib/lawyer-lookup';
 import { logAssignmentAction } from '@/lib/sheet-log';
+import { writeCurrentAssignments } from '@/lib/sheet-assignments';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// GET - Récupérer l'historique des assignations
+// Assignations stockées dans Vercel Blob. Chaque mutation est journalisée dans le
+// Google Sheet (append-only) et l'état courant y est miroité (best-effort).
+
+// Recalcule et réécrit l'état courant des assignations dans le Google Sheet.
+async function mirrorToSheet(assignments: StoredAssignment[], members: TeamMember[]) {
+  try {
+    const lawyerMap = await getLawyerMap();
+    const memberMap = new Map(members.map((m) => [m.id, `${m.prenom} ${m.nom}`.trim()]));
+    const rows = assignments.map((a) => ({
+      avocat: lawyerMap.get(a.lawyer_prenomnom)?.nom_complet || a.lawyer_prenomnom,
+      prenomnom: a.lawyer_prenomnom,
+      membre: memberMap.get(a.team_member_id) || a.team_member_id,
+      assigned_at: a.assigned_at,
+    }));
+    await writeCurrentAssignments(rows);
+  } catch (e) {
+    console.warn('Miroir Sheet (best-effort) échoué:', e);
+  }
+}
+
+// GET - Historique des assignations (enrichi avocat + membre)
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
-    
-    // Calcul de l'offset pour la pagination
     const offset = (page - 1) * limit;
 
-    console.log(' Récupération historique assignations...');
-    
-    // Récupérer les assignations avec jointure sur les avocats et membres d'équipe
-    const { data: assignments, error, count } = await supabase
-      .from('assignments')
-      .select(`
-        id,
-        lawyer_prenomnom,
-        assigned_at,
-        team_member_id,
-        lawyers!inner(
-          nom_complet,
-          cabinet,
-          classement,
-          email,
-          telephone,
-          civilite
-        ),
-        team_members!inner(
-          prenom,
-          nom,
-          email
-        )
-      `, { count: 'exact' })
-      .order('assigned_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    const [assignments, members, lawyerMap] = await Promise.all([
+      getAllAssignments(),
+      getTeamMembers(),
+      getLawyerMap(),
+    ]);
+    const memberMap = new Map(members.map((m) => [m.id, m]));
 
-    if (error) {
-      console.error('Erreur récupération assignations:', error);
-      throw error;
-    }
+    const sorted = [...assignments].sort(
+      (a, b) => new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime()
+    );
+    const total = sorted.length;
+    const pageItems = sorted.slice(offset, offset + limit);
 
-    // Reformater les données pour la réponse
-    const formattedAssignments = (assignments || []).map((assignment: any) => {
-      // Gestion sécurisée de assigned_by
-      let assignedBy = 'Système';
-      try {
-        if (assignment.team_members && 
-            typeof assignment.team_members === 'object' && 
-            !Array.isArray(assignment.team_members)) {
-          const member = assignment.team_members;
-          if (member.prenom && member.nom) {
-            assignedBy = `${member.prenom} ${member.nom}`;
-          }
-        }
-      } catch (error) {
-        console.warn('Erreur parsing team_members:', error);
-      }
-
+    const formatted = pageItems.map((a) => {
+      const lw = lawyerMap.get(a.lawyer_prenomnom);
+      const mb = memberMap.get(a.team_member_id);
       return {
-        id: assignment.id,
-        lawyer_prenomnom: assignment.lawyer_prenomnom,
-        assigned_at: assignment.assigned_at,
-        assigned_by: assignedBy,
-        status: 'assigned', // Statut par défaut
+        id: a.id,
+        lawyer_prenomnom: a.lawyer_prenomnom,
+        assigned_at: a.assigned_at,
+        assigned_by: mb ? `${mb.prenom} ${mb.nom}`.trim() : 'Système',
+        status: 'assigned',
         notes: null,
-        // Informations de l'avocat depuis la jointure
-        lawyer_nom_complet: assignment.lawyers?.nom_complet || null,
-        lawyer_cabinet: assignment.lawyers?.cabinet || null,
-        lawyer_classement: assignment.lawyers?.classement || null,
-        lawyer_email: assignment.lawyers?.email || null,
-        lawyer_telephone: assignment.lawyers?.telephone || null,
-        lawyer_civilite: assignment.lawyers?.civilite || null,
+        lawyer_nom_complet: lw?.nom_complet || null,
+        lawyer_cabinet: lw?.cabinet || null,
+        lawyer_classement: lw?.classement || null,
+        lawyer_email: lw?.email || null,
+        lawyer_telephone: lw?.telephone || null,
+        lawyer_civilite: lw?.civilite || null,
       };
     });
 
-    console.log(` ${formattedAssignments.length} assignations récupérées`);
-
     return NextResponse.json({
       success: true,
-      assignments: formattedAssignments,
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        total_pages: Math.ceil((count || 0) / limit)
-      }
+      assignments: formatted,
+      pagination: { page, limit, total, total_pages: Math.ceil(total / limit) },
     });
-
   } catch (error) {
-    console.error(' Erreur API assignations:', error);
-    
+    console.error(' Erreur API assignations (GET):', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue',
-      assignments: []
+      assignments: [],
     }, { status: 500 });
   }
 }
 
-// POST - Créer ou modifier une assignation
+// POST - Créer une assignation (multi-soutiens, idempotent)
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { lawyer_prenomnom, team_member_id } = body;
-
+    const { lawyer_prenomnom, team_member_id } = await request.json();
     if (!lawyer_prenomnom || !team_member_id) {
-      return NextResponse.json({
-        success: false,
-        error: 'lawyer_prenomnom et team_member_id requis',
-      }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'lawyer_prenomnom et team_member_id requis' }, { status: 400 });
     }
 
-    // Vérifier que l'avocat n'est pas blacklisté
-    const { data: lawyer } = await supabase
-      .from('lawyers')
-      .select('classement, nom_complet')
-      .eq('prenomnom', lawyer_prenomnom)
-      .single();
-
+    const [members, lawyerMap] = await Promise.all([getTeamMembers(), getLawyerMap()]);
+    const member = members.find((m) => m.id === team_member_id);
+    if (!member) {
+      return NextResponse.json({ success: false, error: "Membre d'équipe introuvable" }, { status: 404 });
+    }
+    const lawyer = lawyerMap.get(lawyer_prenomnom);
     if (lawyer?.classement === 'Blacklist') {
-      return NextResponse.json({
-        success: false,
-        error: 'Impossible d\'assigner un avocat blacklisté',
-      }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Impossible d'assigner un avocat blacklisté" }, { status: 400 });
     }
 
-    // Multi-soutiens : on AJOUTE une assignation (avocat ↔ membre) sans écraser
-    // les autres soutiens de l'avocat. Idempotent si le couple existe déjà.
-    // Volontairement sans upsert onConflict : reste robuste avant ET après la
-    // migration de contrainte (qui remplace l'unicité mono-colonne par le couple).
-    const selectMember = `*, team_members ( id, prenom, nom, email )`;
+    const { created, assignment, all } = await addAssignment(lawyer_prenomnom, team_member_id);
 
-    // 1. Le couple (avocat, membre) existe déjà ? -> succès idempotent, sans re-log.
-    const { data: existingPair } = await supabase
-      .from('assignments')
-      .select(selectMember)
-      .eq('lawyer_prenomnom', lawyer_prenomnom)
-      .eq('team_member_id', team_member_id)
-      .maybeSingle();
-
-    let data: any = existingPair;
-
-    if (!existingPair) {
-      // 2. Sinon on insère la nouvelle assignation.
-      const { data: inserted, error } = await supabase
-        .from('assignments')
-        .insert({
-          lawyer_prenomnom,
-          team_member_id,
-          assigned_at: new Date().toISOString(),
-        })
-        .select(selectMember)
-        .single();
-
-      if (error) {
-        // 23505 = violation d'unicité. Deux cas possibles :
-        //  - couple inséré en concurrence -> on le relit (succès idempotent) ;
-        //  - AVANT migration : l'ancienne contrainte mono-colonne bloque un 2e
-        //    soutien pour cet avocat -> message clair.
-        if ((error as any).code === '23505') {
-          const { data: raced } = await supabase
-            .from('assignments')
-            .select(selectMember)
-            .eq('lawyer_prenomnom', lawyer_prenomnom)
-            .eq('team_member_id', team_member_id)
-            .maybeSingle();
-          if (raced) {
-            data = raced;
-          } else {
-            return NextResponse.json({
-              success: false,
-              error: "La multi-assignation n'est pas encore activée (migration de base en attente). Cet avocat est déjà assigné à un autre membre.",
-            }, { status: 409 });
-          }
-        } else {
-          throw error;
-        }
-      } else {
-        data = inserted;
-        // Journalisation durable dans l'onglet Google Sheet (best-effort),
-        // uniquement sur une VRAIE nouvelle assignation.
-        const m = (inserted as any)?.team_members;
-        const membre = m ? `${m.prenom || ''} ${m.nom || ''}`.trim() : '';
-        await logAssignmentAction({
-          avocat: (lawyer as any)?.nom_complet || lawyer_prenomnom,
-          prenomnom: lawyer_prenomnom,
-          membre,
-          action: 'Assignation',
-        });
-      }
-    }
-
-    if (!data) {
-      return NextResponse.json({
-        success: false,
-        error: 'Echec de l\'assignation, aucune donnée retournée',
-      }, { status: 500 });
+    if (created) {
+      await logAssignmentAction({
+        avocat: lawyer?.nom_complet || lawyer_prenomnom,
+        prenomnom: lawyer_prenomnom,
+        membre: `${member.prenom} ${member.nom}`.trim(),
+        action: 'Assignation',
+      });
+      await mirrorToSheet(all, members);
     }
 
     return NextResponse.json({
       success: true,
-      assignment: data,
+      assignment: {
+        ...assignment,
+        team_members: { id: member.id, prenom: member.prenom, nom: member.nom, email: member.email },
+      },
     });
-
   } catch (error) {
-    console.error('Erreur assignation:', error);
-    
+    console.error('Erreur assignation (POST):', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue',
@@ -220,96 +134,39 @@ export async function POST(request: Request) {
   }
 }
 
-// DELETE - Supprimer une assignation
+// DELETE - Retirer une assignation (un soutien précis, ou tous). Idempotent.
 export async function DELETE(request: Request) {
   try {
-    const body = await request.json();
-    const { lawyer_prenomnom, team_member_id } = body;
-
+    const { lawyer_prenomnom, team_member_id } = await request.json();
     if (!lawyer_prenomnom) {
-      return NextResponse.json({
-        success: false,
-        error: 'lawyer_prenomnom requis',
-      }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'lawyer_prenomnom requis' }, { status: 400 });
     }
 
-    // Multi-soutiens : si team_member_id est fourni, on ne retire QUE ce soutien.
-    // Sinon (compatibilité ascendante), on retire tous les soutiens de l'avocat.
-    console.log(' DELETE: Tentative suppression assignation pour:', lawyer_prenomnom, team_member_id ? `(membre ${team_member_id})` : '(tous soutiens)');
+    const { removed, all } = await removeAssignments(lawyer_prenomnom, team_member_id);
 
-    // Vérifier d'abord ce qui existe (filtré sur le couple si un membre est visé)
-    let checkQuery = supabase
-      .from('assignments')
-      .select('*, lawyers(nom_complet), team_members(prenom, nom)')
-      .eq('lawyer_prenomnom', lawyer_prenomnom);
-    if (team_member_id) checkQuery = checkQuery.eq('team_member_id', team_member_id);
-    const { data: existing, error: checkError } = await checkQuery;
-
-    if (checkError) {
-      console.error(' DELETE: Erreur vérification existence:', checkError);
-      throw checkError;
-    }
-
-    console.log(' DELETE: Assignations trouvées:', existing?.length, existing);
-
-    // Suppression idempotente : si rien à supprimer, l'état voulu est déjà
-    // atteint (assignation absente). On renvoie un succès pour que le front
-    // rafraichisse sa liste sans afficher d'erreur sur une ligne déjà retirée.
-    if (!existing || existing.length === 0) {
-      console.log(' DELETE: Aucune assignation à supprimer (déjà absente), réponse idempotente');
-      return NextResponse.json({
-        success: true,
-        message: 'Aucune assignation à supprimer (déjà absente)',
-        debug: {
-          lawyer_prenomnom,
-          team_member_id: team_member_id || null,
-          deleted_count: 0,
-          existing_before: 0
-        }
-      });
-    }
-
-    let deleteQuery = supabase
-      .from('assignments')
-      .delete({ count: 'exact' })
-      .eq('lawyer_prenomnom', lawyer_prenomnom);
-    if (team_member_id) deleteQuery = deleteQuery.eq('team_member_id', team_member_id);
-    const { error, count } = await deleteQuery;
-
-    if (error) {
-      console.error(' DELETE: Erreur suppression:', error);
-      throw error;
-    }
-
-    console.log(' DELETE: Assignation supprimée, lignes affectées:', count);
-
-    // Journalisation durable dans l'onglet Google Sheet (best-effort) : une ligne
-    // par soutien retiré (utile quand on retire tous les soutiens d'un coup).
-    for (const ex of (existing as any[])) {
-      const lw = ex?.lawyers;
-      const mb = ex?.team_members;
-      await logAssignmentAction({
-        avocat: lw?.nom_complet || lawyer_prenomnom,
-        prenomnom: lawyer_prenomnom,
-        membre: mb ? `${mb.prenom || ''} ${mb.nom || ''}`.trim() : '',
-        action: 'Désassignation',
-      });
+    if (removed.length > 0) {
+      const [members, lawyerMap] = await Promise.all([getTeamMembers(), getLawyerMap()]);
+      const memberMap = new Map(members.map((m) => [m.id, m]));
+      const lw = lawyerMap.get(lawyer_prenomnom);
+      for (const ex of removed) {
+        const mb = memberMap.get(ex.team_member_id);
+        await logAssignmentAction({
+          avocat: lw?.nom_complet || lawyer_prenomnom,
+          prenomnom: lawyer_prenomnom,
+          membre: mb ? `${mb.prenom} ${mb.nom}`.trim() : '',
+          action: 'Désassignation',
+        });
+      }
+      await mirrorToSheet(all, members);
     }
 
     return NextResponse.json({
       success: true,
-      message: `Assignation supprimée (${count || 'inconnu'} ligne(s) affectée(s))`,
-      debug: {
-        lawyer_prenomnom,
-        team_member_id: team_member_id || null,
-        deleted_count: count,
-        existing_before: existing?.length || 0
-      }
+      message: `Assignation supprimée (${removed.length} ligne(s))`,
+      debug: { lawyer_prenomnom, team_member_id: team_member_id || null, deleted_count: removed.length },
     });
-
   } catch (error) {
-    console.error(' DELETE: Erreur suppression assignation:', error);
-    
+    console.error(' Erreur suppression assignation (DELETE):', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue',

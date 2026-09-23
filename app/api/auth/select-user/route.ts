@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/database';
+import { getTeamMemberById } from '@/lib/team-store';
 
 export async function POST(request: Request) {
   try {
@@ -12,9 +12,8 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    const db = getDatabase();
-    const user = await db.getUserById(userId);
-    
+    const user = await getTeamMemberById(String(userId));
+
     if (!user) {
       return NextResponse.json({
         success: false,

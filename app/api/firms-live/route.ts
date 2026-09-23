@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { googleSheets } from '@/lib/google-sheets';
-import { supabase } from '@/lib/db';
+import { getAllAssignments } from '@/lib/assignments-store';
 import { memoryCache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 
 export async function GET() {
@@ -26,12 +25,9 @@ export async function GET() {
     // Récupérer les données unifiées pour les assignations
     const allLawyers = await unifiedData.getAllLawyersWithStatuses(false);
 
-    // 3. Récupérer les assignations depuis Supabase (pour assigned_count seulement)
-    const { data: assignments } = await supabase
-      .from('assignments')
-      .select('lawyer_prenomnom');
-
-    const assignedLawyersSet = new Set(assignments?.map((a: any) => a.lawyer_prenomnom) || []);
+    // 3. Récupérer les assignations depuis Vercel Blob (pour assigned_count)
+    const assignments = await getAllAssignments();
+    const assignedLawyersSet = new Set(assignments.map((a) => a.lawyer_prenomnom));
     
     // 4. Calculer assigned_count pour chaque cabinet
     allLawyers.forEach((lawyer: any) => {
@@ -44,57 +40,24 @@ export async function GET() {
       }
     });
 
-    // 5. Récupérer les taux de participation depuis les données Google Sheets (plus précis)
-    const { data: firmsData } = await supabase
-      .from('firms_data')
-      .select('*');
+    // 5a. Nom commercial (plus lisible) par cabinet (raison sociale), pour l'affichage.
+    const nomCommercialMap = new Map<string, string>();
+    allLawyers.forEach((lawyer: any) => {
+      const rs = lawyer.cabinet;
+      const nc = lawyer.cabinet_nom_commercial;
+      if (rs && nc && !nomCommercialMap.has(rs)) nomCommercialMap.set(rs, nc);
+    });
 
-    let participationRatesMap = new Map<string, number>();
-    let tailleCabinetsMap = new Map<string, string>();
-    
-    try {
-      const firmsParticipationData = await googleSheets.readFirmsData();
-      console.log(` ${firmsParticipationData.length} taux de participation récupérés depuis Google Sheets`);
-      
-      firmsParticipationData.forEach((firmData: any) => {
-        // Normaliser les noms pour éviter les erreurs de matching
-        let normalizedName = firmData.cabinet;
-        if (normalizedName === 'Individuel') {
-          normalizedName = 'Avocats en individuel';
-        }
-        participationRatesMap.set(normalizedName, firmData.taux_participation_moyen);
-        
-        // Debug des premiers
-        if (firmsParticipationData.indexOf(firmData) < 3) {
-          console.log(` ${normalizedName}: ${(firmData.taux_participation_moyen * 100).toFixed(1)}% participation`);
-        }
-
-        // 6. Ajouter les tailles de cabinet
-        if (firmData.taille) {
-          tailleCabinetsMap.set(normalizedName, firmData.taille);
-        }
-      });
-    } catch (error) {
-      console.warn(' Données Google Sheets non disponibles, utilisation calcul local');
-    }
-
-    // 7. Finaliser avec les taux de participation et tailles depuis Google Sheets
+    // 5b. Conformité : plus de taux de participation aux votes (onglet interdit).
+    // La "couverture" d'un cabinet = part de ses avocats déjà assignés à un membre
+    // d'équipe (assigned_count / lawyer_count).
     const cabinetsArray = Array.from(cabinetStats.values()).map((firm: any) => {
-      let participationRate = participationRatesMap.get(firm.name);
-      let tailleCabinet = tailleCabinetsMap.get(firm.name);
-      
-      // Si pas trouvé dans Google Sheets, utiliser le calcul local basé sur les votes
-      if (participationRate === undefined) {
-        participationRate = firm.lawyer_count > 0 ? firm.vote_count / firm.lawyer_count : 0;
-        if (firm.vote_count > 0) {
-          console.log(` Calcul local pour ${firm.name}: ${firm.vote_count}/${firm.lawyer_count} = ${(participationRate * 100).toFixed(1)}%`);
-        }
-      }
-      
+      const couverture = firm.lawyer_count > 0 ? (firm.assigned_count || 0) / firm.lawyer_count : 0;
       return {
         ...firm,
-        participation_rate: participationRate || 0,
-        taille_cabinet: tailleCabinet || undefined
+        participation_rate: couverture,
+        taille_cabinet: undefined,
+        display_name: nomCommercialMap.get(firm.name) || firm.name,
       };
     });
 

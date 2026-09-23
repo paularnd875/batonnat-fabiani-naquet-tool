@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { googleSheets } from '@/lib/google-sheets';
-import { supabase } from '@/lib/db';
+import { getAllAssignments } from '@/lib/assignments-store';
+import { getTeamMembers } from '@/lib/team-store';
 import { memoryCache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 import { getDatabase } from '@/lib/database';
 
@@ -51,16 +52,9 @@ export async function GET(request: Request) {
       }
     });
 
-    // 3. Récupérer les assignations depuis Supabase avec les détails des membres d'équipe
-    const { data: assignments } = await supabase
-      .from('assignments')
-      .select('lawyer_prenomnom, team_member_id')
-      .then((result: any) => result);
-
-    const { data: teamMembers } = await supabase
-      .from('team_members')
-      .select('*')
-      .then((result: any) => result);
+    // 3. Récupérer les assignations et les membres d'équipe depuis Vercel Blob
+    const assignments = await getAllAssignments();
+    const teamMembers = await getTeamMembers();
 
     // 4. Calculer la couverture par membre d'équipe
     const teamCoverage: any = {};

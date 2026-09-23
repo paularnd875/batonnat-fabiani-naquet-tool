@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { MAIN_TAB } from '@/lib/column-map';
 
 export async function GET() {
   try {
@@ -22,7 +23,7 @@ export async function GET() {
     // Test pour récupérer les colonnes A (nom_complet) et BU (photo_url) des 20 premières lignes
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: 'Base principale!A1:BU21', // Header + 20 premières lignes
+      range: `'${MAIN_TAB}'!A1:CZ21`, // Header + 20 premières lignes (onglet source client)
     });
 
     const rows = response.data.values || [];

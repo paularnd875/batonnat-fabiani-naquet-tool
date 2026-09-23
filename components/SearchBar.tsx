@@ -3,12 +3,25 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, User, Building2, Loader2, X, Shield, Award, AlertCircle, Users, UserCheck, Briefcase } from 'lucide-react';
 import Link from 'next/link';
+import { CERCLES } from '@/lib/column-map';
+
+// Options des filtres avancés (Phase 2)
+const ANCIENNETE_OPTIONS = ['0-5', '5-25', '25-50', '50&+'];
+const ELU_OPTIONS: { value: string; label: string }[] = [
+  { value: 'exercice', label: 'Élu en exercice' },
+  { value: 'sortant', label: 'Élu sortant non réélu' },
+  { value: 'candidat', label: 'Candidat 2026 non élu' },
+  { value: 'ancien', label: 'Ancien élu' },
+  { value: 'any', label: '— Tout statut élu —' },
+];
 
 interface Lawyer {
   prenomnom: string;
   nom_complet: string;
   civilite: string;
   cabinet: string;
+  cabinet_display?: string;
+  cabinet_nom_commercial?: string;
   email: string;
   photo_url?: string;
   specialisations?: string[];
@@ -20,6 +33,7 @@ interface Lawyer {
 interface Cabinet {
   name: string;
   originalName: string;
+  display_name?: string;
   lawyer_count: number;
   c1_count: number;
   c2_count: number;
@@ -53,7 +67,10 @@ export default function SearchBar({ onSearchResults, showDropdown = true, search
   const [classificationFilter, setClassificationFilter] = useState<'all' | 'C1' | 'C2' | 'C3' | 'BL' | 'SP'>('all');
   const [exerciceFilter, setExerciceFilter] = useState<'all' | 'Individuel' | 'Collaborateur' | 'Associé' | 'SCP'>('all');
   const [tailleFilter, setTailleFilter] = useState<'all' | '0' | '1' | '2-5' | '5-25' | '25-50' | '50&+' | 'Non trouvé'>('all');
-  
+  const [cercleFilter, setCercleFilter] = useState<string>('all');
+  const [ancienneteFilter, setAncienneteFilter] = useState<string>('all');
+  const [eluFilter, setEluFilter] = useState<string>('all');
+
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -74,10 +91,19 @@ export default function SearchBar({ onSearchResults, showDropdown = true, search
     return () => window.removeEventListener('lawyerStatusChanged', handleStatusChange);
   }, [results, query]);
 
+  // Un filtre (quelconque) est-il actif ?
+  const anyFilterActive =
+    classificationFilter !== 'all' ||
+    exerciceFilter !== 'all' ||
+    tailleFilter !== 'all' ||
+    cercleFilter !== 'all' ||
+    ancienneteFilter !== 'all' ||
+    eluFilter !== 'all';
+
   // Recherche avec debounce
   useEffect(() => {
     // Si pas de texte ET pas de filtre, on n'affiche rien
-    if (query.length < 2 && classificationFilter === 'all' && exerciceFilter === 'all' && tailleFilter === 'all') {
+    if (query.length < 2 && !anyFilterActive) {
       setResults(null);
       setShowResults(false);
       return;
@@ -96,8 +122,8 @@ export default function SearchBar({ onSearchResults, showDropdown = true, search
         const localStorageStatuses = statusChangesStorage.getCurrentStatuses();
         
         // Utiliser une limite plus élevée quand on filtre sans texte
-        const limit = (!query && (classificationFilter !== 'all' || exerciceFilter !== 'all' || tailleFilter !== 'all')) ? 5000 : 50;
-        
+        const limit = (!query && anyFilterActive) ? 5000 : 50;
+
         // 🚀 UTILISER LA NOUVELLE API AVEC LOCALSTORAGE
         const response = await fetch('/api/search-with-localstorage', {
           method: 'POST',
@@ -110,6 +136,9 @@ export default function SearchBar({ onSearchResults, showDropdown = true, search
             classification: classificationFilter,
             exercice: exerciceFilter,
             taille: tailleFilter,
+            cercle: cercleFilter,
+            anciennete: ancienneteFilter,
+            elu: eluFilter,
             limit,
             localStorageStatuses
           })
@@ -132,7 +161,7 @@ export default function SearchBar({ onSearchResults, showDropdown = true, search
     }, 200); // Debounce de 200ms
 
     return () => clearTimeout(timeoutId);
-  }, [query, classificationFilter, exerciceFilter, tailleFilter]);
+  }, [query, classificationFilter, exerciceFilter, tailleFilter, cercleFilter, ancienneteFilter, eluFilter]);
 
   // Fermer les résultats si clic externe
   useEffect(() => {
@@ -153,6 +182,9 @@ export default function SearchBar({ onSearchResults, showDropdown = true, search
     setClassificationFilter('all');
     setExerciceFilter('all');
     setTailleFilter('all');
+    setCercleFilter('all');
+    setAncienneteFilter('all');
+    setEluFilter('all');
     // Notifier le parent de l'effacement
     onSearchResults?.(null);
     inputRef.current?.focus();
@@ -434,6 +466,48 @@ export default function SearchBar({ onSearchResults, showDropdown = true, search
           })}
           </div>
         </div>
+
+        {/* Section 4: Filtres avancés (cercles, ancienneté, élus 2026) */}
+        <div>
+          <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Cercles · Ancienneté · Élus 2026</h4>
+          <div className="flex gap-2 flex-wrap">
+            <select
+              value={cercleFilter}
+              onChange={(e) => setCercleFilter(e.target.value)}
+              className="px-2 py-1 text-sm rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+              aria-label="Filtrer par cercle / réseau"
+            >
+              <option value="all">Cercle : tous</option>
+              {CERCLES.map((c) => (
+                <option key={c.key} value={c.label}>{c.label}</option>
+              ))}
+            </select>
+
+            <select
+              value={ancienneteFilter}
+              onChange={(e) => setAncienneteFilter(e.target.value)}
+              className="px-2 py-1 text-sm rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+              aria-label="Filtrer par ancienneté"
+            >
+              <option value="all">Ancienneté : toutes</option>
+              {ANCIENNETE_OPTIONS.map((a) => (
+                <option key={a} value={a}>{a} ans</option>
+              ))}
+            </select>
+
+            <select
+              value={eluFilter}
+              onChange={(e) => setEluFilter(e.target.value)}
+              className="px-2 py-1 text-sm rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+              aria-label="Filtrer par statut élu 2026"
+            >
+              <option value="all">Élus 2026 : tous</option>
+              {ELU_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Résultats de recherche */}
@@ -471,7 +545,7 @@ export default function SearchBar({ onSearchResults, showDropdown = true, search
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <h5 className="font-medium text-gray-900">{cabinet.name}</h5>
+                      <h5 className="font-medium text-gray-900">{cabinet.display_name || cabinet.name}</h5>
                       <p className="text-sm text-gray-600">
                         {cabinet.lawyer_count} avocat{cabinet.lawyer_count > 1 ? 's' : ''}
                       </p>
@@ -542,7 +616,7 @@ export default function SearchBar({ onSearchResults, showDropdown = true, search
                       </div>
                       
                       <p className="text-sm text-gray-600 truncate">
-                        {lawyer.cabinet === 'Individuel' ? 'Avocat en individuel' : lawyer.cabinet}
+                        {lawyer.cabinet === 'Individuel' ? 'Avocat en individuel' : (lawyer.cabinet_display || lawyer.cabinet)}
                       </p>
                       
                       {lawyer.statut_cabinet && (

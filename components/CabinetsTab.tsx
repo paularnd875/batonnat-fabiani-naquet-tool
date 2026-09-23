@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react';
 
 interface Firm {
   name: string;
+  display_name?: string; // Nom commercial (affichage) ; `name` = raison sociale (clé/routing)
   lawyer_count: number;
   c1_count: number;
   c2_count: number;
@@ -52,9 +53,10 @@ export default function CabinetsTab({}: CabinetsTabProps) {
     }
   };
 
-  const filteredFirms = firms.filter(firm => 
-    firm.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredFirms = firms.filter(firm => {
+    const q = searchTerm.toLowerCase();
+    return firm.name.toLowerCase().includes(q) || (firm.display_name || '').toLowerCase().includes(q);
+  });
 
   // Calcul de la pagination
   const totalPages = Math.ceil(filteredFirms.length / firmsPerPage);
@@ -130,11 +132,11 @@ export default function CabinetsTab({}: CabinetsTabProps) {
         </div>
       )}
 
-      {/* Label explicatif pour les pourcentages de participation */}
+      {/* Label : part des avocats du cabinet déjà assignés (couverture) */}
       {firms.length > 0 && (
         <div className="flex justify-end">
-          <div className="text-sm font-bold text-blue-600">
-            % participation
+          <div className="text-sm font-bold text-blue-600" title="Part des avocats du cabinet déjà assignés à un membre d'équipe">
+            % couverture (assignés)
           </div>
         </div>
       )}
@@ -148,7 +150,7 @@ export default function CabinetsTab({}: CabinetsTabProps) {
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-fn-black mb-2 text-balance">{firm.name}</h3>
+                      <h3 className="text-xl font-semibold text-fn-black mb-2 text-balance">{firm.display_name || firm.name}</h3>
                       <p className="text-gray-600 font-medium">
                         {firm.lawyer_count} avocat{firm.lawyer_count > 1 ? 's' : ''}
                       </p>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { googleSheets, SheetLawyer } from '@/lib/google-sheets';
-import { supabase } from '@/lib/db';
+import { attachAssignments } from '@/lib/attach-assignments';
 import { getDatabase } from '@/lib/database';
 
 interface LawyersApiResponse {
@@ -226,33 +226,8 @@ export async function GET(request: NextRequest) {
     
     console.log(` Page ${page}/${pagination.totalPages} - ${paginatedLawyers.length} avocats retournés`);
     
-    // Récupérer les assignations depuis Supabase pour chaque avocat (seulement pour la page courante)
-    const lawyersWithAssignments = await Promise.all(
-      paginatedLawyers.map(async (lawyer) => {
-        // Récupérer les assignations pour cet avocat via prenomnom
-        const { data: assignments, error: assignError } = await supabase
-          .from('assignments')
-          .select(`
-            id,
-            team_member_id,
-            assigned_at,
-            team_members (
-              id,
-              prenom,
-              nom,
-              email
-            )
-          `)
-          .eq('lawyer_prenomnom', lawyer.prenomnom);
-
-        if (assignError) console.error('Erreur assignations:', assignError);
-
-        return {
-          ...lawyer,
-          assignments: assignments || []
-        };
-      })
-    );
+    // Attacher les assignations (soutiens) depuis Vercel Blob à la page courante
+    const lawyersWithAssignments = await attachAssignments(paginatedLawyers);
     
     const response: LawyersApiResponse = {
       success: true,

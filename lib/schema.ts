@@ -5,14 +5,37 @@ export const lawyers = pgTable('lawyers', {
   prenomnom: text('prenomnom').unique().notNull(),
   civilite: text('civilite'),
   nom_complet: text('nom_complet'),
+  nom: text('nom'),
+  prenom: text('prenom'),
   telephone: text('telephone'),
   email: text('email'),
   annee_serment: integer('annee_serment'),
-  cabinet: text('cabinet').notNull(),
+  cabinet: text('cabinet').notNull(), // Raison sociale (clé de regroupement)
+  cabinet_nom_commercial: text('cabinet_nom_commercial'), // Nom commercial (affichage)
+  statut_cabinet: text('statut_cabinet'), // MODE_EXE : Collaborateur|Associé|Individuel…
+  photo_url: text('photo_url'),
   classement: text('classement'), // C1|C2|C3|Blacklist|null
+  origine: text('origine'), // C123 origine
+  soutien_public: boolean('soutien_public').default(false),
+  // Conformité : plus de soutiens de campagnes précédentes ; conservé (toujours vide) pour compat.
   soutiens_precedents: jsonb('soutiens_precedents').$type<string[]>(),
   ami_linkedin_mhf: boolean('ami_linkedin_mhf').default(false),
   ami_linkedin_fn: boolean('ami_linkedin_fn').default(false),
+  // Phase 2 : profil supplémentaire
+  xp: text('xp'), // tranche d'ancienneté (0-5, 5-25, 25-50…)
+  specialite: text('specialite'),
+  mandat: text('mandat'),
+  langue: text('langue'),
+  nationalite: text('nationalite'),
+  tranche_taille_cabinet: text('tranche_taille_cabinet'),
+  siren: text('siren'),
+  st_siren: text('st_siren'),
+  nbr_occur_siren: text('nbr_occur_siren'),
+  // Phase 2 : élus 2026
+  elus_statut: text('elus_statut'),
+  elus_certitude: text('elus_certitude'),
+  // Phase 2 : cercles / réseaux (source : MHF)
+  cercles: text('cercles').array(),
   raw_data: jsonb('raw_data'),
   last_synced_at: timestamp('last_synced_at', { withTimezone: true }).defaultNow(),
 }, (table) => ({

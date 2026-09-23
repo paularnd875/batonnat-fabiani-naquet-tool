@@ -37,6 +37,7 @@ interface TeamMember {
 interface Cabinet {
   name: string;
   originalName: string;
+  display_name?: string; // Nom commercial (affichage) ; routing sur originalName (raison sociale)
   lawyer_count: number;
   c1_count: number;
   c2_count: number;
@@ -298,7 +299,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
                         <h4 className="text-xl font-semibold text-fn-black mb-2 text-balance">
-                          {cabinet.name}
+                          {cabinet.display_name || cabinet.name}
                         </h4>
                         <p className="text-gray-600 font-medium">
                           {cabinet.lawyer_count} avocat{cabinet.lawyer_count > 1 ? 's' : ''}

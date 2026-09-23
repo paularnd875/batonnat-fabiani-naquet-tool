@@ -1,67 +1,44 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/db';
+import { getAllAssignments } from '@/lib/assignments-store';
+import { getLawyerMap } from '@/lib/lawyer-lookup';
 
 export async function GET() {
   try {
-    // Statistiques d'assignations
-    const { data: assignments, error: assignmentsError } = await supabase
-      .from('assignments')
-      .select(`
-        id,
-        team_member_id,
-        team_members (
-          id,
-          prenom,
-          nom
-        )
-      `);
+    // Assignations (soutiens) depuis Vercel Blob
+    const assignments = await getAllAssignments();
 
-    if (assignmentsError) throw assignmentsError;
+    // Avocats depuis le Google Sheet (pour les totaux et classements)
+    const lawyerMap = await getLawyerMap();
+    const lawyers = Array.from(lawyerMap.values());
 
-    // Compter le total d'avocats
-    const { count: totalLawyers, error: totalError } = await supabase
-      .from('lawyers')
-      .select('*', { count: 'exact', head: true });
+    const totalLawyers = lawyers.length;
+    let c1Count = 0;
+    let c2Count = 0;
+    let c3Count = 0;
+    let blacklistCount = 0;
+    let soutienPublicCount = 0;
 
-    if (totalError) throw totalError;
-
-    // Compter les différentes catégories
-    const { count: c1Count, error: c1Error } = await supabase
-      .from('lawyers')
-      .select('*', { count: 'exact', head: true })
-      .eq('classement', 'C1');
-
-    const { count: c2Count, error: c2Error } = await supabase
-      .from('lawyers')
-      .select('*', { count: 'exact', head: true })
-      .eq('classement', 'C2');
-
-    const { count: c3Count, error: c3Error } = await supabase
-      .from('lawyers')
-      .select('*', { count: 'exact', head: true })
-      .eq('classement', 'C3');
-
-    const { count: blacklistCount, error: blacklistError } = await supabase
-      .from('lawyers')
-      .select('*', { count: 'exact', head: true })
-      .eq('classement', 'Blacklist');
-
-    const { count: soutienPublicCount, error: soutienError } = await supabase
-      .from('lawyers')
-      .select('*', { count: 'exact', head: true })
-      .eq('soutien_public', true);
+    lawyers.forEach((lawyer) => {
+      if (lawyer.soutien_public) soutienPublicCount++;
+      switch (lawyer.classement) {
+        case 'C1': c1Count++; break;
+        case 'C2': c2Count++; break;
+        case 'C3': c3Count++; break;
+        case 'Blacklist': blacklistCount++; break;
+      }
+    });
 
     // Calculer les avocats "vraiment" non assignés
     // = Total - (assignations manuelles + C1 + C2 + C3 + soutiens publics)
-    const manuallyAssignedCount = assignments?.length || 0;
-    const preAssignedCount = (c1Count || 0) + (c2Count || 0) + (c3Count || 0) + (soutienPublicCount || 0);
+    const manuallyAssignedCount = assignments.length;
+    const preAssignedCount = c1Count + c2Count + c3Count + soutienPublicCount;
     const totalAssignedCount = manuallyAssignedCount + preAssignedCount;
-    const unassignedCount = (totalLawyers || 0) - totalAssignedCount;
+    const unassignedCount = totalLawyers - totalAssignedCount;
 
     // Grouper les assignations par membre d'équipe
     const teamCoverage: { [key: string]: number } = {};
-    
-    assignments?.forEach((assignment: any) => {
+
+    assignments.forEach((assignment) => {
       const memberId = assignment.team_member_id;
       if (!teamCoverage[memberId]) {
         teamCoverage[memberId] = 0;
@@ -70,14 +47,14 @@ export async function GET() {
     });
 
     const stats = {
-      total_assignments: assignments?.length || 0,
+      total_assignments: assignments.length,
       assigned_lawyers: totalAssignedCount,
       unassigned_lawyers: Math.max(0, unassignedCount),
-      c1_count: c1Count || 0,
-      c2_count: c2Count || 0,
-      c3_count: c3Count || 0,
-      blacklist_count: blacklistCount || 0,
-      soutien_public_count: soutienPublicCount || 0,
+      c1_count: c1Count,
+      c2_count: c2Count,
+      c3_count: c3Count,
+      blacklist_count: blacklistCount,
+      soutien_public_count: soutienPublicCount,
       team_coverage: teamCoverage,
     };
 
@@ -88,7 +65,7 @@ export async function GET() {
 
   } catch (error) {
     console.error('Erreur statistiques assignations:', error);
-    
+
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue',

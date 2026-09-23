@@ -7,17 +7,19 @@ import { unifiedData } from '@/lib/unified-data';
  */
 export async function POST(request: Request) {
   try {
-    const { query, type = 'all', classification = 'all', exercice = 'all', taille = 'all', limit = 100, localStorageStatuses } = await request.json();
-    
+    const { query, type = 'all', classification = 'all', exercice = 'all', taille = 'all', cercle = 'all', anciennete = 'all', elu = 'all', limit = 100, localStorageStatuses } = await request.json();
+
+    const hasFilter = classification !== 'all' || exercice !== 'all' || taille !== 'all' || cercle !== 'all' || anciennete !== 'all' || elu !== 'all';
+
     // Si aucune recherche textuelle mais un filtre, on autorise la recherche
-    if ((!query || query.length < 2) && classification === 'all' && exercice === 'all' && taille === 'all') {
+    if ((!query || query.length < 2) && !hasFilter) {
       return NextResponse.json({
         success: false,
         error: 'Requête de recherche trop courte (minimum 2 caractères) ou sélectionnez un filtre'
       }, { status: 400 });
     }
 
-    console.log(` Recherche avec localStorage: "${query}" (type: ${type}, classification: ${classification}, exercice: ${exercice}, taille: ${taille}, limit: ${limit})`);
+    console.log(` Recherche avec localStorage: "${query}" (type: ${type}, classification: ${classification}, exercice: ${exercice}, taille: ${taille}, cercle: ${cercle}, anciennete: ${anciennete}, elu: ${elu}, limit: ${limit})`);
     console.log(` LocalStorage: ${Object.keys(localStorageStatuses || {}).length} statuts appliqués`);
     
     const startTime = Date.now();
@@ -63,17 +65,22 @@ export async function POST(request: Request) {
     // 1. RECHERCHE DANS LES AVOCATS
     if (type === 'all' || type === 'lawyers') {
       const foundLawyers = lawyersWithLocalStorage.filter((lawyer: any) => {
-        // Filtre textuel
+        // Filtre textuel (inclut désormais spécialité/mandat/langue/nationalité + cercles)
         const searchFields = [
           lawyer.nom_complet || '',
           lawyer.prenomnom || '',
           lawyer.civilite || '',
           lawyer.specialisations?.join(' ') || '',
+          lawyer.specialite || '',
+          lawyer.mandat || '',
+          lawyer.langue || '',
+          lawyer.nationalite || '',
+          (lawyer.cercles || []).join(' '),
           lawyer.cabinet || '',
           lawyer.email || '',
           lawyer.classement || ''
         ].join(' ').toLowerCase();
-        
+
         const matchesText = !query || searchFields.includes(queryLower);
         
         // Filtre de classification
@@ -106,8 +113,27 @@ export async function POST(request: Request) {
           }
           // Pour les autres tailles, on autorise tout pour l'instant
         }
-        
-        return matchesText && matchesClassification && matchesExercice && matchesTaille;
+
+        // Filtre cercle / réseau (source : MHF)
+        let matchesCercle = true;
+        if (cercle !== 'all') {
+          matchesCercle = (lawyer.cercles || []).includes(cercle);
+        }
+
+        // Filtre ancienneté (tranche XP : 0-5, 5-25, 25-50, 50&+)
+        let matchesAnciennete = true;
+        if (anciennete !== 'all') {
+          matchesAnciennete = (lawyer.xp || '') === anciennete;
+        }
+
+        // Filtre élus 2026 (correspondance par mot-clé sur le statut)
+        let matchesElu = true;
+        if (elu !== 'all') {
+          const statut = (lawyer.elus_statut || '').toLowerCase();
+          matchesElu = elu === 'any' ? statut !== '' : statut.includes(elu);
+        }
+
+        return matchesText && matchesClassification && matchesExercice && matchesTaille && matchesCercle && matchesAnciennete && matchesElu;
       });
 
       // Trier par pertinence (nom d'abord, puis cabinet)
@@ -131,12 +157,26 @@ export async function POST(request: Request) {
         nom_complet: lawyer.nom_complet,
         civilite: lawyer.civilite,
         cabinet: lawyer.cabinet || 'Individuel',
+        cabinet_nom_commercial: lawyer.cabinet_nom_commercial,
+        cabinet_display: lawyer.cabinet_display || lawyer.cabinet || 'Individuel',
         email: lawyer.email,
         photo_url: lawyer.photo_url,
         specialisations: lawyer.specialisations,
         classement: lawyer.classement,
         soutien_public: lawyer.soutien_public,
-        statut_cabinet: lawyer.statut_cabinet
+        statut_cabinet: lawyer.statut_cabinet,
+        // Champs Phase 2 (profil + cercles + élus)
+        specialite: lawyer.specialite,
+        mandat: lawyer.mandat,
+        langue: lawyer.langue,
+        nationalite: lawyer.nationalite,
+        xp: lawyer.xp,
+        tranche_taille_cabinet: lawyer.tranche_taille_cabinet,
+        cercles: lawyer.cercles,
+        elus_statut: lawyer.elus_statut,
+        elus_certitude: lawyer.elus_certitude,
+        ami_linkedin_mhf: lawyer.ami_linkedin_mhf,
+        ami_linkedin_fn: lawyer.ami_linkedin_fn
       }));
       
       results.totalLawyersFound = totalLawyersFound;
@@ -155,6 +195,9 @@ export async function POST(request: Request) {
           cabinetsMap.set(cabinetName, {
             name: displayName,
             originalName: cabinetName,
+            // Nom commercial pour l'affichage (cohérent par raison sociale) ; le
+            // routing/regroupement reste sur `name`/`originalName` (raison sociale).
+            display_name: displayName,
             lawyer_count: 0,
             c1_count: 0, c2_count: 0, c3_count: 0, bl_count: 0,
             soutien_public_count: 0,
@@ -162,9 +205,13 @@ export async function POST(request: Request) {
             sample_lawyers: []
           });
         }
-        
+
         const cabinet = cabinetsMap.get(cabinetName);
         cabinet.lawyer_count++;
+        // Renseigner le nom commercial dès qu'un avocat du cabinet en a un.
+        if (cabinetName !== 'Individuel' && lawyer.cabinet_nom_commercial && cabinet.display_name === displayName) {
+          cabinet.display_name = lawyer.cabinet_nom_commercial;
+        }
         
         if (lawyer.soutien_public) cabinet.soutien_public_count++;
         switch (lawyer.classement) {

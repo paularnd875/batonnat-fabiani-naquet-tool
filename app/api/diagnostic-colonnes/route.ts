@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
-import { resolveFields, colLetter, MAIN_TAB } from '@/lib/column-map';
+import { resolveFields, colLetter, MAIN_TAB, SOURCE_TAB_GID } from '@/lib/column-map';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
-async function readHeaders(): Promise<string[]> {
+// Résout titre + en-têtes de l'onglet source par gid (robuste au renommage).
+async function readSource(): Promise<{ title: string; headers: string[] }> {
   let cj = process.env.GOOGLE_SERVICE_ACCOUNT_KEY as string;
   const sid = process.env.GOOGLE_SHEET_ID as string;
   if (cj && (cj.startsWith('ey') || cj.includes('base64:'))) {
@@ -14,13 +15,16 @@ async function readHeaders(): Promise<string[]> {
   const credentials = JSON.parse(cj);
   const auth = new google.auth.GoogleAuth({ credentials, scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'] });
   const sheets = google.sheets({ version: 'v4', auth });
-  const r = await sheets.spreadsheets.values.get({ spreadsheetId: sid, range: `'${MAIN_TAB}'!1:1` });
-  return (r.data.values?.[0] || []) as string[];
+  const meta = await sheets.spreadsheets.get({ spreadsheetId: sid, fields: 'sheets.properties(sheetId,title)' });
+  const match = (meta.data.sheets || []).find((s: any) => s.properties?.sheetId === SOURCE_TAB_GID);
+  const title = match?.properties?.title || MAIN_TAB;
+  const r = await sheets.spreadsheets.values.get({ spreadsheetId: sid, range: `'${title}'!1:1` });
+  return { title, headers: (r.data.values?.[0] || []) as string[] };
 }
 
 export async function GET() {
   try {
-    const headers = await readHeaders();
+    const { title, headers } = await readSource();
     const fields = resolveFields(headers);
 
     const parName = fields.filter(f => f.status === 'name').length;
@@ -29,7 +33,8 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      onglet: MAIN_TAB,
+      onglet: title,
+      ongletGid: SOURCE_TAB_GID,
       totalColonnes: headers.length,
       resume: { trouvesParNom: parName, secoursParIndex: parIndex, manquants },
       champs: fields.map(f => ({

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/db';
+import { getAllAssignments } from '@/lib/assignments-store';
+import { getTeamMembers } from '@/lib/team-store';
+import { getLawyerMap } from '@/lib/lawyer-lookup';
 import nodemailer from 'nodemailer';
 
 interface Assignment {
@@ -20,6 +22,40 @@ interface Assignment {
     cabinet: string;
     classement: string;
   };
+}
+
+// Construit la liste d'assignations enrichies (membre + avocat) au format
+// attendu par le générateur d'email, depuis Vercel Blob + Google Sheet.
+async function buildEnrichedAssignments(filter?: { team_member_id?: string }): Promise<Assignment[]> {
+  const [stored, members, lawyerMap] = await Promise.all([
+    getAllAssignments(),
+    getTeamMembers(),
+    getLawyerMap(),
+  ]);
+  const memberMap = new Map(members.map((m) => [m.id, m]));
+
+  return stored
+    .filter((a) => !filter?.team_member_id || a.team_member_id === filter.team_member_id)
+    .map((a): Assignment | null => {
+      const mb = memberMap.get(a.team_member_id);
+      if (!mb) return null;
+      const lw = lawyerMap.get(a.lawyer_prenomnom);
+      return {
+        id: a.id,
+        lawyer_prenomnom: a.lawyer_prenomnom,
+        assigned_at: a.assigned_at,
+        team_members: { id: mb.id, prenom: mb.prenom, nom: mb.nom, email: mb.email },
+        lawyers: {
+          prenomnom: a.lawyer_prenomnom,
+          nom_complet: lw?.nom_complet || a.lawyer_prenomnom,
+          email: lw?.email || '',
+          telephone: lw?.telephone || '',
+          cabinet: lw?.cabinet || '',
+          classement: lw?.classement || '',
+        },
+      };
+    })
+    .filter((a): a is Assignment => a !== null);
 }
 
 export async function POST(request: Request) {
@@ -52,29 +88,8 @@ export async function POST(request: Request) {
     });
 
     if (type === 'individual' && team_member_id) {
-      // Récupérer les assignations pour un membre spécifique
-      const { data: assignments, error } = await supabase
-        .from('assignments')
-        .select(`
-          *,
-          team_members (
-            id,
-            prenom,
-            nom,
-            email
-          ),
-          lawyers (
-            prenomnom,
-            nom_complet,
-            email,
-            telephone,
-            cabinet,
-            classement
-          )
-        `)
-        .eq('team_member_id', team_member_id) as { data: Assignment[] | null; error: any };
-
-      if (error) throw error;
+      // Récupérer les assignations pour un membre spécifique (Vercel Blob + Sheet)
+      const assignments = await buildEnrichedAssignments({ team_member_id });
 
       if (!assignments || assignments.length === 0) {
         return NextResponse.json({
@@ -96,19 +111,6 @@ export async function POST(request: Request) {
         text: emailContent,
       });
 
-      // Enregistrer le log de l'envoi
-      await supabase
-        .from('mail_logs')
-        .insert({
-          recipient_email: teamMember.email,
-          subject: 'Récapitulatif assignations',
-          type: 'individual_recap',
-          metadata: {
-            team_member_id,
-            assignments_count: assignments.length,
-          },
-        });
-
       return NextResponse.json({
         success: true,
         message: `Email envoyé à ${teamMember.prenom} ${teamMember.nom}`,
@@ -116,28 +118,8 @@ export async function POST(request: Request) {
       });
 
     } else if (type === 'global') {
-      // Récupérer toutes les assignations groupées par membre d'équipe
-      const { data: allAssignments, error } = await supabase
-        .from('assignments')
-        .select(`
-          *,
-          team_members (
-            id,
-            prenom,
-            nom,
-            email
-          ),
-          lawyers (
-            prenomnom,
-            nom_complet,
-            email,
-            telephone,
-            cabinet,
-            classement
-          )
-        `) as { data: Assignment[] | null; error: any };
-
-      if (error) throw error;
+      // Récupérer toutes les assignations groupées par membre d'équipe (Vercel Blob + Sheet)
+      const allAssignments = await buildEnrichedAssignments();
 
       if (!allAssignments || allAssignments.length === 0) {
         return NextResponse.json({
@@ -174,19 +156,6 @@ export async function POST(request: Request) {
           subject: `🎯 Récapitulatif de vos assignations - Bâtonnat Fabiani-Naquet 2026`,
           text: emailContent,
         });
-
-        // Log l'envoi
-        await supabase
-          .from('mail_logs')
-          .insert({
-            recipient_email: member.email,
-            subject: 'Récapitulatif assignations',
-            type: 'global_recap',
-            metadata: {
-              team_member_id: member.id,
-              assignments_count: assignments.length,
-            },
-          });
 
         sentEmails.push({
           member: `${member.prenom} ${member.nom}`,
