@@ -53,6 +53,7 @@ const FabianiNaquetHeader: React.FC = () => {
     { text: 'AVOCATS', href: '/avocats' },
     { text: 'AJOUT C123', href: '/typeform-ajout-c123' },
     { text: 'TABLEAU DE BORD', href: '/dashboard' },
+    { text: 'QUALIFICATION', href: '/qualification-admin' },
   ];
 
   return (

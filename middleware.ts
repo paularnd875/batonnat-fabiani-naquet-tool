@@ -22,6 +22,19 @@ export function middleware(request: NextRequest) {
     '/api/clear-assignments' // TEMPORAIRE POUR RESET ASSIGNATIONS
   ];
 
+  // Liens participants de l'outil de qualification (swipe) : authentifies par
+  // jeton, pas de login. On laisse passer AVANT le check publicRoutes.
+  // NB : /qualification-admin et /api/qualif-admin restent PROTEGES.
+  if (
+    pathname.startsWith('/q/') ||
+    pathname === '/api/qualif' ||
+    pathname.startsWith('/api/qualif?')
+  ) {
+    const response = NextResponse.next();
+    addSecurityHeaders(response, pathname);
+    return response;
+  }
+
   // Routes d'assets statiques à ignorer pour l'authentification
   if (
     pathname.startsWith('/_next') ||
