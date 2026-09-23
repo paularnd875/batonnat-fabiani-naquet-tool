@@ -342,26 +342,63 @@ class DatabaseService {
   }
 }
 
-// Import du service Supabase pour Vercel
-import { getSupabaseDatabase } from './database-supabase';
+// Users = équipe (Vercel Blob). Statuts (classement) = pilotés par le localStorage
+// client ; plus de persistance serveur (Supabase retiré). getDatabase() renvoie un
+// adaptateur : méthodes users -> team-store, méthodes logs de statut -> no-op.
+import { getTeamMembers, getTeamMemberById, addTeamMember } from './team-store';
 
-// Singleton pour la base de données
-let databaseInstance: DatabaseService | null = null;
+function toUser(m: { id: string; nom: string; prenom: string; email: string } | null) {
+  return m ? { id: m.id, nom: m.nom, prenom: m.prenom, email: m.email } : null;
+}
 
-export function getDatabase(): DatabaseService | any {
-  // Utiliser Supabase sur Vercel, SQLite en local
-  const isVercel = process.env.VERCEL === '1';
-  
-  if (isVercel) {
-    console.log(' Utilisation de Supabase pour la persistance sur Vercel');
-    return getSupabaseDatabase();
-  }
-  
-  if (!databaseInstance) {
-    console.log(' Utilisation de SQLite en local');
-    databaseInstance = new DatabaseService();
-  }
-  return databaseInstance;
+export function getDatabase(): any {
+  return {
+    // --- Users -> team-store (Blob) ---
+    async getAllUsers() {
+      return (await getTeamMembers()).map((m) => toUser(m));
+    },
+    async getUserById(id: any) {
+      return toUser(await getTeamMemberById(String(id)));
+    },
+    async getUserByEmail(email: string) {
+      const m = (await getTeamMembers()).find(
+        (x) => (x.email || '').toLowerCase() === String(email || '').toLowerCase()
+      );
+      return toUser(m || null);
+    },
+    async createUser(nom: string, prenom: string, email: string) {
+      return toUser(await addTeamMember({ nom, prenom, email }));
+    },
+
+    // --- Logs de changement de statut : neutralisés (statuts en localStorage client) ---
+    async getAllLatestStatuses() {
+      return new Map<string, string>();
+    },
+    async getLatestStatusForLawyer(_lawyerId?: string) {
+      return null;
+    },
+    async logStatusChange(data: any) {
+      return { id: 0, exported: false, ...data };
+    },
+    async getStatusChangeLogs() {
+      return [] as any[];
+    },
+    async getAllStatusChangeLogs(_filters?: any) {
+      return [] as any[];
+    },
+    async getUnexportedStatusChangesCount() {
+      return 0;
+    },
+    async deleteStatusChangeLog(_id?: number) {
+      return;
+    },
+    async markStatusChangeAsExported(_id?: number) {
+      return;
+    },
+    async markStatusChangesAsExported(_ids?: number[]) {
+      return;
+    },
+  };
 }
 
 export { DatabaseService };
