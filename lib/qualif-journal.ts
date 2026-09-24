@@ -22,7 +22,7 @@ const HEADER = [
 // Reproduit fidelement l'Apps Script uniformizeText : supprime ponctuation,
 // espaces, accents, chiffres et emojis, met en minuscules et tout colle.
 // Ex : "Jean Michel De Préssense" -> "jeanmicheldepressense"
-function normalizeName(input: string): string {
+export function normalizeName(input: string): string {
   let s = String(input || '');
   s = s.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()'"’‘]/g, ''); // ponctuation
   s = s.replace(/\s/g, ''); // espaces

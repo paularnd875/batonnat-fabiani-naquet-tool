@@ -2,7 +2,8 @@ import { google } from 'googleapis';
 import crypto from 'crypto';
 import { memoryCache } from './cache';
 import { SOURCE_TAB_GID, MAIN_TAB } from './column-map';
-import { logClassifChange } from './qualif-journal';
+import { logClassifChange, normalizeName } from './qualif-journal';
+import { writeC123Classification } from './qualif-c123';
 
 // Coeur de l'outil "Qualification des contacts" (interface swipe).
 // Tout est stocke dans le meme Google Sheet que le reste de l'outil Fabiani-Naquet :
@@ -471,6 +472,30 @@ export async function saveChoice(
     nouvelle: choice,
     utilisateur: p.name,
   });
+
+  // Ecriture directe dans « C123 agrégés » (sauf « Neutre », memorise cote onglet
+  // participant uniquement). La cle D est UNIFORMISEE ici (Prénom Nom -> prenomnom),
+  // le canal (J) est recalcule depuis la source. Best-effort : n'interrompt jamais
+  // l'action utilisateur.
+  if (choice !== 'Neutre') {
+    try {
+      const net = NETWORKS[p.network];
+      const data = await getSheetData();
+      const R = makeResolver(data[0]?.raw_data);
+      const raw = data.find((l) => R.val(l.raw_data, 'prenom1particulenom') === contact.id)?.raw_data;
+      const canaux = net && raw
+        ? net.sources.filter((s) => s.headers.some((h) => R.present(raw, h))).map((s) => s.label).join(', ')
+        : '';
+      await writeC123Classification({
+        prenomnom: normalizeName(contact.name),
+        cercle: choice,
+        candidat: p.name,
+        canaux,
+      });
+    } catch (e) {
+      console.warn('Ecriture C123 agrégés (best-effort) echouee:', e);
+    }
+  }
 }
 
 // --- Reconciliation avec le doc principal -----------------------------------
