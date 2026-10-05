@@ -36,10 +36,14 @@ export function normalizeName(input: string): string {
   return s.toLowerCase();
 }
 
+// Client Sheets memoise (par process) pour reutiliser l'auth + le jeton OAuth :
+// eviter de recreer une auth a CHAQUE journalisation (chemin chaud du swipe).
+let sheetsClient: ReturnType<typeof google.sheets> | null = null;
 function getConfig() {
   let credentialsJson = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
   const sheetId = process.env.GOOGLE_SHEET_ID;
   if (!credentialsJson || !sheetId) throw new Error('Google Sheets credentials not configured');
+  if (sheetsClient) return { sheets: sheetsClient, sheetId };
   // Support cle encodee en base64 (comme lib/google-sheets.ts).
   if (credentialsJson.startsWith('ey') || credentialsJson.includes('base64:')) {
     const base64Data = credentialsJson.replace('base64:', '');
@@ -50,8 +54,8 @@ function getConfig() {
     credentials,
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
-  const sheets = google.sheets({ version: 'v4', auth });
-  return { sheets, sheetId };
+  sheetsClient = google.sheets({ version: 'v4', auth });
+  return { sheets: sheetsClient, sheetId };
 }
 
 let tabEnsured = false;
