@@ -48,7 +48,6 @@ export async function GET() {
       if (rs && nc && !nomCommercialMap.has(rs)) nomCommercialMap.set(rs, nc);
     });
 
-    // 5b. Conformité : plus de taux de participation aux votes (onglet interdit).
     // La "couverture" d'un cabinet = part de ses avocats déjà assignés à un membre
     // d'équipe (assigned_count / lawyer_count).
     const cabinetsArray = Array.from(cabinetStats.values()).map((firm: any) => {

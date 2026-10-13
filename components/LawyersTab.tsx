@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { SheetLawyer } from '@/lib/google-sheets';
 import { TeamMember, Lawyer } from '@/types';
 import LawyerCard from '@/components/LawyerCard';
-import BallotBoxIcon from '@/components/ui/BallotBoxIcon';
 import { Loader2 } from 'lucide-react';
 
 interface LawyersStats {
@@ -19,12 +18,6 @@ interface LawyersStats {
     c3: number;
     blacklist: number;
     unclassified: number;
-  };
-  by_voting: {
-    first_round: number;
-    second_round: number;
-    both_rounds: number;
-    no_vote: number;
   };
   top_years_by_oath: Array<{ year: number; count: number }>;
 }
@@ -49,7 +42,6 @@ export default function LawyersTab({}: LawyersTabProps) {
   // Filtres
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClassifications, setSelectedClassifications] = useState<string[]>([]);
-  const [selectedVoteFilters, setSelectedVoteFilters] = useState<string[]>([]);
   const [selectedStatusFilters, setSelectedStatusFilters] = useState<string[]>([]);
   const [cabinetFilter, setCabinetFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -111,7 +103,6 @@ export default function LawyersTab({}: LawyersTabProps) {
         limit: '50',
         classification: selectedClassifications.length > 0 ? selectedClassifications.join(',') : 'all',
         cabinet: cabinetFilter,
-        vote: selectedVoteFilters.length > 0 ? selectedVoteFilters.join(',') : 'all',
         search: searchTerm,
         status: selectedStatusFilters.length > 0 ? selectedStatusFilters.join(',') : 'all',
       });
@@ -220,7 +211,7 @@ export default function LawyersTab({}: LawyersTabProps) {
     }, searchTerm ? 500 : 0); // Délai de 500ms pour la recherche textuelle
     
     return () => clearTimeout(delayedSearch);
-  }, [mounted, selectedClassifications, selectedVoteFilters, selectedStatusFilters, cabinetFilter, searchTerm]);
+  }, [mounted, selectedClassifications, selectedStatusFilters, cabinetFilter, searchTerm]);
 
   // Rechargement lors du changement de page
   useEffect(() => {
@@ -329,14 +320,6 @@ export default function LawyersTab({}: LawyersTabProps) {
     );
   };
 
-  const toggleVoteFilter = (voteType: string) => {
-    setSelectedVoteFilters(prev => 
-      prev.includes(voteType)
-        ? prev.filter(v => v !== voteType)
-        : [...prev, voteType]
-    );
-  };
-
   const toggleStatusFilter = (status: string) => {
     setSelectedStatusFilters(prev => 
       prev.includes(status)
@@ -348,7 +331,6 @@ export default function LawyersTab({}: LawyersTabProps) {
   const resetAllFilters = () => {
     setSearchTerm('');
     setSelectedClassifications([]);
-    setSelectedVoteFilters([]);
     setSelectedStatusFilters([]);
     setCabinetFilter('');
   };
@@ -366,30 +348,15 @@ export default function LawyersTab({}: LawyersTabProps) {
     <div className="space-y-6">
       {/* Statistiques */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
             <div className="text-2xl font-bold text-blue-600">{stats.total.toLocaleString()}</div>
             <div className="text-sm text-gray-600">Avocats total</div>
           </div>
-          
+
           <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
             <div className="text-2xl font-bold text-green-600">{stats.by_classification.soutien_public}</div>
             <div className="text-sm text-gray-600">Soutien Public</div>
-          </div>
-          
-          <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-            <div className="text-2xl font-bold text-blue-600">{stats.by_voting.both_rounds}</div>
-            <div className="text-sm text-gray-600">Ont voté 2 tours</div>
-          </div>
-          
-          <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-            <div className="text-2xl font-bold text-purple-600">{stats.by_voting.first_round}</div>
-            <div className="text-sm text-gray-600">Ont voté 1er tour</div>
-          </div>
-          
-          <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-            <div className="text-2xl font-bold text-gray-600">{stats.by_voting.no_vote}</div>
-            <div className="text-sm text-gray-600">N'ont pas voté</div>
           </div>
         </div>
       )}
@@ -517,62 +484,6 @@ export default function LawyersTab({}: LawyersTabProps) {
                 style={{backgroundColor: 'var(--fn-gray-medium)', color: 'var(--fn-white)'}}
               >
                 Non classés
-              </button>
-            </div>
-          </div>
-
-          {/* Participations au vote */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Participation au vote
-            </label>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => toggleVoteFilter('first_round')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md border transition-transform duration-200 cursor-pointer hover:shadow-lg ${
-                  selectedVoteFilters.includes('first_round') 
-                    ? 'scale-110 font-bold border-green-500 bg-green-50' 
-                    : 'border-gray-300 bg-white hover:scale-105 hover:border-green-300'
-                }`}
-              >
-                <BallotBoxIcon voted={true} className="w-6 h-6" />
-                <span className="text-sm">1er tour</span>
-              </button>
-              <button
-                onClick={() => toggleVoteFilter('second_round')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md border transition-transform duration-200 cursor-pointer hover:shadow-lg ${
-                  selectedVoteFilters.includes('second_round') 
-                    ? 'scale-110 font-bold border-green-500 bg-green-50' 
-                    : 'border-gray-300 bg-white hover:scale-105 hover:border-green-300'
-                }`}
-              >
-                <BallotBoxIcon voted={true} className="w-6 h-6" />
-                <span className="text-sm">2ème tour</span>
-              </button>
-              <button
-                onClick={() => toggleVoteFilter('both')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md border transition-transform duration-200 cursor-pointer hover:shadow-lg ${
-                  selectedVoteFilters.includes('both') 
-                    ? 'scale-110 font-bold border-green-500 bg-green-50' 
-                    : 'border-gray-300 bg-white hover:scale-105 hover:border-green-300'
-                }`}
-              >
-                <div className="flex gap-1">
-                  <BallotBoxIcon voted={true} className="w-5 h-5" />
-                  <BallotBoxIcon voted={true} className="w-5 h-5" />
-                </div>
-                <span className="text-sm">Les 2 tours</span>
-              </button>
-              <button
-                onClick={() => toggleVoteFilter('none')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md border transition-transform duration-200 cursor-pointer hover:shadow-lg ${
-                  selectedVoteFilters.includes('none') 
-                    ? 'scale-110 font-bold border-red-500 bg-red-50' 
-                    : 'border-gray-300 bg-white hover:scale-105 hover:border-red-300'
-                }`}
-              >
-                <BallotBoxIcon voted={false} className="w-6 h-6" />
-                <span className="text-sm">N'a pas voté</span>
               </button>
             </div>
           </div>

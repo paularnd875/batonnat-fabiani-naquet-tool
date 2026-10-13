@@ -36,17 +36,7 @@ export interface SheetLawyer {
   elus_statut?: string;
   elus_certitude?: string;
   cercles?: string[];
-  // Données de vote du Barreau de Paris 2024
-  premier_tour_vote?: boolean;
-  second_tour_vote?: boolean;
   raw_data: any;
-}
-
-// Interface pour les données de cabinet depuis l'onglet votes
-export interface SheetFirmData {
-  cabinet: string;
-  taux_participation_moyen: number;
-  taille_cabinet?: string;
 }
 
 // Interface pour les membres d'équipe
@@ -54,13 +44,6 @@ export interface SheetTeamMember {
   prenom: string;
   nom: string;
   email: string;
-}
-
-// Interface pour les données de vote du Barreau de Paris 2024
-export interface SheetVoteData {
-  prenomnom: string;
-  premier_tour_vote: boolean;
-  second_tour_vote: boolean;
 }
 
 class GoogleSheetsService {
@@ -231,132 +214,11 @@ class GoogleSheetsService {
     // Appliquer la logique de distribution des photos
     const processedLawyers = this.distributePhotos(lawyersData);
 
-    // Conformité : la participation aux votes des campagnes précédentes n'est plus
-    // exploitée (données non conservées). Champs laissés indéfinis.
-    const lawyersWithVotes = processedLawyers.map(lawyer => ({
-      ...lawyer,
-      premier_tour_vote: undefined as boolean | undefined,
-      second_tour_vote: undefined as boolean | undefined,
-    }));
-
     // 🚀 OPTIMISATION: Mettre en cache pour 60 minutes (Google Sheets très lent)
-    memoryCache.set(CACHE_KEYS.LAWYERS_ALL, lawyersWithVotes, CACHE_TTL.LAWYERS);
-    console.log(` ${lawyersWithVotes.length} avocats mis en cache pour 60 minutes`);
+    memoryCache.set(CACHE_KEYS.LAWYERS_ALL, processedLawyers, CACHE_TTL.LAWYERS);
+    console.log(` ${processedLawyers.length} avocats mis en cache pour 60 minutes`);
 
-    return lawyersWithVotes;
-  }
-
-  /**
-   * Lit l'onglet BARREAU-DE-PARIS-2024 pour les données de vote
-   */
-  async readVoteData(): Promise<SheetVoteData[]> {
-    try {
-      console.log(' Lecture données de vote BARREAU-DE-PARIS-2024...');
-      
-      const response = await this.sheets.spreadsheets.values.get({
-        spreadsheetId: this.sheetId,
-        range: 'BARREAU-DE-PARIS-2024!A:K', // Colonnes A à K pour inclure le vote 2ème tour
-      });
-
-      const rows = response.data.values || [];
-      if (rows.length === 0) return [];
-
-      // Ignorer la première ligne (entêtes) et traiter les données
-      const voteData = rows.slice(1).map((row: any[]) => {
-        return {
-          prenomnom: row[5] || '', // Colonne F (index 5) - prenomnom pour matcher
-          premier_tour_vote: !!(row[9] && row[9].trim() !== ''), // Colonne J (index 9) - 1er tour
-          second_tour_vote: !!(row[10] && row[10].trim() !== ''), // Colonne K (index 10) - 2ème tour
-        };
-      }).filter((vote: any) => vote.prenomnom); // Filtrer les lignes sans prenomnom
-
-      console.log(` ${voteData.length} entrées de vote récupérées`);
-      return voteData;
-    } catch (error) {
-      console.error(' Erreur lecture données de vote:', error);
-      return []; // Retourner un tableau vide en cas d'erreur
-    }
-  }
-
-  /**
-   * Lit l'onglet votes et retourne les données de participation
-   * Note: Essaie plusieurs onglets possibles pour trouver les bonnes données
-   */
-  async readFirmsData(): Promise<SheetFirmData[]> {
-    // 🚀 OPTIMISATION: Vérifier le cache en premier
-    const cachedFirmsData = memoryCache.get<SheetFirmData[]>('firms_data');
-    if (cachedFirmsData) {
-      console.log(' Données cabinets chargées depuis le cache');
-      return cachedFirmsData;
-    }
-
-    console.log(' Lecture données cabinets depuis Google Sheets...');
-    // Essayer différents noms d'onglets possibles
-    const possibleSheetNames = [
-      'Synthèse vote toutes structures!A:I', // Onglet correct avec vraies données + colonne I (taille)
-      'Synthèse vote par structure!A:I', // Fallback sur ancien onglet + colonne I
-      // Ajouter d'autres noms possibles si nécessaire
-    ];
-    
-    for (const rangeName of possibleSheetNames) {
-      try {
-        console.log(` Tentative lecture onglet: ${rangeName}`);
-        const response = await this.sheets.spreadsheets.values.get({
-          spreadsheetId: this.sheetId,
-          range: rangeName,
-        });
-        
-        const rows = response.data.values || [];
-        if (rows.length === 0) continue;
-        
-        console.log(` Trouvé ${rows.length} lignes dans ${rangeName}`);
-        console.log(` Première ligne:`, rows[0]);
-        console.log(` Deuxième ligne:`, rows[1]);
-        
-        const processedData = this.processFirmsData(rows);
-        if (processedData.length > 0) {
-          console.log(` ${processedData.length} cabinets valides trouvés`);
-          // 🚀 OPTIMISATION: Mettre en cache pour 10 minutes
-          memoryCache.set('firms_data', processedData, CACHE_TTL.STATS);
-          return processedData;
-        }
-      } catch (error) {
-        console.warn(` Impossible de lire ${rangeName}:`, error);
-        continue;
-      }
-    }
-    
-    console.warn(' Aucun onglet de participation trouvé');
-    return [];
-  }
-
-  /**
-   * Traite les données brutes d'un onglet pour extraire les données de participation
-   */
-  private processFirmsData(rows: any[][]): SheetFirmData[] {
-    if (rows.length === 0) return [];
-
-    return rows.slice(1).map((row: any[]) => {
-      const cabinet = (row[0] || '').toString().trim();
-      let taux = parseFloat(row[6]) || 0;
-      const taille = (row[8] || '').toString().trim(); // Colonne I = index 8
-      
-      // Si le taux > 1, c'est probablement en pourcentage, le convertir en décimal
-      if (taux > 1) {
-        taux = taux / 100;
-      }
-      
-      return {
-        cabinet,
-        taux_participation_moyen: taux,
-        taille_cabinet: taille,
-      };
-    }).filter(firm => 
-      firm.cabinet && 
-      firm.cabinet !== 'Structure' && 
-      !firm.cabinet.includes('Liste des personnes') &&
-      firm.cabinet.length > 2 // Filtrer les noms trop courts
-    );
+    return processedLawyers;
   }
 
   /**

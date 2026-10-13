@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
-import { googleSheets } from '@/lib/google-sheets';
 
 export async function POST() {
   try {
@@ -46,26 +45,6 @@ export async function POST() {
     }
 
     console.log(` Total avocats récupérés: ${allLawyers.length}`);
-
-    // Lire les taux de participation réels depuis Google Sheets
-    console.log(' Lecture taux de participation depuis Google Sheets...');
-    let participationRatesMap = new Map<string, number>();
-    try {
-      const firmsParticipationData = await googleSheets.readFirmsData();
-      console.log(` ${firmsParticipationData.length} cabinets avec taux trouvés dans Google Sheets`);
-      
-      firmsParticipationData.forEach((firmData: any) => {
-        participationRatesMap.set(firmData.cabinet, firmData.taux_participation_moyen);
-      });
-      
-      // Afficher quelques exemples
-      const exampleParticipation = firmsParticipationData.slice(0, 3);
-      exampleParticipation.forEach((firm: any) => {
-        console.log(` ${firm.cabinet}: ${(firm.taux_participation_moyen * 100).toFixed(1)}%`);
-      });
-    } catch (error) {
-      console.warn(' Impossible de lire les taux depuis Google Sheets, utilisation calcul local:', error);
-    }
 
     // 3. Calculer les stats par cabinet
     console.log(` Calcul stats pour ${allLawyers.length} avocats...`);
@@ -152,44 +131,21 @@ export async function POST() {
       });
     }
 
-    // 5. Calculer le taux de participation pour chaque cabinet
+    // 5. « Couverture » par cabinet = part des avocats du cabinet déjà assignés
     const firmsArray = Array.from(firmsMap.values()).map((firm: any) => {
-      // D'abord chercher le taux réel depuis Google Sheets
-      let participationRate = participationRatesMap.get(firm.name);
-      
-      // Si pas trouvé, essayer avec des variantes du nom
-      if (participationRate === undefined) {
-        // Essayer les variantes courantes
-        const nameVariants = [
-          firm.name,
-          firm.name.toUpperCase(),
-          firm.name.toLowerCase(),
-          firm.name.trim(),
-        ];
-        
-        for (const variant of nameVariants) {
-          participationRate = participationRatesMap.get(variant);
-          if (participationRate !== undefined) break;
-        }
-      }
-      
-      // Si toujours pas trouvé, utiliser le calcul local comme fallback
-      if (participationRate === undefined) {
-        participationRate = firm.lawyer_count > 0 ? firm.assigned_count / firm.lawyer_count : 0;
-      }
-      
+      const couverture = firm.lawyer_count > 0 ? firm.assigned_count / firm.lawyer_count : 0;
       return {
         ...firm,
-        participation_rate: participationRate
+        participation_rate: couverture
       };
     });
-    
-    console.log(` Insertion ${firmsArray.length} cabinets avec taux de participation...`);
+
+    console.log(` Insertion ${firmsArray.length} cabinets...`);
 
     // Afficher quelques exemples
     const examples = firmsArray.slice(0, 5);
     examples.forEach((firm: any) => {
-      console.log(` ${firm.name}: ${firm.lawyer_count} avocats (Assignés:${firm.assigned_count}, Taux:${(firm.participation_rate * 100).toFixed(1)}%, SP:${firm.soutien_public_count}, C1:${firm.c1_count}, C2:${firm.c2_count}, C3:${firm.c3_count})`)
+      console.log(` ${firm.name}: ${firm.lawyer_count} avocats (Assignés:${firm.assigned_count}, Couverture:${(firm.participation_rate * 100).toFixed(1)}%, SP:${firm.soutien_public_count}, C1:${firm.c1_count}, C2:${firm.c2_count}, C3:${firm.c3_count})`)
     });
 
     const { error: insertError } = await supabase

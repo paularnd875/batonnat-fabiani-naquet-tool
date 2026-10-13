@@ -13,8 +13,6 @@ export interface UnifiedLawyer {
   cabinet: string;
   classement: string;
   soutien_public: boolean;
-  premier_tour_vote?: boolean;
-  second_tour_vote?: boolean;
   photo_url?: string;
   email?: string;
   telephone?: string;
@@ -109,19 +107,13 @@ export class UnifiedDataService {
           soutien_public_count: 0,
           unclassified_count: 0,
           assigned_count: 0,
-          vote_count: 0,
           participation_rate: 0
         });
       }
 
       const stats = cabinetStats.get(cabinet);
       stats.lawyer_count++;
-      
-      // Compter les votes pour la participation
-      if (lawyer.premier_tour_vote || lawyer.second_tour_vote) {
-        stats.vote_count++;
-      }
-      
+
       if (lawyer.soutien_public) stats.soutien_public_count++;
       
       switch (lawyer.classement) {
@@ -131,11 +123,6 @@ export class UnifiedDataService {
         case 'Blacklist': stats.bl_count++; break;
         default: stats.unclassified_count++; break;
       }
-    });
-
-    // Calculer les taux de participation
-    cabinetStats.forEach((stats, cabinet) => {
-      stats.participation_rate = stats.lawyer_count > 0 ? stats.vote_count / stats.lawyer_count : 0;
     });
 
     console.log(` ${cabinetStats.size} cabinets calculés avec statistiques unifiées`);

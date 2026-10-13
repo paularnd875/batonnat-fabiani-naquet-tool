@@ -9,7 +9,6 @@ export async function POST() {
     // Vider complètement le cache
     memoryCache.delete(CACHE_KEYS.LAWYERS_ALL);
     memoryCache.delete('lawyers_cache');
-    memoryCache.delete('vote_data');
     
     console.log(' Cache vidé');
     

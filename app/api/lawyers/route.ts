@@ -16,12 +16,6 @@ interface LawyersApiResponse {
       blacklist: number;
       unclassified: number;
     };
-    by_voting: {
-      first_round: number;
-      second_round: number;
-      both_rounds: number;
-      no_vote: number;
-    };
     top_years_by_oath: Array<{ year: number; count: number }>;
   };
   pagination?: {
@@ -44,13 +38,11 @@ export async function GET(request: NextRequest) {
     // Paramètres de filtrage
     const classificationFilter = searchParams.get('classification') || 'all';
     const cabinetFilter = searchParams.get('cabinet') || '';
-    const voteFilter = searchParams.get('vote') || 'all';
     const statusFilter = searchParams.get('status') || 'all';
     const searchQuery = searchParams.get('search') || '';
-    
+
     // Support for multiple filters (comma-separated)
     const classificationFilters = classificationFilter === 'all' ? [] : classificationFilter.split(',');
-    const voteFilters = voteFilter === 'all' ? [] : voteFilter.split(',');
     const statusFilters = statusFilter === 'all' ? [] : statusFilter.split(',');
     
     // Récupération des données depuis Google Sheets
@@ -136,33 +128,7 @@ export async function GET(request: NextRequest) {
         
         if (!matchesStatus) return false;
       }
-      
-      // Filtre par vote (support multiple)
-      if (voteFilters.length > 0) {
-        let matchesVote = false;
-        
-        for (const filter of voteFilters) {
-          if (filter === 'first_round' && lawyer.premier_tour_vote) {
-            matchesVote = true;
-            break;
-          }
-          if (filter === 'second_round' && lawyer.second_tour_vote) {
-            matchesVote = true;
-            break;
-          }
-          if (filter === 'both' && lawyer.premier_tour_vote && lawyer.second_tour_vote) {
-            matchesVote = true;
-            break;
-          }
-          if (filter === 'none' && !lawyer.premier_tour_vote && !lawyer.second_tour_vote) {
-            matchesVote = true;
-            break;
-          }
-        }
-        
-        if (!matchesVote) return false;
-      }
-      
+
       // Filtre par recherche textuelle (nom, prénom, cabinet)
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -189,12 +155,6 @@ export async function GET(request: NextRequest) {
         c3: lawyersWithUpdatedStatuses.filter(l => l.classement === 'C3').length,
         blacklist: lawyersWithUpdatedStatuses.filter(l => l.classement === 'Blacklist').length,
         unclassified: lawyersWithUpdatedStatuses.filter(l => !l.classement || l.classement === '').length,
-      },
-      by_voting: {
-        first_round: lawyersWithUpdatedStatuses.filter(l => l.premier_tour_vote).length,
-        second_round: lawyersWithUpdatedStatuses.filter(l => l.second_tour_vote).length,
-        both_rounds: lawyersWithUpdatedStatuses.filter(l => l.premier_tour_vote && l.second_tour_vote).length,
-        no_vote: lawyersWithUpdatedStatuses.filter(l => !l.premier_tour_vote && !l.second_tour_vote).length,
       },
       top_years_by_oath: [] as Array<{year: number, count: number}>
     };

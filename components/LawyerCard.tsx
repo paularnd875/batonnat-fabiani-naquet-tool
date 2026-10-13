@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Mail, Phone, AlertTriangle, User, Loader2, X } from 'lucide-react';
 import { Lawyer, LawyerCardProps } from '@/types';
-import BallotBoxIcon from '@/components/ui/BallotBoxIcon';
 import StatusButton from '@/components/StatusButton';
 
 type AssignedMember = { id: string; prenom: string; nom: string };
@@ -397,23 +396,6 @@ const LawyerCard: React.FC<LawyerCardProps> = React.memo(({ lawyer, onAssign, on
               </div>
             )}
 
-            {/* Icônes de vote pour les élections du Barreau de Paris 2024 */}
-            {(lawyer.premier_tour_vote !== undefined || lawyer.second_tour_vote !== undefined) && (
-              <div className="flex gap-2 mt-2 justify-end">
-                {lawyer.premier_tour_vote !== undefined && (
-                  <div className="flex items-center gap-1">
-                    <BallotBoxIcon voted={lawyer.premier_tour_vote} className="flex-shrink-0" />
-                    <span className="text-xs text-gray-500">1er</span>
-                  </div>
-                )}
-                {lawyer.second_tour_vote !== undefined && (
-                  <div className="flex items-center gap-1">
-                    <BallotBoxIcon voted={lawyer.second_tour_vote} className="flex-shrink-0" />
-                    <span className="text-xs text-gray-500">2e</span>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>

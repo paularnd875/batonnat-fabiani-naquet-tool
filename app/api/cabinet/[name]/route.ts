@@ -191,7 +191,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ name
       if (assignedLawyersSet.has(lawyer.prenomnom)) realStats.assigned_count++;
     });
 
-    // « Couverture » = part des avocats du cabinet déjà assignés (plus de participation aux votes)
+    // « Couverture » = part des avocats du cabinet déjà assignés
     realStats.participation_rate = realStats.lawyer_count > 0
       ? realStats.assigned_count / realStats.lawyer_count
       : 0;
