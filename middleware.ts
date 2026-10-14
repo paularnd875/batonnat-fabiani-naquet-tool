@@ -8,6 +8,7 @@ export function middleware(request: NextRequest) {
   const publicRoutes = [
     '/login',
     '/user-selection',
+    '/relations-linkedin', // page dédiée : classement LinkedIn par les avocats externes (accès public)
     '/api/auth/login',
     '/api/auth/logout',
     '/api/auth/select-user',
